@@ -5,4 +5,5 @@ import Dashboard from './Dashboard.jsx'
 createRoot(document.getElementById('root')).render(
   
     <Dashboard />
+    //<KakaoMap />
 )

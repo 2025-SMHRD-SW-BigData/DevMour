@@ -1,7 +1,20 @@
-import React from "react";
+import React , {useState, useEffect} from "react";
 import "./Dashboard.css";
+import NaverMap from "./NaverMap";
+import CCTVModal from "./CCTVModal";
+
 
 const Dashboard = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // 이 함수를 NaverMap 컴포넌트 내부에서 호출할 수 있도록 props로 전달
+  const handleMarkerClick = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
   return (
     <div className="container">
       {/* 헤더 */}
@@ -34,8 +47,7 @@ const Dashboard = () => {
 
       {/* 메인 */}
       <main className="main">
-        <div className="map">🗺️ 실시간 도로 현황 지도</div>
-
+        <NaverMap onMarkerClick={handleMarkerClick} />
         <div className="card">
           <h3>날씨 정보 및 예측</h3>
           <div className="weather">
@@ -89,6 +101,11 @@ const Dashboard = () => {
           <div className="alert blue">📢 신규 신고: 10분 전</div>
         </div>
       </aside>
+      {/* CCTV 모달 컴포넌트 */}
+      <CCTVModal 
+        isOpen={isModalOpen} 
+        onClose={handleCloseModal} 
+      />
     </div>
   );
 };
