@@ -3,12 +3,10 @@ import React, { useEffect, useState, useRef } from "react";
 const NaverMap = ({ onMarkerClick }) => {
   const mapRef = useRef(null);
   const polylineRef = useRef(null);
-  const isEditingRef = useRef(false); // isEditing 상태를 위한 ref
   const [isEditing, setIsEditing] = useState(false);
+  const isEditingRef = useRef(isEditing); // isEditing 상태를 위한 ref
 
-  const [path, setPath] = useState([]); // 현재 그려지는 선의 경로 (점 1개 또는 2개)
-  const [drawnLines, setDrawnLines] = useState([]); // 완성된 모든 Polyline 객체
-  const [markers, setMarkers] = useState([]); // 모든 마커 객체
+  const [path, setPath] = useState([]);
   const [displayedCoords, setDisplayedCoords] = useState([]);
 
   // isEditing 상태가 변경될 때마다 ref를 업데이트합니다.
@@ -19,7 +17,7 @@ const NaverMap = ({ onMarkerClick }) => {
   // 1. 지도 초기화 및 이벤트 리스너 등록 (컴포넌트 마운트 시 단 한 번만 실행)
   useEffect(() => {
     const script = document.createElement("script");
-    const newClientId = "se9uk5m3m9"; 
+    const newClientId = "se9uk5m3m9";
     script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${newClientId}&submodules=geocoder`;
     script.async = true;
 
@@ -37,10 +35,8 @@ const NaverMap = ({ onMarkerClick }) => {
       const map = new window.naver.maps.Map('naverMap', mapOptions);
       mapRef.current = map;
 
-      // 마커 추가
-      const markerPosition = new window.naver.maps.LatLng(35.146667, 126.888667);
       const marker = new window.naver.maps.Marker({
-        position: markerPosition,
+        position: new window.naver.maps.LatLng(35.146667, 126.888667),
         map: map,
       });
       window.naver.maps.Event.addListener(marker, 'click', () => {
@@ -64,7 +60,7 @@ const NaverMap = ({ onMarkerClick }) => {
     return () => {
       document.head.removeChild(script);
     };
-  }, [onMarkerClick]);
+  }, [onMarkerClick]); // 의존성 배열에서 isEditing을 제거하여 마운트 시에만 실행되도록 합니다.
 
   // 2. path 상태 변경에 따라 Polyline 동적 업데이트
   useEffect(() => {
@@ -92,9 +88,8 @@ const NaverMap = ({ onMarkerClick }) => {
   }, [path]);
 
   const handleToggleEditing = () => {
-    setIsEditing(!isEditing);
-    if (isEditing) {
-      // 편집 모드 종료 시 경로 및 좌표 정보 초기화
+    setIsEditing(prev => !prev);
+    if (!isEditing) { // 편집 모드 시작 시
       setPath([]);
       setDisplayedCoords([]);
     }
@@ -122,7 +117,6 @@ const NaverMap = ({ onMarkerClick }) => {
         }}>
         {isEditing ? '편집 완료' : '편집 모드 시작'}
       </button>
-      {/* 📍 클릭된 위치의 위도/경도 표시 */}
       {isEditing && (
         <div style={{
           position: 'absolute',
