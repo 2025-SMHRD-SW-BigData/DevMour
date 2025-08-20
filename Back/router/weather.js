@@ -7,6 +7,8 @@ const router = express.Router();
 const API_KEY = 'c1c00ab7cd918d1121e2b38128a14709';
 const BASE_URL = `https://api.openweathermap.org/data/2.5`;
 
+//http://localhost:3001/weather/weather?lat=35.1595&lon=126.8526 <- 예시로 얘 주소에 치면 값 나옴
+
 // API 키 확인 미들웨어
 const checkApiKey = (req, res, next) => {
   if (!API_KEY) {
@@ -69,7 +71,9 @@ console.log(`날씨 조회 요청: lat=${lat}, lon=${lon}`); // 디버깅용
         cloudiness: response.data.clouds.all,
         sunrise: response.data.sys.sunrise,
         sunset: response.data.sys.sunset,
-        timestamp: response.data.dt
+        timestamp: response.data.dt,
+        rain: response.data.rain || null,    // 🆕 추가
+        snow: response.data.snow || null
       }
   
     }
