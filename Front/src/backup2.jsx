@@ -5,7 +5,7 @@ const NaverMap = ({ onMarkerClick }) => {
   const mapRef = useRef(null);
   const polylineRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
-  const isEditingRef = useRef(isEditing); // isEditing 상태를 위한 ref
+  const isEditingRef = useRef(isEditing);
   
   const [path, setPath] = useState([]);
   const [displayedCoords, setDisplayedCoords] = useState([]);
@@ -24,17 +24,12 @@ const NaverMap = ({ onMarkerClick }) => {
     setLon(126.888667);
   }, []); // 빈 의존성 배열로 마운트 시 한 번만 실행됩니다.
 
-  // 1. 지도 초기화 및 이벤트 리스너 등록 (컴포넌트 마운트 시 단 한 번만 실행)
-  useEffect(() => {
-    const script = document.createElement("script");
-    const newClientId = "se9uk5m3m9";
-    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${newClientId}&submodules=geocoder`;
-    script.async = true;
-
-    script.onload = () => {
+  // 지도 초기화 함수
+  const initializeMap = (centerLat = 35.146667, centerLon = 126.888667, zoomLevel = 13) => {
+    if (window.naver && window.naver.maps) {
       const mapOptions = {
-        center: new window.naver.maps.LatLng(35.146667, 126.888667),
-        zoom: 13,
+        center: new window.naver.maps.LatLng(centerLat, centerLon),
+        zoom: zoomLevel,
         mapTypeControl: true,
         maxBounds: new window.naver.maps.LatLngBounds(
           new window.naver.maps.LatLng(35.0, 126.6),
@@ -46,9 +41,10 @@ const NaverMap = ({ onMarkerClick }) => {
       mapRef.current = map;
 
       const marker = new window.naver.maps.Marker({
-        position: new window.naver.maps.LatLng(35.146667, 126.888667),
+        position: new window.naver.maps.LatLng(centerLat, centerLon),
         map: map,
       });
+      
       window.naver.maps.Event.addListener(marker, 'click', () => {
         if (onMarkerClick) {
           onMarkerClick();
@@ -57,16 +53,36 @@ const NaverMap = ({ onMarkerClick }) => {
       
       // 📍 지도 클릭 이벤트 리스너 등록
       window.naver.maps.Event.addListener(map, 'click', (e) => {
-        // ref를 사용해 최신 isEditing 값을 참조합니다.
-        
-          setPath(prevPath => [...prevPath, e.coord]);
-          setDisplayedCoords(prevCoords => [...prevCoords, e.coord]);
+        setPath(prevPath => [...prevPath, e.coord]);
+        setDisplayedCoords(prevCoords => [...prevCoords, e.coord]);
 
-          setLat?.(e.coord.y);
-          setLon?.(e.coord.x);
-          console.log(lat)
-          console.log(lon)
+        // Context 상태 업데이트
+        setLat?.(e.coord.y);
+        setLon?.(e.coord.x);
+        
+        // 현재 줌 레벨 가져오기
+        const currentZoom = map.getZoom();
+        
+        // 클릭한 위치와 현재 줌으로 지도 재초기화
+        setTimeout(() => {
+          initializeMap(e.coord.y, e.coord.x, currentZoom);
+        }, 100);
+        
+        console.log('Updated - Lat:', e.coord.y, 'Lon:', e.coord.x, 'Zoom:', currentZoom);
+        console.log(lat,lon)
       });
+    }
+  };
+
+  // 1. 지도 스크립트 로드 및 초기화 (한 번만 실행되도록 빈 배열)
+  useEffect(() => {
+    const script = document.createElement("script");
+    const newClientId = "se9uk5m3m9";
+    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${newClientId}&submodules=geocoder`;
+    script.async = true;
+
+    script.onload = () => {
+      initializeMap();
     };
 
     document.head.appendChild(script);
@@ -74,7 +90,7 @@ const NaverMap = ({ onMarkerClick }) => {
     return () => {
       document.head.removeChild(script);
     };
-  }, [onMarkerClick]); // 의존성 배열에서 isEditing을 제거하여 마운트 시에만 실행되도록 합니다.
+  }, []); // 빈 배열로 변경해서 한 번만 실행
 
   // 2. path 상태 변경에 따라 Polyline 동적 업데이트
   useEffect(() => {
@@ -161,4 +177,7 @@ const NaverMap = ({ onMarkerClick }) => {
   );
 };
 
-export default NaverMap;
+export default React.memo(NaverMap, (prevProps, nextProps) => {
+  // onMarkerClick prop이 바뀌지 않으면 리렌더링 방지
+  return prevProps.onMarkerClick === nextProps.onMarkerClick;
+});
