@@ -50,6 +50,7 @@ const Dashboard = () => {
         <NaverMap onMarkerClick={handleMarkerClick} />
         <div className="card">
           <h3>날씨 정보 및 예측</h3>
+          <WeatherDisplay/>
           <div className="weather">
             <div className="weather-item">
               <h4>☀️ 맑음</h4>
