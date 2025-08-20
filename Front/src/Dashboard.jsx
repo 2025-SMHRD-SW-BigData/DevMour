@@ -2,7 +2,7 @@ import React , {useState, useEffect} from "react";
 import "./Dashboard.css";
 import NaverMap from "./NaverMap";
 import CCTVModal from "./CCTVModal";
-
+import WeatherDisplay from "./WeatherDisplay";
 
 const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
