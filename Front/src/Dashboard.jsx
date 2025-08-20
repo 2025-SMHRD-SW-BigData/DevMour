@@ -52,7 +52,7 @@ const Dashboard = () => {
           <h3>날씨 정보 및 예측</h3>
           <WeatherDisplay/>
           <div className="weather">
-            <div className="weather-item">
+            {/* <div className="weather-item">
               <h4>☀️ 맑음</h4>
               <p>22℃</p>
             </div>
@@ -67,7 +67,7 @@ const Dashboard = () => {
             <div className="weather-item">
               <h4>❄️ 눈</h4>
               <p>-2℃</p>
-            </div>
+            </div> */}
           </div>
         </div>
       </main>

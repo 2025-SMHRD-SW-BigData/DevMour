@@ -71,7 +71,9 @@ console.log(`날씨 조회 요청: lat=${lat}, lon=${lon}`); // 디버깅용
         cloudiness: response.data.clouds.all,
         sunrise: response.data.sys.sunrise,
         sunset: response.data.sys.sunset,
-        timestamp: response.data.dt
+        timestamp: response.data.dt,
+        rain: response.data.rain || null,    // 🆕 추가
+        snow: response.data.snow || null
       }
   
     }

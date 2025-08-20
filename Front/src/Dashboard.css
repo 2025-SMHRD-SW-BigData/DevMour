@@ -104,27 +104,38 @@ body, html, #root {
 }
 
 /* 날씨 정보 */
-.weather {
-  display: flex;
-  justify-content: space-around;
-  text-align: center;
+
+.weather-info {
+  width: 100%;
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background-color: #f9f9f9;
+  font-family: 'Arial', sans-serif;
+}
+
+.weather-main {
+  width: 100%;
 }
 
 .weather-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex: 1;
+  text-align: center;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  font-size: 14px;
+  line-height: 1.4;
 }
 
-.weather-item h4 {
-  margin: 0 0 5px;
-  font-size: 1.5em;
-}
-
-.weather-item p {
-  margin: 0;
-  font-size: 1.2em;
-  font-weight: bold;
+.weather-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
 }
 
 /* 종합 위험도 점수 원형 */
