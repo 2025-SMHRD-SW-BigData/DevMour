@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useContext } from "react";
 import { InfoContext } from "./context/InfoContext";
 import axios from 'axios';
 
+
 const NaverMap = ({ onMarkerClick }) => {
     const mapRef = useRef(null);
     const [isEditing, setIsEditing] = useState(false);
@@ -12,7 +13,7 @@ const NaverMap = ({ onMarkerClick }) => {
     const markersRef = useRef([]);
     // ⭐ 마커 필터링을 위한 상태 추가
     const [filterType, setFilterType] = useState('all');
-
+    
 
     const { lat, setLat, lon, setLon } = useContext(InfoContext);
 
@@ -107,14 +108,10 @@ const NaverMap = ({ onMarkerClick }) => {
                 }
             });
 
-            // window.naver.maps.Event.addListener(naverMarker, 'click', () => {
-            //     console.log("마커클릭")
-            //     if (onMarkerClick) {
-            //         onMarkerClick();
-            //     }
-            // });
-            // ⭐ setMarkers를 호출하기 전에 markersRef.current에 먼저 추가
-            markersRef.current.push(naverMarker);
+            window.naver.maps.Event.addListener(naverMarker, 'click', () => {
+                alert(`${newMarkerData.name} 마커\n위치: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+            });
+
             setMarkers(prev => [...prev, newMarkerData]);
             markersRef.current.push(naverMarker);
 
@@ -166,12 +163,19 @@ const NaverMap = ({ onMarkerClick }) => {
             const map = new window.naver.maps.Map('naverMap', mapOptions);
             mapRef.current = map;
 
+            const defaultMarker = new window.naver.maps.Marker({
+                position: new window.naver.maps.LatLng(35.146667, 126.888667),
+                map: map,
+            });
 
-
+            window.naver.maps.Event.addListener(defaultMarker, 'click', () => {
+                if (onMarkerClick) {
+                    onMarkerClick();
+                }
+            });
 
             // 초기 마커를 불러오는 함수 호출
             fetchMarkers(map);
-
 
             window.naver.maps.Event.addListener(map, 'click', (e) => {
                 console.log('지도 클릭됨:', e.coord.y, e.coord.x, '편집모드:', isEditingRef.current);
@@ -205,8 +209,6 @@ const NaverMap = ({ onMarkerClick }) => {
         try {
             const response = await axios.get('http://localhost:3001/api/marker/allmarkers');
             const markerDataList = response.data;
-            const newMarkers = [];
-            const newNaverMarkers = [];
 
             console.log('✅ 서버에서 마커 데이터 로드 성공:', markerDataList);
 
@@ -239,48 +241,19 @@ const NaverMap = ({ onMarkerClick }) => {
                     }
                 });
 
-                // 임시 배열에 마커와 마커 데이터를 저장
-                newMarkers.push(newMarkerData);
-                newNaverMarkers.push(naverMarker);
+                window.naver.maps.Event.addListener(naverMarker, 'click', () => {
+                    alert(`${newMarkerData.name} 마커\n위치: ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
+                });
 
-                // window.naver.maps.Event.addListener(naverMarker, 'click', () => {
-                //     console.log("마커클릭")
-                //     if (onMarkerClick) {
-                //         onMarkerClick();
-                //     }
-                // });
-                // setMarkers(prev => [...prev, newMarkerData]);
-                // markersRef.current.push(naverMarker);
+                setMarkers(prev => [...prev, newMarkerData]);
+                markersRef.current.push(naverMarker);
             });
-
-            // ⭐ 한 번에 상태 업데이트
-            setMarkers(newMarkers);
-            markersRef.current = newNaverMarkers;
-
             console.log(`지도에 총 ${markerDataList.length}개의 마커가 추가되었습니다.`);
 
         } catch (error) {
             console.error('❌ 마커 데이터 로드 실패:', error.response ? error.response.data : error.message);
         }
     };
-
-    // ⭐ 마커 이벤트 리스너를 관리하는 useEffect 훅을 추가
-    useEffect(() => {
-        if (!mapRef.current) return;
-
-        markersRef.current.forEach(naverMarker => {
-            // 기존 이벤트 리스너 제거 (필요시)
-            window.naver.maps.Event.clearListeners(naverMarker, 'click');
-
-            // 새 이벤트 리스너 등록
-            window.naver.maps.Event.addListener(naverMarker, 'click', () => {
-                console.log("마커클릭");
-                if (onMarkerClick) {
-                    onMarkerClick();
-                }
-            });
-        });
-    }, [markers, onMarkerClick]); // ⭐ 의존성 배열에 markers와 onMarkerClick 추가
 
     const handleToggleEditing = () => {
         setIsEditing(prev => {
