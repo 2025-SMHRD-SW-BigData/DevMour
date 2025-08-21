@@ -1,0 +1,220 @@
+/* 전체 페이지 스타일 */
+/* body와 html에 margin과 padding을 제거하여 여백을 없앱니다. */
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* 전체 레이아웃 */
+.container {
+  display: grid;
+  grid-template-areas:
+    "header header header"
+    "left main right";
+  /* 좌우 너비는 유동적으로, 좌/우측 패널은 고정 */
+  grid-template-columns: 250px 1fr 300px;
+  /* 위아래 높이를 고정하여 화면을 꽉 채움 */
+  grid-template-rows: 60px 1fr;
+  width: 100%;
+  height: 100%;
+  gap: 20px;
+  padding: 20px;
+  box-sizing: border-box;
+  background-color: #f0f2f5;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* 헤더 */
+.header {
+  grid-area: header;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+/* 사이드 패널 및 메인 영역 */
+.left-panel {
+  grid-area: left;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.right-panel {
+  grid-area: right;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.main {
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 공통 카드 스타일 */
+.card {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.card h3 {
+  margin-top: 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.card p {
+  margin: 5px 0;
+  color: #555;
+  font-size: 0.95em;
+}
+
+/* 도로 위험도 랭킹 텍스트 색상 */
+.card p:nth-child(2) { color: #e74c3c; font-weight: bold; } /* 고위험 */
+.card p:nth-child(3) { color: #f39c12; font-weight: bold; } /* 주의 */
+.card p:nth-child(4) { color: #2ecc71; font-weight: bold; } /* 안전 */
+
+/* 지도 섹션 */
+.map {
+  background-color: #e0e0e0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+  min-height: 400px;
+  border-radius: 8px;
+  font-size: 1.5em;
+  color: #666;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* 날씨 정보 */
+
+.weather-info {
+  width: 100%;
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background-color: #f9f9f9;
+  font-family: 'Arial', sans-serif;
+}
+
+.weather-main {
+  width: 100%;
+}
+
+.weather-item {
+  flex: 1;
+  text-align: center;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.weather-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+}
+
+/* 종합 위험도 점수 원형 */
+.score-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-color: #3498db;
+  color: #ffffff;
+  font-size: 3em;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  animation: pulse 2s infinite ease-in-out;
+}
+
+/* 맥박 뛰는 효과 */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* 막대 그래프 */
+.bar {
+  width: 100%;
+  height: 15px;
+  background-color: #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 5px;
+}
+
+.bar-fill {
+  height: 100%;
+  width: 50%; /* 기본값, 인라인 스타일로 오버라이드 됨 */
+  background-color: #3498db;
+  border-radius: 10px;
+  transition: width 0.5s ease-in-out;
+}
+
+/* 실시간 알림 */
+.alert {
+  padding: 10px 15px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.alert.red {
+  background-color: #fdeaea;
+  color: #e74c3c;
+  border-left: 5px solid #e74c3c;
+}
+
+.alert.yellow {
+  background-color: #fff8e1;
+  color: #f39c12;
+  border-left: 5px solid #f39c12;
+}
+
+.alert.blue {
+  background-color: #eaf4fd;
+  color: #3498db;
+  border-left: 5px solid #3498db;
+}
+
+/* 모바일 반응형 디자인 */
+@media (max-width: 768px) {
+  .container {
+    grid-template-areas:
+      "header"
+      "main"
+      "left"
+      "right";
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+  }
+}
