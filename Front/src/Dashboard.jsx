@@ -1,4 +1,6 @@
-import React , {useState, useEffect} from "react";
+import React , {useState, useEffect, useContext} from "react";
+import { useNavigate } from "react-router-dom";
+import { InfoContext } from "./context/InfoContext";
 import "./Dashboard.css";
 import NaverMap from "./NaverMap";
 import Modals from "./Modals";
@@ -8,6 +10,10 @@ const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMarkerType, setSelectedMarkerType] = useState('cctv');
   const [selectedMarkerData, setSelectedMarkerData] = useState(null);
+  const nav = useNavigate();
+  
+  // ✅ InfoContext에서 lat, lon 값 가져오기
+  const { lat, lon } = useContext(InfoContext);
 
   // 이 함수를 NaverMap 컴포넌트 내부에서 호출할 수 있도록 props로 전달
   const handleMarkerClick = (markerType, markerData) => {
@@ -22,7 +28,12 @@ const Dashboard = () => {
       {/* 헤더 */}
       <header className="header">
         <div>도로 안전 관리 시스템</div>
-        <div>🔍</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <span style={{ fontSize: '12px', color: '#666' }}>
+            📍 현재 위치: {lat ? lat.toFixed(6) : 'N/A'}, {lon ? lon.toFixed(6) : 'N/A'}
+          </span>
+          <span>🔍</span>
+        </div>
       </header>
 
       {/* 왼쪽 패널 */}
@@ -32,11 +43,17 @@ const Dashboard = () => {
           <p>🔴 고위험 구간: 3곳</p>
           <p>🟠 주의 구간: 7곳</p>
           <p>🟢 안전 구간: 12곳</p>
+          <button className="detail-btn" onClick={() => nav('/risk-ranking')}>
+            상세보기 →
+          </button>
         </div>
         <div className="card">
           <h3>민원 신고 접수</h3>
           <p>오늘 접수: 8건</p>
           <p>처리 완료: 5건</p>
+          <button className="detail-btn" onClick={() => nav('/complaints')}>
+            상세보기 →
+          </button>
         </div>
         <div className="card">
           <h3>도로 보수공사</h3>
@@ -44,6 +61,9 @@ const Dashboard = () => {
           <div className="bar">
             <div className="bar-fill"></div>
           </div>
+          <button className="detail-btn" onClick={() => nav('/construction')}>
+            상세보기 →
+          </button>
         </div>
       </aside>
 
@@ -86,6 +106,9 @@ const Dashboard = () => {
           <h3>종합 위험도 점수</h3>
           <div className="score-circle">6.5</div>
           <p>오늘 평균 위험도 (보통 수준)</p>
+          <button className="detail-btn" onClick={() => nav('/risk-score')}>
+            상세보기 →
+          </button>
         </div>
 
         <div className="card">
@@ -101,6 +124,9 @@ const Dashboard = () => {
               style={{ width: "80%", background: "#2ecc71" }}
             ></div>
           </div>
+          <button className="detail-btn" onClick={() => nav('/comparison')}>
+            상세보기 →
+          </button>
         </div>
 
         <div className="card">
@@ -108,6 +134,9 @@ const Dashboard = () => {
           <div className="alert red">⚠️ 장한로 구간 위험도 급상승</div>
           <div className="alert yellow">⚠️ 데이터 오류 발생</div>
           <div className="alert blue">📢 신규 신고: 10분 전</div>
+          <button className="detail-btn" onClick={() => nav('/alerts')}>
+            상세보기 →
+          </button>
         </div>
       </aside>
 
