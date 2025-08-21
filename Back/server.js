@@ -22,6 +22,7 @@ let conn = mysql.createConnection({
 app.use(cors());         
 app.use(express.json()); 
 app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
 
 // 날씨 라우터 연결 추가
 const weatherRouter = require('./router/weather')
@@ -29,8 +30,12 @@ const weatherRouter = require('./router/weather')
 // 마커 업데이트 라우터 연결
 app.use('/api/marker', markerRouter);
 
-
+// 날씨 라우터 연결
 app.use('/weather', weatherRouter);
+
+// 보고서 생성 라우터 연결
+const reportRouter = require('./router/report');
+app.use('/api/report', reportRouter);
 
 
 // 기본 라우트 추가 (선택사항)

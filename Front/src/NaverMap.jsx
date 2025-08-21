@@ -90,7 +90,9 @@ const NaverMap = ({ onMarkerClick }) => {
                 lat,
                 lng,
                 type,
-                name: markerTypes[type].name
+                name: markerTypes[type].name,
+                icon: markerTypes[type].icon,
+                color: markerTypes[type].color
             };
 
             const naverMarker = new window.naver.maps.Marker({
@@ -104,9 +106,14 @@ const NaverMap = ({ onMarkerClick }) => {
 
             // ✅ 마커 클릭 이벤트를 즉시 등록
             window.naver.maps.Event.addListener(naverMarker, 'click', () => {
-                console.log("마커클릭");
+                console.log("마커클릭:", type);
+                
+                // ✅ InfoContext의 lat, lon 값 업데이트
+                setLat(lat);
+                setLon(lng);
+                
                 if (onMarkerClick) {
-                    onMarkerClick();
+                    onMarkerClick(type, newMarkerData);
                 }
             });
 
@@ -220,7 +227,9 @@ const NaverMap = ({ onMarkerClick }) => {
                     lat,
                     lng: lon,
                     type: marker_type,
-                    name: markerTypes[marker_type].name
+                    name: markerTypes[marker_type].name,
+                    icon: markerTypes[marker_type].icon,
+                    color: markerTypes[marker_type].color
                 };
 
                 const naverMarker = new window.naver.maps.Marker({
@@ -234,9 +243,14 @@ const NaverMap = ({ onMarkerClick }) => {
 
                 // ✅ 마커 클릭 이벤트를 즉시 등록
                 window.naver.maps.Event.addListener(naverMarker, 'click', () => {
-                    console.log("마커클릭");
+                    console.log("마커클릭:", marker_type);
+                    
+                    // ✅ InfoContext의 lat, lon 값 업데이트
+                    setLat(lat);
+                    setLon(lon);
+                    
                     if (onMarkerClick) {
-                        onMarkerClick();
+                        onMarkerClick(marker_type, newMarkerData);
                     }
                 });
 

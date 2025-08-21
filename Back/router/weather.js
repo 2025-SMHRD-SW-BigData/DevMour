@@ -98,13 +98,15 @@ console.log(`날씨 조회 요청: lat=${lat}, lon=${lon}`); // 디버깅용
   }
 });
 
+
 //현재 시간 분 단위로
 //const timestamp = Math.floor(Date.now() / (1000*60));
 
 // POST 
-router.get('/save_weather', (req, res) => {
+router.post('/save_weather', (req, res) => {
+const {lat, lon, temperature, rain, snow, weather } = req.body;
 
-const {lat, lon, temperature, rain, snow } = req.body;
+console.log('받은 데이터:', req.body)
 
 const checkSQL = `SELECT * FROM t_weather 
         WHERE lat = ? AND lon = ? 
@@ -120,6 +122,7 @@ const checkSQL = `SELECT * FROM t_weather
         }
 
         // 중복 데이터 존재 여부 확인
+
         if (results.length > 0) {
             return res.status(200).json({ 
                 success: false, 
@@ -128,11 +131,28 @@ const checkSQL = `SELECT * FROM t_weather
             });
         }
 
-const insertSQL = 'Insert into t_weather(lat, lon, temp, precipitation, snowfall) values (?, ?, ?, ?,?)'
-conn.query(insertSQL, [lat, lon, temperature, rain, snow ], (err, results) => {
-    if (err) return res.status(500).json({ success: false, message: '서버 오류' });
+const insertSQL = 'Insert into t_weather(wh_date, lat, lon, temp, precipitation, snowfall,wh_type) values (?,?, ?, ?, ?,?,?)'
 
-    return res.json({ success: true, message: '날씨데이터가 성공적으로 DB에 들어갔습니다.' });
+        // 데이터 전처리 - DECIMAL 컬럼이므로 숫자로 변환
+        const precipitationValue = parseFloat(rain) || 0;
+        const snowfallValue = parseFloat(snow) || 0;
+
+conn.query(insertSQL, [new Date(),lat, lon, temperature, precipitationValue, snowfallValue, weather ], (err, insertResults) => {
+    if (err) {
+
+        console.error('=== 삽입 에러 상세 정보 ===');
+            console.error('에러 코드:', err.code);
+            console.error('에러 메시지:', err.message);
+            console.error('SQL 상태:', err.sqlState);
+
+        return res.status(500).json({ success: false,
+                                     message: '데이터 삽입 실패' });     
+      }
+    console.log('삽입 성공:', insertResults);
+
+
+    return res.json({ success: true,
+                     message: '날씨데이터가 성공적으로 DB에 들어갔습니다.' });
 
   });
 })

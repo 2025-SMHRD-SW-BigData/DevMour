@@ -16,8 +16,8 @@ let conn = mysql.createConnection({
 router.get('/allmarkers', (req, res) => {
     console.log('✅ 모든 마커 정보 요청 수신');
     
-    // SQL 쿼리: 'markers' 테이블의 모든 데이터 선택
-    const sql = 'SELECT * FROM markers';
+    // SQL 쿼리: 't_markers' 테이블의 모든 데이터 선택
+    const sql = 'SELECT * FROM t_markers';
 
     conn.connect(err => {
         if (err) {
@@ -49,8 +49,8 @@ router.post('/updatemarker', (req, res) => {
     console.log(`- 위도: ${lat}, 경도: ${lon}`);
     console.log(`- 마커 타입: ${marker_type}`);
 
-     // SQL 쿼리 작성 (테이블 이름을 'markers'로 가정)
-    const sql = 'INSERT INTO markers (lat, lon, marker_type) VALUES (?, ?, ?)';
+     // SQL 쿼리 작성 (테이블 이름을 't_markers'로 가정)
+    const sql = 'INSERT INTO t_markers (lat, lon, marker_type) VALUES (?, ?, ?)';
 
      conn.connect(err => {
         if (err) {
