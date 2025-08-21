@@ -17,9 +17,11 @@ const Dashboard = () => {
 
   // 이 함수를 NaverMap 컴포넌트 내부에서 호출할 수 있도록 props로 전달
   const handleMarkerClick = (markerType, markerData) => {
+    console.log('🎯 Dashboard handleMarkerClick 호출:', { markerType, markerData });
     setSelectedMarkerType(markerType);
     setSelectedMarkerData(markerData);
     setIsModalOpen(true);
+    console.log('✅ 모달 상태 업데이트 완료');
   };
 
 

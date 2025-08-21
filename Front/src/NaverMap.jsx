@@ -85,8 +85,12 @@ const NaverMap = ({ onMarkerClick }) => {
 
             console.log('✅ 서버 통신 성공:', response.data);
 
+            // 서버 응답에서 marker_id 추출 (실제 DB에 저장된 ID)
+            const serverMarkerId = response.data.marker_id || response.data.id || Date.now();
+
             const newMarkerData = {
-                id: Date.now(),
+                id: serverMarkerId,
+                marker_id: serverMarkerId, // ✅ Modals에서 사용할 marker_id
                 lat,
                 lng,
                 type,
@@ -106,7 +110,7 @@ const NaverMap = ({ onMarkerClick }) => {
 
             // ✅ 마커 클릭 이벤트를 즉시 등록
             window.naver.maps.Event.addListener(naverMarker, 'click', () => {
-                console.log("마커클릭:", type);
+                console.log("마커클릭:", type, "marker_id:", serverMarkerId);
                 
                 // ✅ InfoContext의 lat, lon 값 업데이트
                 setLat(lat);
@@ -118,13 +122,13 @@ const NaverMap = ({ onMarkerClick }) => {
             });
 
             // ✅ 한 번만 추가하고 상태 동기화
-            markersRef.current.push(naverMarker);
             setMarkers(prev => [...prev, newMarkerData]);
+            markersRef.current.push(naverMarker);
 
-            console.log(`📍 마커가 지도에 추가됨: ${type} at ${lat}, ${lng}`);
+            console.log(`📍 마커가 지도에 추가됨: ${type} at ${lat}, ${lng} (ID: ${serverMarkerId})`);
+
         } catch (error) {
-            console.error('❌ 서버 통신 실패:', error.response ? error.response.data : error.message);
-            alert('마커 정보 저장에 실패했습니다. 다시 시도해주세요.');
+            console.error('❌ 마커 추가 실패:', error.response ? error.response.data : error.message);
         }
     };
 
@@ -215,7 +219,7 @@ const NaverMap = ({ onMarkerClick }) => {
             markerDataList.forEach(markerData => {
                 const lat = parseFloat(markerData.lat);
                 const lon = parseFloat(markerData.lon);
-                const { marker_type } = markerData;
+                const { marker_type, marker_id } = markerData;
 
                 if (isNaN(lat) || isNaN(lon) || !markerTypes[marker_type]) {
                     console.error('유효하지 않은 마커 데이터:', markerData);
@@ -223,7 +227,8 @@ const NaverMap = ({ onMarkerClick }) => {
                 }
 
                 const newMarkerData = {
-                    id: markerData.id,
+                    id: marker_id, // ✅ DB의 marker_id 사용
+                    marker_id: marker_id, // ✅ Modals에서 사용할 marker_id 추가
                     lat,
                     lng: lon,
                     type: marker_type,
@@ -243,7 +248,7 @@ const NaverMap = ({ onMarkerClick }) => {
 
                 // ✅ 마커 클릭 이벤트를 즉시 등록
                 window.naver.maps.Event.addListener(naverMarker, 'click', () => {
-                    console.log("마커클릭:", marker_type);
+                    console.log("마커클릭:", marker_type, "marker_id:", marker_id);
                     
                     // ✅ InfoContext의 lat, lon 값 업데이트
                     setLat(lat);
