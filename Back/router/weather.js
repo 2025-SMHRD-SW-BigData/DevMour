@@ -13,10 +13,14 @@ let conn = mysql.createConnection({
     database: 'campus_25SW_BD_p3_2'
 });
 
+//openWeather api
 const API_KEY = 'c1c00ab7cd918d1121e2b38128a14709';
 const BASE_URL = `https://api.openweathermap.org/data/2.5`;
 
-//http://localhost:3001/weather/weather?lat=35.1595&lon=126.8526 <- 예시로 얘 주소에 치면 값 나옴
+//위도와 경도를 지명으로 바꿔주는 api(역지오코딩)
+const GEOCODER_API_KEY = 'CC0429A6-796B-3D14-8F2A-EE2DD1A329F0'
+const GEOCODER_BASE_URL = 'https://api.vworld.kr/req/address'
+
 
 // API 키 확인 미들웨어
 const checkApiKey = (req, res, next) => {
@@ -29,6 +33,61 @@ const checkApiKey = (req, res, next) => {
   next();
 };
 
+router.get('/reverse', async (req, res) => {
+  try{
+    console.log('🗺️ 역지오코딩 API 요청 시작!')
+    const {lat, lon } = req.query
+
+// 좌표 유효성 검사
+    if (!lat || !lon || isNaN(lat) || isNaN(lon)) {
+      return res.status(400).json({
+        success: false,
+        error: '올바른 좌표를 입력해주세요.'
+      });
+  }
+
+ const response = await axios.get(GEOCODER_BASE_URL, {
+      params: {
+        service: 'address',
+        request: 'getAddress',
+        version: '2.0',
+        crs: 'epsg:4326',
+        point: `${lon},${lat}`, // 경도,위도 순서!
+        format: 'json',
+        type: 'both',
+        zipcode: 'true',
+        simple: 'false',
+        key: GEOCODER_API_KEY
+      }
+})
+
+ const result = response.data.response.result[0];
+    
+    res.json({
+      success: true,
+      data: {
+        coordinates: { lat: parseFloat(lat), lon: parseFloat(lon) },
+        address: {
+          full: result.text,
+          sido: result.structure.level1,
+          sigungu: result.structure.level2,
+          dong: result.structure.level3,
+          detail: result.structure.level4L
+        },
+        zipcode: result.zipcode
+      }
+    });
+
+  } catch (error) {
+    console.error('역지오코딩 API 오류:', error.response?.data || error.message);
+    
+    res.status(500).json({
+      success: false,
+      error: '주소 변환에 실패했습니다.'
+    });
+  }
+})
+
 
 // 현재 날씨 조회 - 좌표로
 router.get('/weather', checkApiKey, async (req, res) => {
@@ -38,11 +97,12 @@ router.get('/weather', checkApiKey, async (req, res) => {
     const { lat, lon } = req.query;
     console.log(`📊 추출된 좌표: lat=${lat}, lon=${lon}`);
     
-    // 좌표 유효성 검사
-    if (isNaN(lat) || isNaN(lon)) {
-      return res.status(400).json({
-        success: false,
-        error: '올바른 좌표를 입력해주세요.'
+// 좌표 유효성 검사
+  if (isNaN(lat) || isNaN(lon)) {
+// if (!lat || !lon || isNaN(parseFloat(lat)) || isNaN(parseFloat(lon))) {
+    return res.status(400).json({
+      success: false,
+      error: '올바른 좌표를 입력해주세요.'
       });
     }
 
@@ -97,6 +157,11 @@ console.log(`날씨 조회 요청: lat=${lat}, lon=${lon}`); // 디버깅용
     });
   }
 });
+
+
+
+
+
 
 
 //현재 시간 분 단위로

@@ -12,8 +12,8 @@ import ComparisonDetail from "./pages/ComparisonDetail";
 import AlertDetail from "./pages/AlertDetail";
 
 function App() {
-    const [lat, setLat] = useState(37.5665);
-    const [lon, setLon] = useState(127.0018);
+    const [lat, setLat] = useState(35.159983);
+    const [lon, setLon] = useState(126.8513092);
 
     // 위치 업데이트 함수
     const updateLocation = (newLat, newLon) => {

@@ -36,6 +36,7 @@ app.use('/api/risk', require('./router/risk'));
 // 기상 관련 라우터
 app.use('/api/weather', require('./router/weather'));
 
+
 // 보고서 생성 라우터 연결
 const reportRouter = require('./router/report');
 app.use('/api/report', reportRouter);
