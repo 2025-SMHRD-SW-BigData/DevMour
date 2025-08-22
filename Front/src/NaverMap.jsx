@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useContext } from "react";
 import { InfoContext } from "./context/InfoContext";
 import axios from 'axios';
 
-const NaverMap = ({ onMarkerClick }) => {
+const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers }) => {
     const mapRef = useRef(null);
     const [isEditing, setIsEditing] = useState(false);
     const isEditingRef = useRef(isEditing);
@@ -13,6 +13,10 @@ const NaverMap = ({ onMarkerClick }) => {
     const [filterType, setFilterType] = useState('all');
     const [alertMarker, setAlertMarker] = useState(null);
     const alertMarkerRef = useRef(null);
+    const [riskMarkers, setRiskMarkers] = useState([]);
+
+
+
 
     const { lat, setLat, lon, setLon } = useContext(InfoContext);
 
@@ -32,6 +36,86 @@ const NaverMap = ({ onMarkerClick }) => {
         selectedMarkerTypeRef.current = selectedMarkerType;
     }, [selectedMarkerType]);
 
+    // 위험도 데이터가 변경될 때 마커 업데이트
+    useEffect(() => {
+        console.log('🔄 위험도 데이터/모드 변경 감지:', { showRiskMarkers, riskDataLength: riskData?.length });
+        if (showRiskMarkers && riskData && riskData.length > 0) {
+            console.log('✅ 위험도 마커 추가 실행');
+            // 지도가 준비되었는지 확인하고 마커 추가
+            if (mapRef.current) {
+                addRiskMarkers(riskData);
+            } else {
+                console.log('⏳ 지도가 아직 준비되지 않음, 잠시 후 재시도');
+                // 지도가 준비되지 않았다면 잠시 후 재시도
+                setTimeout(() => {
+                    if (mapRef.current) {
+                        addRiskMarkers(riskData);
+                    }
+                }, 1000);
+            }
+        } else {
+            console.log('❌ 위험도 마커 숨김 또는 데이터 없음');
+            // Hide risk markers if not showing or no data
+            riskMarkers.forEach(marker => marker.setMap(null));
+            setRiskMarkers([]);
+        }
+    }, [riskData, showRiskMarkers]);
+
+    // 필터 타입 변경 시 위험도 마커도 함께 필터링
+    useEffect(() => {
+        if (!mapRef.current) return;
+        
+        console.log('🔄 필터 타입 변경:', filterType);
+        console.log('🔄 현재 위험도 마커 개수:', riskMarkers.length);
+        
+        // 위험도 마커 필터링
+        if (riskMarkers.length > 0) {
+            riskMarkers.forEach((marker, index) => {
+                if (filterType === 'all' || filterType === 'risk') {
+                    console.log(`✅ 위험도 마커 ${index + 1} 표시`);
+                    marker.setMap(mapRef.current);
+                } else {
+                    console.log(`❌ 위험도 마커 ${index + 1} 숨김`);
+                    marker.setMap(null);
+                }
+            });
+        }
+        
+    }, [filterType, riskMarkers]);
+
+    // 위험도 마커가 추가된 후 필터 상태 확인
+    useEffect(() => {
+        if (!mapRef.current || riskMarkers.length === 0) return;
+        
+        console.log('🔄 위험도 마커 상태 확인, 현재 필터:', filterType);
+        
+        riskMarkers.forEach((marker, index) => {
+            if (filterType === 'all' || filterType === 'risk') {
+                console.log(`✅ 위험도 마커 ${index + 1} 상태 확인 - 표시`);
+                if (marker.getMap() !== mapRef.current) {
+                    marker.setMap(mapRef.current);
+                }
+            } else {
+                console.log(`❌ 위험도 마커 ${index + 1} 상태 확인 - 숨김`);
+                if (marker.getMap() !== null) {
+                    marker.setMap(null);
+                }
+            }
+        });
+        
+    }, [riskMarkers, filterType]);
+
+    // 외부에서 호출할 수 있도록 함수 노출
+    useEffect(() => {
+        if (mapRef.current) {
+            // 전역 함수로 노출 (Dashboard.jsx에서 호출 가능)
+            window.moveToRiskMarker = moveToRiskMarker;
+            console.log('✅ moveToRiskMarker 함수를 전역으로 노출');
+        }
+    }, [mapRef.current]);
+
+
+
     const markerTypes = {
         cctv: {
             name: 'CCTV',
@@ -50,8 +134,37 @@ const NaverMap = ({ onMarkerClick }) => {
             color: '#4488FF',
             icon: '🌊',
             size: { width: 30, height: 30 }
+        },
+        risk: {
+            name: '위험도',
+            color: '#9B59B6',
+            icon: '🚨',
+            size: { width: 35, height: 35 }
         }
     };
+
+    const riskMarkerTypes = {
+        high: {
+            name: '고위험',
+            color: '#e74c3c',
+            icon: '🔴',
+            size: { width: 24, height: 24 }
+        },
+        medium: {
+            name: '주의',
+            color: '#f39c12',
+            icon: '🟠',
+            size: { width: 24, height: 24 }
+        },
+        low: {
+            name: '안전',
+            color: '#27ae60',
+            icon: '🟢',
+            size: { width: 24, height: 24 }
+        }
+    };
+
+
 
     const createMarkerContent = (type) => {
         const config = markerTypes[type];
@@ -72,6 +185,282 @@ const NaverMap = ({ onMarkerClick }) => {
         ${config.icon}
       </div>
     `;
+    };
+
+    const createRiskMarkerContent = (riskLevel) => {
+        const config = riskMarkerTypes[riskLevel];
+        console.log(`🎨 위험도 마커 HTML 생성: ${riskLevel} 레벨, 설정:`, config);
+        
+                const htmlContent = `
+      <div style="
+        width: 24px;
+        height: 24px;
+        background: ${config.color};
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        position: relative;
+        margin: 0 auto;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 14px;
+        color: white;
+      " onmouseover="this.style.transform='scale(1.2)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.4)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.3)'">
+        !
+      </div>
+    `;
+        
+        console.log(`🎨 생성된 HTML:`, htmlContent);
+        return htmlContent;
+    };
+
+
+
+
+
+
+
+
+
+    // 위험도 점수에 따른 레벨 반환
+    const getRiskLevel = (score) => {
+        if (score >= 8.0) return 'high';
+        if (score >= 6.0) return 'medium';
+        return 'low';
+    };
+
+    // 직접 위험도 InfoWindow 표시 (마커 클릭 이벤트 트리거 실패 시 대안)
+    const showRiskInfoWindowDirectly = (marker, riskData) => {
+        if (!mapRef.current || !marker || !riskData) {
+            console.log('❌ InfoWindow 직접 표시 실패: 조건 불충족');
+            return;
+        }
+        
+        console.log('🔄 InfoWindow 직접 표시 시도:', riskData);
+        
+        try {
+            const riskLevel = getRiskLevel(riskData.totalRiskScore);
+            const infoWindow = new window.naver.maps.InfoWindow({
+                content: `
+                    <div style="padding: 10px; min-width: 200px;">
+                        <h4 style="margin: 0 0 10px 0; color: ${riskMarkerTypes[riskLevel].color};">${riskMarkerTypes[riskLevel].icon} ${riskMarkerTypes[riskLevel].name}</h4>
+                        <p style="margin: 5px 0;"><strong>위험도 점수:</strong> ${riskData.totalRiskScore.toFixed(1)}/20.0</p>
+                        <p style="margin: 5px 0;"><strong>위치:</strong> ${riskData.address || '주소 정보 없음'}</p>
+                        <p style="margin: 5px 0;"><strong>상세:</strong> ${riskData.riskDetail || '상세 정보가 없습니다.'}</p>
+                    </div>
+                `,
+                backgroundColor: "#fff",
+                borderColor: riskMarkerTypes[riskLevel].color,
+                borderWidth: 2,
+                anchorSize: new window.naver.maps.Size(20, 20),
+                anchorColor: "#fff",
+                pixelOffset: new window.naver.maps.Point(0, -10)
+            });
+            
+            // 기존 InfoWindow가 있다면 닫기
+            if (window.currentRiskInfoWindow) {
+                window.currentRiskInfoWindow.close();
+            }
+            
+            // 새 InfoWindow 표시
+            infoWindow.open(mapRef.current, marker);
+            window.currentRiskInfoWindow = infoWindow;
+            
+            console.log('✅ InfoWindow 직접 표시 완료');
+        } catch (error) {
+            console.error('❌ InfoWindow 직접 표시 실패:', error);
+        }
+    };
+
+    // 위험도 마커를 찾아서 해당 위치로 이동하고 상세정보창 띄우기
+    const moveToRiskMarker = (lat, lon, riskData) => {
+        if (!mapRef.current) {
+            console.log('❌ 지도가 아직 준비되지 않음');
+            return;
+        }
+        
+        console.log('🎯 위험도 마커 위치로 이동:', { lat, lon, riskData });
+        console.log('🔍 현재 위험도 마커 개수:', riskMarkers.length);
+        
+        // 지도 중심을 해당 위치로 이동
+        const position = new window.naver.maps.LatLng(lat, lon);
+        mapRef.current.setCenter(position);
+        mapRef.current.setZoom(16); // 적절한 줌 레벨로 설정
+        
+        // 해당 위치의 위험도 마커 찾기 (더 정확한 좌표 비교)
+        const targetMarker = riskMarkers.find(marker => {
+            if (marker && marker.riskData) {
+                const markerLat = marker.riskData.coordinates?.lat || marker.riskData.lat;
+                const markerLon = marker.riskData.coordinates?.lon || marker.riskData.lon;
+                
+                console.log('🔍 마커 좌표 비교:', {
+                    marker: { lat: markerLat, lon: markerLon },
+                    target: { lat, lon },
+                    diff: { 
+                        lat: Math.abs(markerLat - lat), 
+                        lon: Math.abs(markerLon - lon) 
+                    }
+                });
+                
+                // 좌표 차이가 매우 작은 경우 (약 10미터 이내)
+                return Math.abs(markerLat - lat) < 0.0001 && Math.abs(markerLon - lon) < 0.0001;
+            }
+            return false;
+        });
+        
+        if (targetMarker) {
+            console.log('✅ 해당 위치의 위험도 마커 찾음, 상세정보창 표시');
+            console.log('🎯 찾은 마커:', targetMarker);
+            console.log('🎯 마커의 위험도 데이터:', targetMarker.riskData);
+            
+            // 약간의 지연 후 마커 클릭 이벤트 트리거 (지도 이동 완료 후)
+            setTimeout(() => {
+                try {
+                    console.log('🚀 마커 클릭 이벤트 트리거 시도');
+                    window.naver.maps.Event.trigger(targetMarker, 'click');
+                    console.log('✅ 마커 클릭 이벤트 트리거 완료');
+                } catch (error) {
+                    console.error('❌ 마커 클릭 이벤트 트리거 실패:', error);
+                    // 대안: 직접 InfoWindow 생성하여 표시
+                    showRiskInfoWindowDirectly(targetMarker, targetMarker.riskData);
+                }
+            }, 500);
+        } else {
+            console.log('⚠️ 해당 위치의 위험도 마커를 찾을 수 없음');
+            console.log('🔍 현재 위험도 마커들:', riskMarkers.map(marker => ({
+                hasData: !!marker.riskData,
+                coordinates: marker.riskData ? {
+                    lat: marker.riskData.coordinates?.lat || marker.riskData.lat,
+                    lon: marker.riskData.coordinates?.lon || marker.riskData.lon
+                } : null
+            })));
+        }
+    };
+
+    // 위험도 마커 추가 함수
+    const addRiskMarkers = (riskData) => {
+        console.log('🔍 위험도 마커 추가 시작:', riskData);
+        console.log('🔍 mapRef.current 상태:', !!mapRef.current);
+        console.log('🔍 riskData 상태:', !!riskData, riskData?.length);
+        
+        // 지도가 준비되지 않았다면 재시도
+        if (!mapRef.current) {
+            console.log('⏳ 지도가 아직 준비되지 않음, 1초 후 재시도');
+            setTimeout(() => {
+                addRiskMarkers(riskData);
+            }, 1000);
+            return;
+        }
+        
+        if (!riskData || riskData.length === 0) {
+            console.log('❌ 위험도 마커 추가 실패: 데이터 없음');
+            console.log('❌ riskData:', !!riskData);
+            console.log('❌ riskData.length:', riskData?.length);
+            return;
+        }
+
+        // 기존 위험도 마커 제거
+        riskMarkers.forEach(marker => {
+            if (marker && marker.setMap) {
+                marker.setMap(null);
+            }
+        });
+
+        const newRiskMarkers = [];
+
+        riskData.forEach((item, index) => {
+            console.log(`🔍 아이템 ${index + 1} 전체 데이터:`, item);
+            
+            // coordinates.lat, coordinates.lon 또는 직접 lat, lon 사용
+            const lat = item.coordinates?.lat || item.lat;
+            const lon = item.coordinates?.lon || item.lon;
+            
+            console.log(`📍 마커 ${index + 1}: lat=${lat}, lon=${lon}, score=${item.totalRiskScore}`);
+            console.log(`📍 coordinates 객체:`, item.coordinates);
+            
+            if (lat && lon) {
+                let riskLevel = 'low';
+                if (item.totalRiskScore >= 8.0) riskLevel = 'high';
+                else if (item.totalRiskScore >= 6.0) riskLevel = 'medium';
+
+                console.log(`🎯 마커 생성 시작: ${riskLevel} 레벨, 위치: (${lat}, ${lon})`);
+                
+                const marker = new window.naver.maps.Marker({
+                    position: new window.naver.maps.LatLng(lat, lon),
+                    map: null, // 초기에는 숨김 상태로 생성
+                    zIndex: 1000, // 위험도 마커를 다른 마커들 위에 표시
+                    icon: {
+                        content: createRiskMarkerContent(riskLevel),
+                        anchor: new window.naver.maps.Point(riskMarkerTypes[riskLevel].size.width / 2, riskMarkerTypes[riskLevel].size.height / 2)
+                    }
+                });
+                
+                console.log(`✅ 마커 생성 완료:`, marker);
+                console.log(`🗺️ 마커가 지도에 추가됨: map=${mapRef.current}, position=(${lat}, ${lon})`);
+
+                // 마커에 위험도 데이터 저장 (외부에서 접근 가능하도록)
+                marker.riskData = item;
+                
+                // 마커 클릭 시 위험도 정보 표시 (간단한 정보창)
+                window.naver.maps.Event.addListener(marker, 'click', () => {
+                    // 기존 InfoWindow가 있다면 닫기
+                    if (window.currentRiskInfoWindow) {
+                        window.currentRiskInfoWindow.close();
+                    }
+                    
+                    const infoWindow = new window.naver.maps.InfoWindow({
+                        content: `
+                            <div style="padding: 10px; min-width: 200px;">
+                                <h4 style="margin: 0 0 10px 0; color: ${riskMarkerTypes[riskLevel].color};">${riskMarkerTypes[riskLevel].icon} ${riskMarkerTypes[riskLevel].name}</h4>
+                                <p style="margin: 5px 0;"><strong>순위:</strong> #${index + 1}</p>
+                                <p style="margin: 5px 0;"><strong>위험도 점수:</strong> ${item.totalRiskScore.toFixed(1)}/20.0</p>
+                                <p style="margin: 5px 0;"><strong>위치:</strong> ${item.address || '주소 정보 없음'}</p>
+                                <p style="margin: 5px 0;"><strong>상세:</strong> ${item.riskDetail || '상세 정보가 없습니다.'}</p>
+                            </div>
+                        `,
+                        backgroundColor: "#fff",
+                        borderColor: riskMarkerTypes[riskLevel].color,
+                        borderWidth: 2,
+                        anchorSize: new window.naver.maps.Size(20, 20),
+                        anchorColor: "#fff",
+                        pixelOffset: new window.naver.maps.Point(0, -10)
+                    });
+                    
+                    // 새 InfoWindow 표시하고 전역 변수에 저장
+                    infoWindow.open(mapRef.current, marker);
+                    window.currentRiskInfoWindow = infoWindow;
+                });
+
+                newRiskMarkers.push(marker);
+                console.log(`📌 마커 ${index + 1} 배열에 추가됨`);
+            } else {
+                console.log(`❌ 마커 ${index + 1} 좌표 없음: lat=${lat}, lon=${lon}`);
+            }
+        });
+
+        console.log(`✅ 위험도 마커 생성 완료: ${newRiskMarkers.length}개`);
+        console.log(`🗺️ 지도에 표시될 마커들:`, newRiskMarkers);
+        setRiskMarkers(newRiskMarkers);
+
+        // 현재 필터 상태에 따라 위험도 마커 표시/숨김 결정
+        setTimeout(() => {
+            console.log('🔍 위험도 마커 생성 후 필터 상태 확인:', filterType);
+            newRiskMarkers.forEach(marker => {
+                if (marker && marker.setMap) {
+                    if (filterType === 'all' || filterType === 'risk') {
+                        console.log('✅ 위험도 마커 표시 (생성 후)');
+                        marker.setMap(mapRef.current);
+                    } else {
+                        console.log('❌ 위험도 마커 숨김 (생성 후)');
+                        marker.setMap(null);
+                    }
+                }
+            });
+        }, 100);
     };
 
     // ✅ 수정된 addMarker 함수
@@ -499,13 +888,22 @@ const NaverMap = ({ onMarkerClick }) => {
 
             fetchMarkers(map);
 
+            // 지도 초기화 완료 후 위험도 마커가 있다면 추가
+            if (showRiskMarkers && riskData && riskData.length > 0) {
+                console.log('🗺️ 지도 초기화 완료 후 위험도 마커 추가');
+                setTimeout(() => {
+                    addRiskMarkers(riskData);
+                }, 500); // 마커 로딩 후 위험도 마커 추가
+            }
+
             window.naver.maps.Event.addListener(map, 'click', (e) => {
                 console.log('지도 클릭됨:', e.coord.y, e.coord.x, '편집모드:', isEditingRef.current);
 
                 setLat(e.coord.y);
                 setLon(e.coord.x);
 
-                if (isEditingRef.current) {
+                // 편집 모드일 때 마커 추가 (위험도 마커 모드가 아닐 때만)
+                if (isEditingRef.current && !showRiskMarkers) {
                     addMarker(e.coord.y, e.coord.x, selectedMarkerTypeRef.current);
                 }
             });
@@ -650,6 +1048,7 @@ const NaverMap = ({ onMarkerClick }) => {
                 style={{ width: "100%", height: "100%", borderRadius: "10px" }}
             ></div>
 
+            {/* 편집 모드 버튼 - 항상 표시 */}
             <button
                 onClick={handleToggleEditing}
                 style={{
@@ -668,6 +1067,7 @@ const NaverMap = ({ onMarkerClick }) => {
                 {isEditing ? '편집 완료' : '편집 모드'}
             </button>
 
+            {/* 마커 타입 필터링 - 항상 표시 */}
             <div style={{
                 position: 'absolute',
                 top: '10px',
@@ -713,7 +1113,7 @@ const NaverMap = ({ onMarkerClick }) => {
                 ))}
             </div>
 
-            {isEditing && (
+            {isEditing && !showRiskMarkers && (
                 <div style={{
                     position: 'absolute',
                     top: '60px',
@@ -769,7 +1169,7 @@ const NaverMap = ({ onMarkerClick }) => {
                 </div>
             )}
 
-            {isEditing && filteredMarkers.length > 0 && (
+            {isEditing && !showRiskMarkers && filteredMarkers.length > 0 && (
                 <div style={{
                     position: 'absolute',
                     bottom: '10px',
@@ -822,7 +1222,7 @@ const NaverMap = ({ onMarkerClick }) => {
                 </div>
             )}
 
-            {isEditing && markers.length === 0 && (
+            {isEditing && !showRiskMarkers && markers.length === 0 && (
                 <div style={{
                     position: 'absolute',
                     bottom: '10px',
@@ -840,19 +1240,42 @@ const NaverMap = ({ onMarkerClick }) => {
                 </div>
             )}
 
-            <div style={{
-                position: 'absolute',
-                top: '10px',
-                left: '10px',
-                zIndex: 100,
-                backgroundColor: 'rgba(0,0,0,0.5)',
-                color: 'white',
-                padding: '5px 10px',
-                borderRadius: '4px',
-                fontSize: '11px'
-            }}>
-                편집모드: {isEditing ? 'ON' : 'OFF'} | 마커: {markers.length}개
-            </div>
+            {/* 편집 모드 상태 표시 - 위험도 마커 모드가 아닐 때만 표시 */}
+            {!showRiskMarkers && (
+                <div style={{
+                    position: 'absolute',
+                    top: '10px',
+                    left: '10px',
+                    zIndex: 100,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    color: 'white',
+                    padding: '5px 10px',
+                    borderRadius: '4px',
+                    fontSize: '11px'
+                }}>
+                    편집모드: {isEditing ? 'ON' : 'OFF'} | 마커: {markers.length}개
+                </div>
+            )}
+
+            {/* 위험도 마커 모드일 때 표시할 정보 */}
+            {showRiskMarkers && (
+                <div style={{
+                    position: 'absolute',
+                    top: '10px',
+                    left: '10px',
+                    zIndex: 100,
+                    backgroundColor: 'rgba(0,0,0,0.7)',
+                    color: 'white',
+                    padding: '10px 15px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                }}>
+                    🗺️ 위험도 마커 모드 | 총 {riskData?.length || 0}개 구간
+                </div>
+            )}
+
+
         </div>
     );
 };
