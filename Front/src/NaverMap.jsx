@@ -178,6 +178,28 @@ const NaverMap = ({ onMarkerClick }) => {
         }
     };
 
+    // 위험도 랭킹 클릭 시 지도 이동 이벤트 핸들러
+    const handleMoveToRiskLocation = (event) => {
+        const { lat, lon, message, level, riskDetail, totalRiskScore } = event.detail;
+        console.log('🎯 위험도 위치 이동 이벤트 수신:', lat, lon, message, level);
+        
+        if (mapRef.current) {
+            const newPosition = new window.naver.maps.LatLng(lat, lon);
+            mapRef.current.setCenter(newPosition);
+            mapRef.current.setZoom(15); // 줌 레벨을 15로 설정하여 상세 보기
+            
+            // 기존 알림 마커 제거
+            removeAlertMarker();
+            
+            // 새로운 위험도 정보 마커 생성
+            createRiskInfoMarker(lat, lon, message, level, riskDetail, totalRiskScore);
+            
+            console.log('✅ 위험도 위치 이동 및 정보 마커 생성 완료:', lat, lon);
+        } else {
+            console.warn('⚠️ 지도 객체가 아직 초기화되지 않았습니다.');
+        }
+    };
+
     // 알림 마커 생성 함수
     const createAlertMarker = (lat, lon, message, level) => {
         if (!mapRef.current) return;
@@ -194,13 +216,15 @@ const NaverMap = ({ onMarkerClick }) => {
                 box-shadow: 0 4px 12px rgba(0,0,0,0.3);
                 border: 2px solid white;
                 max-width: 200px;
-                word-wrap: break-word;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
                 text-align: center;
                 position: relative;
                 margin-bottom: 15px;
             ">
                 <div style="margin-bottom: 4px;">${getAlertIcon(level)}</div>
-                <div style="font-size: 10px; opacity: 0.9;">${message}</div>
+                <div style="font-size: 10px; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${message}</div>
                 <div style="
                     position: absolute;
                     bottom: -8px;
@@ -216,13 +240,12 @@ const NaverMap = ({ onMarkerClick }) => {
             <div style="
                 width: 20px;
                 height: 20px;
-                background: ${getAnchorMarkerColor(level)};
+                background: ${getAlertMarkerColor(level).split(',')[0]};
                 border-radius: 50%;
                 border: 3px solid white;
                 box-shadow: 0 2px 8px rgba(0,0,0,0.3);
                 position: relative;
                 margin: 0 auto;
-                animation: pulse 2s infinite;
             ">
                 <div style="
                     position: absolute;
@@ -233,7 +256,7 @@ const NaverMap = ({ onMarkerClick }) => {
                     height: 0;
                     border-left: 8px solid transparent;
                     border-right: 8px solid transparent;
-                    border-top: 15px solid ${getAnchorMarkerColor(level)};
+                    border-top: 15px solid ${getAlertMarkerColor(level).split(',')[0]};
                 "></div>
             </div>
             <style>
@@ -277,6 +300,104 @@ const NaverMap = ({ onMarkerClick }) => {
         }, 10000);
 
         console.log('✅ 알림 마커 생성 완료:', message);
+    };
+
+    // 위험도 정보 마커 생성 함수
+    const createRiskInfoMarker = (lat, lon, message, level, riskDetail, totalRiskScore) => {
+        if (!mapRef.current) return;
+
+        // 위험도 정보 마커 HTML 생성
+        const riskMarkerContent = `
+            <div style="
+                background: linear-gradient(135deg, ${getAlertMarkerColor(level)});
+                border-radius: 8px;
+                padding: 12px 16px;
+                color: white;
+                font-size: 12px;
+                font-weight: 600;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                border: 2px solid white;
+                max-width: 250px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                text-align: center;
+                position: relative;
+                margin-bottom: 15px;
+            ">
+                <div style="margin-bottom: 6px; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🚨 위험도 정보</div>
+                <div style="margin-bottom: 4px; font-size: 11px; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${message}</div>
+                <div style="
+                    margin-top: 8px;
+                    padding: 6px 8px;
+                    background: rgba(255, 255, 255, 0.2);
+                    border-radius: 4px;
+                    font-size: 10px;
+                    line-height: 1.3;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                ">${riskDetail}</div>
+                <div style="
+                    position: absolute;
+                    bottom: -8px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 0;
+                    height: 0;
+                    border-left: 8px solid transparent;
+                    border-right: 8px solid transparent;
+                    border-top: 8px solid ${getAlertMarkerColor(level)};
+                "></div>
+            </div>
+            <div style="
+                width: 20px;
+                height: 20px;
+                background: ${getAlertMarkerColor(level).split(',')[0]};
+                border-radius: 50%;
+                border: 3px solid white;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                position: relative;
+                margin: 0 auto;
+                animation: pulse 2s infinite;
+            ">
+                <div style="
+                    position: absolute;
+                    bottom: -15px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 0;
+                    height: 0;
+                    border-left: 8px solid transparent;
+                    border-right: 8px solid transparent;
+                    border-top: 15px solid ${getAlertMarkerColor(level).split(',')[0]};
+                "></div>
+            </div>
+        `;
+
+        // 위험도 정보 마커 생성
+        const newRiskMarker = new window.naver.maps.Marker({
+            position: new window.naver.maps.LatLng(lat, lon),
+            map: mapRef.current,
+            icon: {
+                content: riskMarkerContent,
+                anchor: new window.naver.maps.Point(125, 40) // 마커 중앙 하단에 위치
+            }
+        });
+
+        // 위험도 정보 마커 상태 업데이트
+        setAlertMarker(newRiskMarker);
+        alertMarkerRef.current = newRiskMarker;
+
+        // 15초 후 자동으로 위험도 정보 마커 제거
+        setTimeout(() => {
+            if (alertMarkerRef.current === newRiskMarker) {
+                removeAlertMarker();
+                console.log('⏰ 위험도 정보 마커 자동 제거 완료');
+            }
+        }, 15000);
+
+        console.log('✅ 위험도 정보 마커 생성 완료:', message);
     };
 
     // 알림 마커 제거 함수
@@ -341,14 +462,17 @@ const NaverMap = ({ onMarkerClick }) => {
     const setupEventListeners = () => {
         // 기존 이벤트 리스너 제거
         window.removeEventListener('moveToLocation', handleMoveToLocation);
+        window.removeEventListener('moveToRiskLocation', handleMoveToRiskLocation);
         // 새로운 이벤트 리스너 등록
         window.addEventListener('moveToLocation', handleMoveToLocation);
+        window.addEventListener('moveToRiskLocation', handleMoveToRiskLocation);
         console.log('✅ 지도 이동 이벤트 리스너 등록 완료');
     };
 
     // 이벤트 리스너 정리 함수
     const cleanupEventListeners = () => {
         window.removeEventListener('moveToLocation', handleMoveToLocation);
+        window.removeEventListener('moveToRiskLocation', handleMoveToRiskLocation);
         console.log('✅ 지도 이동 이벤트 리스너 정리 완료');
     };
 

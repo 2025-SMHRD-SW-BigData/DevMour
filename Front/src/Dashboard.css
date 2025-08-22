@@ -14,12 +14,12 @@ body, html, #root {
     "header header header"
     "left main right";
   /* 좌우 너비는 유동적으로, 좌/우측 패널은 고정 */
-  grid-template-columns: 250px 1fr 300px;
+  grid-template-columns: 300px 1fr 300px;
   /* 위아래 높이를 고정하여 화면을 꽉 채움 */
   grid-template-rows: 60px 1fr;
   width: 100%;
   height: 100%;
-  gap: 20px;
+  gap: 15px;
   padding: 20px;
   box-sizing: border-box;
   background-color: #f0f2f5;
@@ -45,27 +45,27 @@ body, html, #root {
   grid-area: left;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 5px;
 }
 
 .right-panel {
   grid-area: right;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 5px;
 }
 
 .main {
   grid-area: main;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 5px;
 }
 
 /* 공통 카드 스타일 */
 .card {
   background-color: #ffffff;
-  padding: 20px;
+  padding: 5px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
@@ -73,8 +73,8 @@ body, html, #root {
 .card h3 {
   margin-top: 0;
   border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
-  margin-bottom: 15px;
+  padding-bottom: 5px;
+  margin-bottom: 5px;
   color: #333;
 }
 
@@ -108,7 +108,7 @@ body, html, #root {
 .weather-info {
   width: 100%;
   max-width: 800px;
-  margin: 20px auto;
+  margin: 10px auto;
   padding: 20px;
   border: 1px solid #ccc;
   border-radius: 12px;
@@ -143,16 +143,22 @@ body, html, #root {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background-color: #3498db;
-  color: #ffffff;
-  font-size: 3em;
-  font-weight: bold;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
   display: flex;
-  justify-content: center;
   align-items: center;
-  margin: 10px auto;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  animation: pulse 2s infinite ease-in-out;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: bold;
+  margin: 20px auto;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+  border: 4px solid white;
+  transition: all 0.3s ease;
+}
+
+.score-circle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
 }
 
 /* 맥박 뛰는 효과 */
@@ -240,28 +246,28 @@ body, html, #root {
 
 /* 상세보기 버튼 스타일 */
 .detail-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
-    margin-top: 10px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  align-self: flex-start;
+  margin-top: 0;
 }
 
 .detail-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .detail-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 /* 모바일 반응형 디자인 */
@@ -275,4 +281,318 @@ body, html, #root {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto auto;
   }
+}
+
+/* 위험도 랭킹 스타일 */
+.risk-rankings {
+  margin: 10px 0;
+}
+
+.risk-ranking-item {
+  background: white;
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 1px;
+  border: 2px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  cursor: pointer;
+}
+
+.risk-ranking-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  border-color: #007bff;
+  background: #f8f9fa;
+}
+
+.risk-ranking-item:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.risk-ranking-item:last-child {
+  margin-bottom: 0;
+}
+
+.ranking-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.ranking-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ranking-address {
+  font-size: 13px;
+  color: #495057;
+  margin-bottom: 8px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.ranking-detail {
+  font-size: 11px;
+  color: #6c757d;
+  line-height: 1.4;
+  background: #f8f9fa;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border-left: 3px solid #007bff;
+}
+
+.risk-score-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+  border: 3px solid white;
+}
+
+/* 위험도 점수별 색상 */
+.risk-ranking-item:nth-child(1) .risk-score-circle {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+.risk-ranking-item:nth-child(2) .risk-score-circle {
+  background: linear-gradient(135deg, #ff9f43, #f39c12);
+  box-shadow: 0 2px 8px rgba(255, 159, 67, 0.3);
+}
+
+.risk-ranking-item:nth-child(3) .risk-score-circle {
+  background: linear-gradient(135deg, #feca57, #ff9ff3);
+  box-shadow: 0 2px 8px rgba(254, 202, 87, 0.3);
+}
+
+/* 종합 위험도 점수 카드 스타일 */
+.risk-score-circle {
+  transition: all 0.3s ease;
+  animation: fadeIn 0.5s ease-in;
+}
+
+.risk-score-circle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3) !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 전년도 동기간 대비 카드 스타일 */
+.comparison-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+
+.comparison-item:last-child {
+  border-bottom: none;
+}
+
+.comparison-item span:first-child {
+  color: #666;
+  font-weight: 500;
+}
+
+.trend {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.trend.up {
+  color: #e74c3c;
+}
+
+.trend.down {
+  color: #27ae60;
+}
+
+.comparison-section {
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+}
+
+.comparison-section:last-child {
+  margin-bottom: 0;
+}
+
+/* 수직 바 차트 스타일 */
+.bar-chart-container {
+  margin: 15px 0;
+}
+
+.bar-chart {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 120px;
+  padding: 0 10px;
+}
+
+.bar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  max-width: 80px;
+}
+
+.bar-label {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.bar-wrapper {
+  width: 100%;
+  height: 80px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.bar {
+  width: 30px;
+  min-height: 8px;
+  border-radius: 4px 4px 0 0;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.bar.last-year {
+  background: linear-gradient(to top, #95a5a6, #7f8c8d);
+  box-shadow: 0 2px 4px rgba(127, 140, 141, 0.3);
+}
+
+.bar.current-year {
+  background: linear-gradient(to top, #3498db, #2980b9);
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+}
+
+.bar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.bar-value {
+  font-size: 12px;
+  font-weight: bold;
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.bar-score {
+  font-size: 10px;
+  color: #7f8c8d;
+  text-align: center;
+}
+
+/* 컴팩트 비교 행 스타일 */
+.comparison-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.comparison-item-compact {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+}
+
+/* 컴팩트 바 차트 스타일 */
+.bar-chart-container-compact {
+  margin: 25px 0 10px 0;
+}
+
+.bar-chart-compact {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 80px;
+  padding: 0 8px;
+}
+
+.bar-group-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  max-width: 60px;
+}
+
+.bar-label-compact {
+  font-size: 10px;
+  color: #666;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.bar-wrapper-compact {
+  width: 100%;
+  height: 50px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.bar-compact {
+  width: 24px;
+  min-height: 6px;
+  border-radius: 3px 3px 0 0;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.bar-compact:hover {
+  transform: scale(1.05);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.bar-value-compact {
+  font-size: 10px;
+  font-weight: bold;
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 1px;
+}
+
+.bar-score-compact {
+  font-size: 9px;
+  color: #7f8c8d;
+  text-align: center;
 }
