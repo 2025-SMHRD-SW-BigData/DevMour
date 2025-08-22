@@ -23,14 +23,14 @@ app.use(cors());
 app.use(express.json()); 
 app.use(bodyParser.json());
 
-// 날씨 라우터 연결 추가
-const weatherRouter = require('./router/weather')
+// 마커 관련 라우터
+app.use('/api/marker', require('./router/marker'));
 
-// 마커 업데이트 라우터 연결
-app.use('/api/marker', markerRouter);
+// 알림 관련 라우터
+app.use('/api/alert', require('./router/alert'));
 
-// 날씨 라우터 연결
-app.use('/weather', weatherRouter);
+// 기상 관련 라우터
+app.use('/api/weather', require('./router/weather'));
 
 // 보고서 생성 라우터 연결
 const reportRouter = require('./router/report');
@@ -44,10 +44,6 @@ app.get('/', (req, res) => {
     message: 'Weather API Server',
     version: '1.0.0'
   });
-});
-
-app.listen(3001, () => {
-    console.log('서버가 3001번 포트에서 실행 중입니다.');
 });
 
 // 서버 시작

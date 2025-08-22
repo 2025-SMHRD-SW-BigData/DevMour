@@ -11,6 +11,8 @@ const NaverMap = ({ onMarkerClick }) => {
     const [markers, setMarkers] = useState([]);
     const markersRef = useRef([]);
     const [filterType, setFilterType] = useState('all');
+    const [alertMarker, setAlertMarker] = useState(null);
+    const alertMarkerRef = useRef(null);
 
     const { lat, setLat, lon, setLon } = useContext(InfoContext);
 
@@ -154,6 +156,202 @@ const NaverMap = ({ onMarkerClick }) => {
         setMarkers([]);
     };
 
+    // 알림 클릭 시 지도 이동 이벤트 핸들러
+    const handleMoveToLocation = (event) => {
+        const { lat, lon, message, level } = event.detail;
+        console.log('🎯 지도 이동 이벤트 수신:', lat, lon, message, level);
+        
+        if (mapRef.current) {
+            const newPosition = new window.naver.maps.LatLng(lat, lon);
+            mapRef.current.setCenter(newPosition);
+            mapRef.current.setZoom(15); // 줌 레벨을 15로 설정하여 상세 보기
+            
+            // 기존 알림 마커 제거
+            removeAlertMarker();
+            
+            // 새로운 알림 마커 생성
+            createAlertMarker(lat, lon, message, level);
+            
+            console.log('✅ 지도 이동 및 알림 마커 생성 완료:', lat, lon);
+        } else {
+            console.warn('⚠️ 지도 객체가 아직 초기화되지 않았습니다.');
+        }
+    };
+
+    // 알림 마커 생성 함수
+    const createAlertMarker = (lat, lon, message, level) => {
+        if (!mapRef.current) return;
+
+        // 알림 마커 HTML 생성
+        const alertMarkerContent = `
+            <div style="
+                background: linear-gradient(135deg, ${getAlertMarkerColor(level)});
+                border-radius: 8px;
+                padding: 8px 12px;
+                color: white;
+                font-size: 12px;
+                font-weight: 600;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                border: 2px solid white;
+                max-width: 200px;
+                word-wrap: break-word;
+                text-align: center;
+                position: relative;
+                margin-bottom: 15px;
+            ">
+                <div style="margin-bottom: 4px;">${getAlertIcon(level)}</div>
+                <div style="font-size: 10px; opacity: 0.9;">${message}</div>
+                <div style="
+                    position: absolute;
+                    bottom: -8px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 0;
+                    height: 0;
+                    border-left: 8px solid transparent;
+                    border-right: 8px solid transparent;
+                    border-top: 8px solid ${getAlertMarkerColor(level)};
+                "></div>
+            </div>
+            <div style="
+                width: 20px;
+                height: 20px;
+                background: ${getAnchorMarkerColor(level)};
+                border-radius: 50%;
+                border: 3px solid white;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                position: relative;
+                margin: 0 auto;
+                animation: pulse 2s infinite;
+            ">
+                <div style="
+                    position: absolute;
+                    bottom: -15px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 0;
+                    height: 0;
+                    border-left: 8px solid transparent;
+                    border-right: 8px solid transparent;
+                    border-top: 15px solid ${getAnchorMarkerColor(level)};
+                "></div>
+            </div>
+            <style>
+                @keyframes pulse {
+                    0% {
+                        transform: scale(1);
+                        opacity: 1;
+                    }
+                    50% {
+                        transform: scale(1.1);
+                        opacity: 0.8;
+                    }
+                    100% {
+                        transform: scale(1);
+                        opacity: 1;
+                    }
+                }
+            </style>
+        `;
+
+        // 알림 마커 생성
+        const newAlertMarker = new window.naver.maps.Marker({
+            position: new window.naver.maps.LatLng(lat, lon),
+            map: mapRef.current,
+            icon: {
+                content: alertMarkerContent,
+                anchor: new window.naver.maps.Point(100, 35) // 마커 중앙 하단에 위치 (앵커 마커 고려)
+            }
+        });
+
+        // 알림 마커 상태 업데이트
+        setAlertMarker(newAlertMarker);
+        alertMarkerRef.current = newAlertMarker;
+
+        // 10초 후 자동으로 알림 마커 제거
+        setTimeout(() => {
+            if (alertMarkerRef.current === newAlertMarker) {
+                removeAlertMarker();
+                console.log('⏰ 알림 마커 자동 제거 완료');
+            }
+        }, 10000);
+
+        console.log('✅ 알림 마커 생성 완료:', message);
+    };
+
+    // 알림 마커 제거 함수
+    const removeAlertMarker = () => {
+        if (alertMarkerRef.current) {
+            alertMarkerRef.current.setMap(null);
+            alertMarkerRef.current = null;
+        }
+        setAlertMarker(null);
+        console.log('✅ 알림 마커 제거 완료');
+    };
+
+    // 알림 레벨에 따른 색상 반환
+    const getAlertMarkerColor = (level) => {
+        switch (level) {
+            case '매우 위험':
+                return '#ff6b6b, #ee5a24';
+            case '위험':
+                return '#ff9f43, #f39c12';
+            case '경고':
+                return '#feca57, #ff9ff3';
+            case '안전':
+                return '#2ecc71, #27ae60';
+            default:
+                return '#feca57, #ff9ff3';
+        }
+    };
+
+    // 앵커 마커 색상 반환 (단일 색상)
+    const getAnchorMarkerColor = (level) => {
+        switch (level) {
+            case '매우 위험':
+                return '#e74c3c';
+            case '위험':
+                return '#e67e22';
+            case '경고':
+                return '#f39c12';
+            case '안전':
+                return '#27ae60';
+            default:
+                return '#f39c12';
+        }
+    };
+
+    // 알림 레벨에 따른 아이콘 반환
+    const getAlertIcon = (level) => {
+        switch (level) {
+            case '매우 위험':
+                return '🚨';
+            case '위험':
+                return '⚠️';
+            case '경고':
+                return '⚠️';
+            case '안전':
+                return '✅';
+            default:
+                return '⚠️';
+        }
+    };
+
+    // 이벤트 리스너 등록 함수
+    const setupEventListeners = () => {
+        // 기존 이벤트 리스너 제거
+        window.removeEventListener('moveToLocation', handleMoveToLocation);
+        // 새로운 이벤트 리스너 등록
+        window.addEventListener('moveToLocation', handleMoveToLocation);
+        console.log('✅ 지도 이동 이벤트 리스너 등록 완료');
+    };
+
+    // 이벤트 리스너 정리 함수
+    const cleanupEventListeners = () => {
+        window.removeEventListener('moveToLocation', handleMoveToLocation);
+        console.log('✅ 지도 이동 이벤트 리스너 정리 완료');
+    };
+
     useEffect(() => {
         const script = document.createElement("script");
         const newClientId = "se9uk5m3m9";
@@ -188,6 +386,9 @@ const NaverMap = ({ onMarkerClick }) => {
                 }
             });
 
+            // 이벤트 리스너 등록
+            setupEventListeners();
+
             console.log('네이버 지도 초기화 완료');
         };
 
@@ -198,9 +399,16 @@ const NaverMap = ({ onMarkerClick }) => {
         document.head.appendChild(script);
 
         return () => {
-            if (document.head.contains(script)) {
-                document.head.removeChild(script);
-            }
+            // 이벤트 리스너 정리
+            cleanupEventListeners();
+        };
+    }, []);
+
+    // 컴포넌트 언마운트 시 이벤트 리스너 정리
+    useEffect(() => {
+        return () => {
+            cleanupEventListeners();
+            removeAlertMarker();
         };
     }, []);
 

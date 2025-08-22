@@ -72,11 +72,47 @@ POST /api/marker/updatemarker
 }
 ```
 
-### 날씨 관련 API
+### 알림 관련 API
+
+#### `GET /api/alert/recent`
+최근 알림 5개를 조회합니다.
+
+**응답 예시:**
+```json
+{
+  "alerts": [
+    {
+      "id": 1,
+      "message": "장한로 구간 위험도 급상승 - 즉시 현장 확인 필요",
+      "level": "매우 위험",
+      "sentAt": "2024-01-20T10:30:00.000Z",
+      "isRead": false,
+      "recipientType": "admin",
+      "predIdx": 1,
+      "roadIdx": 101
+    }
+  ]
+}
 ```
-GET /weather
+
+#### `GET /api/alert/location/:alertId`
+특정 알림의 위치 정보를 조회합니다.
+
+**응답 예시:**
+```json
+{
+  "alertId": 1,
+  "lat": 37.5665,
+  "lon": 127.0018,
+  "anomalyType": "포트홀",
+  "severityLevel": "위험"
+}
 ```
-- 날씨 정보를 제공합니다.
+
+### 기상 관련 API
+
+#### `GET /weather`
+현재 날씨 정보를 조회합니다.
 
 ### 보고서 생성 API
 ```
