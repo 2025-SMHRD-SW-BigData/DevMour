@@ -21,60 +21,30 @@ node server.js
 
 ## API 엔드포인트
 
-### 마커 관련 API
+### 1. 마커 관련 API (`/api/marker`)
 
-#### 1. 모든 마커 정보 조회
-```
-GET /api/marker/allmarkers
-```
-- 모든 마커의 기본 정보를 반환합니다.
-
-#### 2. 마커 상세 정보 조회
-```
-GET /api/marker/detail/:markerId
-```
-- 특정 마커의 상세 정보를 반환합니다.
-- 마커 타입에 따라 CCTV, 공사, 침수 정보를 함께 반환합니다.
+#### `GET /detail/:markerId`
+마커의 상세 정보를 조회합니다.
 
 **응답 예시:**
 ```json
 {
-  "marker": {
+  "success": true,
+  "data": {
     "marker_id": 1,
-    "lat": 37.4979,
-    "lon": 127.0276,
     "marker_type": "cctv",
-    "cctv_idx": 1
-  },
-  "detail": {
-    "cctv_idx": 1,
-    "cctv_name": "강남역 CCTV-01",
-    "lat": 37.4979,
-    "lon": 127.0276,
-    "cctv_status": "A",
-    "cctv_url": "http://example.com/cctv1/stream"
+    "lat": 37.5665,
+    "lon": 127.0018,
+    "cctv_name": "강남대로 CCTV",
+    "cctv_status": "Y",
+    "cctv_url": "http://example.com/stream"
   }
 }
 ```
 
-#### 3. 마커 정보 저장
-```
-POST /api/marker/updatemarker
-```
-- 새로운 마커 정보를 데이터베이스에 저장합니다.
+### 2. 알림 관련 API (`/api/alert`)
 
-**요청 본문:**
-```json
-{
-  "lat": 37.4979,
-  "lon": 127.0276,
-  "marker_type": "cctv"
-}
-```
-
-### 알림 관련 API
-
-#### `GET /api/alert/recent`
+#### `GET /recent`
 최근 알림 5개를 조회합니다.
 
 **응답 예시:**
@@ -83,20 +53,18 @@ POST /api/marker/updatemarker
   "alerts": [
     {
       "id": 1,
-      "message": "장한로 구간 위험도 급상승 - 즉시 현장 확인 필요",
+      "message": "강남대로 구간 위험도 급상승",
       "level": "매우 위험",
-      "sentAt": "2024-01-20T10:30:00.000Z",
-      "isRead": false,
+      "sentAt": "2024-01-15T10:30:00Z",
       "recipientType": "admin",
-      "predIdx": 1,
-      "roadIdx": 101
+      "isRead": false
     }
   ]
 }
 ```
 
-#### `GET /api/alert/location/:alertId`
-특정 알림의 위치 정보를 조회합니다.
+#### `GET /location/:alertId`
+알림의 위치 정보를 조회합니다.
 
 **응답 예시:**
 ```json
@@ -106,6 +74,65 @@ POST /api/marker/updatemarker
   "lon": 127.0018,
   "anomalyType": "포트홀",
   "severityLevel": "위험"
+}
+```
+
+### 3. 위험도 관련 API (`/api/risk`)
+
+#### `GET /ranking`
+위험도 랭킹 TOP 3를 조회합니다.
+
+**응답 예시:**
+```json
+{
+  "riskRankings": [
+    {
+      "rank": 1,
+      "predIdx": 1,
+      "totalRiskScore": 8.5,
+      "riskDetail": "도로 표면 균열 및 포트홀 발생",
+      "address": "서울특별시 강남구 테헤란로 123번길",
+      "coordinates": {
+        "lat": 37.5665,
+        "lon": 127.0018
+      }
+    }
+  ]
+}
+```
+
+#### `GET /average`
+전체 위험도 점수의 평균값을 조회합니다.
+
+**응답 예시:**
+```json
+{
+  "averageScore": 6.8,
+  "maxScore": 20.0
+}
+```
+
+#### `GET /citizen-report/stats`
+민원 신고의 처리 상태별 통계를 조회합니다.
+
+**응답 예시:**
+```json
+{
+  "completedCount": 15,
+  "pendingCount": 8,
+  "totalCount": 23
+}
+```
+
+#### `GET /road-construction/stats`
+도로 보수공사의 완료 상태별 통계를 조회합니다.
+
+**응답 예시:**
+```json
+{
+  "completedCount": 12,
+  "inProgressCount": 6,
+  "totalCount": 18
 }
 ```
 
