@@ -22,6 +22,7 @@ let conn = mysql.createConnection({
 app.use(cors());         
 app.use(express.json()); 
 app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
 
 // 마커 관련 라우터
 app.use('/api/marker', require('./router/marker'));
