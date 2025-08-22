@@ -362,4 +362,97 @@
     background-color: #F44336;
 }
 
+/* CCTV 비디오 플레이어 스타일 */
+.video-player-container {
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.video-player-container video {
+    width: 100%;
+    height: auto;
+    max-height: 450px;
+    min-height: 300px;
+    background-color: #000;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 새창 스트리밍 링크 스타일 */
+.streaming-link-container {
+    text-align: center;
+    margin-top: 20px;
+    padding: 15px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.streaming-link {
+    display: inline-block;
+    color: #007bff;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 12px 24px;
+    border: 2px solid #007bff;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    background: transparent;
+}
+
+.streaming-link:hover {
+    background: #007bff;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
+}
+
+/* 비디오 로딩 상태 */
+.video-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 8px;
+    color: white;
+}
+
+.video-loading .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 반응형 비디오 플레이어 */
+@media (max-width: 768px) {
+    .video-player-container {
+        padding: 15px;
+    }
+    
+    .video-player-container video {
+        max-height: 350px;
+        min-height: 250px;
+    }
+    
+    .streaming-link {
+        font-size: 14px;
+        padding: 10px 20px;
+    }
+}
+
 

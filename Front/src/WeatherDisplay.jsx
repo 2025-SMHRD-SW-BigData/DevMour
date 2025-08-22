@@ -12,6 +12,11 @@ const WeatherDisplay = ({}) => {
     const defaultLat = 35.159983;
     const defaultLon = 126.8513092;
     
+    // 🔥 디버깅 로그 추가
+    console.log('🔍 Context에서 받은 값:', { lat, lon });
+    console.log('🔍 기본값:', { defaultLat, defaultLon });
+    
+
     // Context에서 받은 좌표가 없으면 기본값 사용
     const currentLat = lat || defaultLat;
     const currentLon = lon || defaultLon;
@@ -22,7 +27,7 @@ const WeatherDisplay = ({}) => {
     try {
         console.log('DB에 날씨 데이터 저장 중...', { lat, lon, weatherData });
             
-        const response = await fetch('http://localhost:3001/weather/save_weather', {
+        const response = await fetch('http://localhost:3001/api/weather/save_weather', {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json'
@@ -54,11 +59,15 @@ const fetchAddressData = async (lat, lon) => {
  try {
     console.log(`주소 API 호출 중: 위도=${lat} 경도=${lon}`);
             
-    const response = await fetch(`http://localhost:3001/weather/reverse?lat=${lat}&lon=${lon}`);
+    const response = await fetch(`http://localhost:3001/api/weather/reverse?lat=${lat}&lon=${lon}`);
     const result = await response.json();
             
+    console.log('🔍 API 전체 응답:', result);
+
       if (result.success) {
         console.log('주소 데이터:', result.data);
+        console.log('🔍 받은 주소:', result.data.address.full);
+
         setAddressData(result.data);
       } else {
         console.log('주소 변환 실패:', result.error);
@@ -80,7 +89,7 @@ setLoading(true);
     try {
       console.log(`날씨 API 호출 중 : 위도=${lat} 경도=${lon}`)
 
-      const response = await fetch(`http://localhost:3001/weather/weather?lat=${lat}&lon=${lon}`);
+      const response = await fetch(`http://localhost:3001/api/weather/weather?lat=${lat}&lon=${lon}`);
       const result = await response.json();
       
       if (result.success) {

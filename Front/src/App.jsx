@@ -12,11 +12,17 @@ import ComparisonDetail from "./pages/ComparisonDetail";
 import AlertDetail from "./pages/AlertDetail";
 
 function App() {
-    const [lat, setLat] = useState();
-    const [lon, setLon] = useState();
+    const [lat, setLat] = useState(35.159983);
+    const [lon, setLon] = useState(126.8513092);
+
+    // 위치 업데이트 함수
+    const updateLocation = (newLat, newLon) => {
+        setLat(newLat);
+        setLon(newLon);
+    };
 
     return(
-        <InfoContext.Provider value = {{lat, setLat, lon, setLon}}>
+        <InfoContext.Provider value = {{lat, setLat, lon, setLon, updateLocation}}>
             <Routes>
                 <Route path = '/' element={<Dashboard></Dashboard>}></Route>
                 <Route path = '/navermap' element = {<NaverMap></NaverMap>}></Route>

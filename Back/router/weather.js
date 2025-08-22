@@ -99,6 +99,7 @@ router.get('/weather', checkApiKey, async (req, res) => {
     
 // 좌표 유효성 검사
   if (isNaN(lat) || isNaN(lon)) {
+// if (!lat || !lon || isNaN(parseFloat(lat)) || isNaN(parseFloat(lon))) {
     return res.status(400).json({
       success: false,
       error: '올바른 좌표를 입력해주세요.'
