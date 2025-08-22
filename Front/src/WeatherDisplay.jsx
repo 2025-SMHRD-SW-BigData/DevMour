@@ -47,7 +47,7 @@ setLoading(true);
     try {
       console.log(`날씨 API 호출 중 : 위도=${lat} 경도=${lon}`)
 
-      const response = await fetch(`http://localhost:3001/api/weather?lat=${lat}&lon=${lon}`);
+      const response = await fetch(`http://localhost:3001/api/weather/weather?lat=${lat}&lon=${lon}`);
       const result = await response.json();
       
       if (result.success) {
