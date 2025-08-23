@@ -286,6 +286,8 @@ const RiskRankingDetail = () => {
                                 <NaverMap 
                                     riskData={riskData}
                                     showRiskMarkers={true}
+                                    filterType="risk"
+                                    key="risk-map"
                                 />
                             </div>
                         ) : (

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useContext } from "react";
 import { InfoContext } from "./context/InfoContext";
 import axios from 'axios';
 
-const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers }) => {
+const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initialFilterType = 'all' }) => {
     const mapRef = useRef(null);
     const [isEditing, setIsEditing] = useState(false);
     const isEditingRef = useRef(isEditing);
@@ -10,7 +10,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers }) => {
     const selectedMarkerTypeRef = useRef(selectedMarkerType);
     const [markers, setMarkers] = useState([]);
     const markersRef = useRef([]);
-    const [filterType, setFilterType] = useState('all');
+    const [filterType, setFilterType] = useState(initialFilterType);
     const [alertMarker, setAlertMarker] = useState(null);
     const alertMarkerRef = useRef(null);
     const [riskMarkers, setRiskMarkers] = useState([]);
@@ -35,6 +35,12 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers }) => {
     useEffect(() => {
         selectedMarkerTypeRef.current = selectedMarkerType;
     }, [selectedMarkerType]);
+
+    // 초기 필터 타입이 변경될 때 filterType 상태 업데이트
+    useEffect(() => {
+        console.log('🔄 초기 필터 타입 변경:', initialFilterType);
+        setFilterType(initialFilterType);
+    }, [initialFilterType]);
 
     // 위험도 데이터가 변경될 때 마커 업데이트
     useEffect(() => {
@@ -139,7 +145,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers }) => {
             name: '위험도',
             color: '#9B59B6',
             icon: '🚨',
-            size: { width: 35, height: 35 }
+            size: { width: 30, height: 30 }
         }
     };
 
@@ -148,19 +154,19 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers }) => {
             name: '고위험',
             color: '#e74c3c',
             icon: '🔴',
-            size: { width: 24, height: 24 }
+            size: { width: 30, height: 30 }
         },
         medium: {
             name: '주의',
             color: '#f39c12',
             icon: '🟠',
-            size: { width: 24, height: 24 }
+            size: { width: 30, height: 30 }
         },
         low: {
             name: '안전',
             color: '#27ae60',
             icon: '🟢',
-            size: { width: 24, height: 24 }
+            size: { width: 30, height: 30 }
         }
     };
 
@@ -191,14 +197,10 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers }) => {
         const config = riskMarkerTypes[riskLevel];
         console.log(`🎨 위험도 마커 HTML 생성: ${riskLevel} 레벨, 설정:`, config);
         
-                const htmlContent = `
+        const htmlContent = `
       <div style="
-        width: 24px;
-        height: 24px;
-        background: ${config.color};
-        border-radius: 50%;
-        border: 2px solid white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        width: 14px;
+        height: 18px;
         position: relative;
         margin: 0 auto;
         cursor: pointer;
@@ -206,11 +208,25 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers }) => {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: bold;
-        font-size: 14px;
-        color: white;
-      " onmouseover="this.style.transform='scale(1.2)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.4)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.3)'">
-        !
+        background: white;
+        border: 2px solid ${config.color};
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        clip-path: polygon(5% 0%, 95% 0%, 85% 100%, 15% 100%);
+      " onmouseover="this.style.transform='scale(1.2)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 6px rgba(0,0,0,0.2)'">
+        <div style="
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          font-size: 18px;
+          color: ${config.color};
+          text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+          pointer-events: auto;
+          cursor: pointer;
+        ">
+          !
+        </div>
       </div>
     `;
         
@@ -258,7 +274,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers }) => {
                 borderWidth: 2,
                 anchorSize: new window.naver.maps.Size(20, 20),
                 anchorColor: "#fff",
-                pixelOffset: new window.naver.maps.Point(0, -10)
+                pixelOffset: new window.naver.maps.Point(0, -9) // 마커 높이의 절반만큼 위로
             });
             
             // 기존 InfoWindow가 있다면 닫기
@@ -395,7 +411,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers }) => {
                     zIndex: 1000, // 위험도 마커를 다른 마커들 위에 표시
                     icon: {
                         content: createRiskMarkerContent(riskLevel),
-                        anchor: new window.naver.maps.Point(riskMarkerTypes[riskLevel].size.width / 2, riskMarkerTypes[riskLevel].size.height / 2)
+                        anchor: new window.naver.maps.Point(7, 9) // 마커 중앙점 (14x18 크기의 중앙)
                     }
                 });
                 
@@ -405,8 +421,17 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers }) => {
                 // 마커에 위험도 데이터 저장 (외부에서 접근 가능하도록)
                 marker.riskData = item;
                 
-                // 마커 클릭 시 위험도 정보 표시 (간단한 정보창)
+                // 마커 클릭 시 위험도 정보 표시 (토글 기능)
                 window.naver.maps.Event.addListener(marker, 'click', () => {
+                    // 현재 마커에 InfoWindow가 열려있는지 확인
+                    if (marker.infoWindow && marker.infoWindow.getMap()) {
+                        // 같은 마커의 InfoWindow가 열려있다면 닫기
+                        console.log('🔄 같은 마커 클릭 - InfoWindow 닫기');
+                        marker.infoWindow.close();
+                        marker.infoWindow = null;
+                        return;
+                    }
+                    
                     // 기존 InfoWindow가 있다면 닫기
                     if (window.currentRiskInfoWindow) {
                         window.currentRiskInfoWindow.close();
@@ -427,11 +452,12 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers }) => {
                         borderWidth: 2,
                         anchorSize: new window.naver.maps.Size(20, 20),
                         anchorColor: "#fff",
-                        pixelOffset: new window.naver.maps.Point(0, -10)
+                        pixelOffset: new window.naver.maps.Point(0, -9) // 마커 높이의 절반만큼 위로
                     });
                     
-                    // 새 InfoWindow 표시하고 전역 변수에 저장
+                    // 새 InfoWindow 표시하고 마커와 전역 변수에 저장
                     infoWindow.open(mapRef.current, marker);
+                    marker.infoWindow = infoWindow; // 마커에 직접 InfoWindow 참조 저장
                     window.currentRiskInfoWindow = infoWindow;
                 });
 
