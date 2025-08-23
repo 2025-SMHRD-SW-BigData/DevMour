@@ -31,6 +31,7 @@ const Dashboard = () => {
   useEffect(() => {
     fetchRecentAlerts();
     fetchRiskRankings();
+    fetchRiskDetailData();
     fetchAverageRiskScore();
     fetchCitizenReportStats();
     fetchRoadConstructionStats();
@@ -76,6 +77,33 @@ const Dashboard = () => {
       setRiskRankingsLoading(false);
     }
   };
+
+  // 위험도 상세 데이터 가져오기 (지도용)
+  const [riskDetailData, setRiskDetailData] = useState([]);
+  const [riskDetailLoading, setRiskDetailLoading] = useState(true);
+
+  const fetchRiskDetailData = async () => {
+    try {
+      setRiskDetailLoading(true);
+      const response = await fetch('http://localhost:3001/api/risk/ranking-detail');
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🔍 Dashboard에서 받은 위험도 상세 데이터:', data);
+        setRiskDetailData(data.riskRankings || []);
+      } else {
+        console.error('위험도 상세 데이터 조회 실패:', response.status);
+        setRiskDetailData([]);
+      }
+    } catch (error) {
+      console.error('위험도 상세 데이터 조회 오류:', error);
+      setRiskDetailData([]);
+    } finally {
+      setRiskDetailLoading(false);
+    }
+  };
+
+
 
   // 전체 위험도 점수 평균 조회
   const fetchAverageRiskScore = async () => {
@@ -203,22 +231,34 @@ const Dashboard = () => {
       updateLocation(riskItem.coordinates.lat, riskItem.coordinates.lon);
       console.log('✅ InfoContext 위치 업데이트 완료:', riskItem.coordinates.lat, riskItem.coordinates.lon);
       
-      // 지도 이동을 위한 이벤트 발생 (위험도 정보 포함)
-      const moveEvent = new CustomEvent('moveToRiskLocation', {
-        detail: {
-          lat: riskItem.coordinates.lat,
-          lon: riskItem.coordinates.lon,
-          message: `위험도 ${riskItem.totalRiskScore.toFixed(1)} - ${riskItem.address}`,
-          level: getRiskLevel(riskItem.totalRiskScore),
-          riskDetail: riskItem.riskDetail,
-          totalRiskScore: riskItem.totalRiskScore
-        }
-      });
-      
-      console.log('🚀 위험도 위치 이동 이벤트 발생:', moveEvent.detail);
-      window.dispatchEvent(moveEvent);
-      
-      console.log('✅ 위험도 위치 이동 트리거 완료');
+      // 맵에 이미 표시된 위험도 마커의 위치로 이동하고 상세정보창 띄우기
+      if (window.moveToRiskMarker) {
+        console.log('🚀 moveToRiskMarker 함수 호출');
+        window.moveToRiskMarker(
+          riskItem.coordinates.lat, 
+          riskItem.coordinates.lon, 
+          riskItem
+        );
+        console.log('✅ 위험도 마커 위치 이동 및 상세정보창 표시 완료');
+      } else {
+        console.log('⚠️ moveToRiskMarker 함수가 아직 준비되지 않음, 기존 방식으로 대체');
+        // 기존 방식으로 대체 (지도 이동만)
+        const moveEvent = new CustomEvent('moveToRiskLocation', {
+          detail: {
+            lat: riskItem.coordinates.lat,
+            lon: riskItem.coordinates.lon,
+            message: `위험도 ${riskItem.totalRiskScore.toFixed(1)} - ${riskItem.address}`,
+            level: getRiskLevel(riskItem.totalRiskScore),
+            riskDetail: riskItem.riskDetail,
+            totalRiskScore: riskItem.totalRiskScore
+          }
+        });
+        
+        console.log('🚀 위험도 위치 이동 이벤트 발생:', moveEvent.detail);
+        window.dispatchEvent(moveEvent);
+        
+        console.log('✅ 위험도 위치 이동 트리거 완료');
+      }
     } catch (error) {
       console.error('위험도 위치 이동 오류:', error);
     }
@@ -292,6 +332,8 @@ const Dashboard = () => {
     setIsModalOpen(true);
     console.log('✅ 모달 상태 업데이트 완료');
   };
+
+
 
   const getAlertLevelClass = (level) => {
     switch (level) {
@@ -491,7 +533,11 @@ const Dashboard = () => {
 
       {/* 메인 */}
       <main className="main">
-        <NaverMap onMarkerClick={handleMarkerClick}/>
+        <NaverMap 
+          onMarkerClick={handleMarkerClick}
+          riskData={riskDetailData}
+          showRiskMarkers={true}
+        />
         <Modals 
           isOpen={isModalOpen} 
           onClose={() => setIsModalOpen(false)}

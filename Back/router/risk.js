@@ -11,7 +11,7 @@ let conn = mysql.createConnection({
     database: 'campus_25SW_BD_p3_2'
 });
 
-// 위험도 랭킹 TOP 5 조회
+// 위험도 랭킹 TOP 3 조회 (대시보드용)
 router.get('/ranking', (req, res) => {
     console.log('✅ 위험도 랭킹 조회 요청 수신');
     
@@ -21,7 +21,14 @@ router.get('/ranking', (req, res) => {
             return res.status(500).json({ error: '데이터베이스 연결 실패' });
         }
 
-        // total_risk_score가 높은 순서로 3개 조회
+        // 현재 년도와 월에 해당하는 데이터만 조회
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1; // 1-12월
+        
+        console.log(`📊 위험도 랭킹 조회: ${currentYear}년 ${currentMonth}월`);
+        
+        // total_risk_score가 높은 순서로 3개 조회 (현재 년도/월 기준)
         const sql = `
             SELECT 
                 pred_idx,
@@ -31,17 +38,75 @@ router.get('/ranking', (req, res) => {
                 lon,
                 addr
             FROM t_risk_prediction 
+            WHERE YEAR(pred_date) = ? AND MONTH(pred_date) = ?
             ORDER BY total_risk_score DESC
             LIMIT 3
         `;
 
-        conn.query(sql, (err, results) => {
+        conn.query(sql, [currentYear, currentMonth], (err, results) => {
             if (err) {
                 console.error('❌ 위험도 랭킹 조회 실패:', err);
                 return res.status(500).json({ error: '위험도 랭킹 조회 실패' });
             }
 
             console.log('✅ 위험도 랭킹 조회 성공:', results.length, '건');
+            
+            // 응답 데이터 포맷팅
+            const riskRankings = results.map((item, index) => ({
+                rank: index + 1,
+                predIdx: item.pred_idx,
+                totalRiskScore: parseFloat(item.total_risk_score),
+                riskDetail: item.risk_detail,
+                address: item.addr,
+                coordinates: {
+                    lat: parseFloat(item.lat),
+                    lon: parseFloat(item.lon)
+                }
+            }));
+
+            res.json({ riskRankings });
+        });
+    });
+});
+
+// 위험도 랭킹 상세 조회 (현재 년도/월의 모든 데이터)
+router.get('/ranking-detail', (req, res) => {
+    console.log('✅ 위험도 랭킹 상세 조회 요청 수신');
+    
+    conn.connect(err => {
+        if (err) {
+            console.error('❌ 데이터베이스 연결 실패:', err);
+            return res.status(500).json({ error: '데이터베이스 연결 실패' });
+        }
+
+        // 현재 년도와 월에 해당하는 데이터만 조회
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1; // 1-12월
+        
+        console.log(`📊 위험도 랭킹 상세 조회: ${currentYear}년 ${currentMonth}월`);
+        
+        // 현재 년도/월의 모든 위험도 데이터 조회 (위험도 높은 순)
+        const sql = `
+            SELECT 
+                pred_idx,
+                total_risk_score,
+                risk_detail,
+                lat,
+                lon,
+                addr
+            FROM t_risk_prediction 
+            WHERE YEAR(pred_date) = ? AND MONTH(pred_date) = ?
+            ORDER BY total_risk_score DESC
+        `;
+
+        conn.query(sql, [currentYear, currentMonth], (err, results) => {
+            if (err) {
+                console.error('❌ 위험도 랭킹 상세 조회 실패:', err);
+                return res.status(500).json({ error: '위험도 랭킹 상세 조회 실패' });
+            }
+
+            console.log('✅ 위험도 랭킹 상세 조회 성공:', results.length, '건');
             
             // 응답 데이터 포맷팅
             const riskRankings = results.map((item, index) => ({
@@ -71,12 +136,20 @@ router.get('/average', (req, res) => {
             return res.status(500).json({ error: '데이터베이스 연결 실패' });
         }
 
+        // 현재 년도와 월에 해당하는 데이터만 조회
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1; // 1-12월
+        
+        console.log(`📊 전체 위험도 점수 평균 조회: ${currentYear}년 ${currentMonth}월`);
+        
         const sql = `
             SELECT AVG(total_risk_score) as average_score
             FROM t_risk_prediction
+            WHERE YEAR(pred_date) = ? AND MONTH(pred_date) = ?
         `;
 
-        conn.query(sql, (err, results) => {
+        conn.query(sql, [currentYear, currentMonth], (err, results) => {
             if (err) {
                 console.error('위험도 점수 평균 조회 오류:', err);
                 return res.status(500).json({ error: '위험도 점수 평균 조회 실패' });
@@ -103,15 +176,23 @@ router.get('/citizen-report/stats', (req, res) => {
             return res.status(500).json({ error: '데이터베이스 연결 실패' });
         }
 
+        // 현재 년도와 월에 해당하는 데이터만 조회
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1; // 1-12월
+        
+        console.log(`📊 민원 신고 통계 조회: ${currentYear}년 ${currentMonth}월`);
+        
         const sql = `
             SELECT 
                 c_report_status,
                 COUNT(*) as count
             FROM t_citizen_report
+            WHERE YEAR(c_reported_at) = ? AND MONTH(c_reported_at) = ?
             GROUP BY c_report_status
         `;
 
-        conn.query(sql, (err, results) => {
+        conn.query(sql, [currentYear, currentMonth], (err, results) => {
             if (err) {
                 console.error('민원 신고 통계 조회 오류:', err);
                 return res.status(500).json({ error: '민원 신고 통계 조회 실패' });
