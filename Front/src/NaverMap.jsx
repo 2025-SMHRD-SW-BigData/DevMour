@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useContext } from "react";
 import { InfoContext } from "./context/InfoContext";
 import axios from 'axios';
 
-const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initialFilterType = 'all' }) => {
+const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initialFilterType = 'all', hideFilterButtons = false, complaintData, showComplaintMarkers = false }) => {
     const mapRef = useRef(null);
     const [isEditing, setIsEditing] = useState(false);
     const isEditingRef = useRef(isEditing);
@@ -14,6 +14,9 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
     const [alertMarker, setAlertMarker] = useState(null);
     const alertMarkerRef = useRef(null);
     const [riskMarkers, setRiskMarkers] = useState([]);
+    const [complaintMarkers, setComplaintMarkers] = useState([]);
+    const alertMarkersRef = useRef([]);
+    const currentInfoWindowRef = useRef(null);
 
 
 
@@ -44,7 +47,8 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
 
     // 위험도 데이터가 변경될 때 마커 업데이트
     useEffect(() => {
-        console.log('🔄 위험도 데이터/모드 변경 감지:', { showRiskMarkers, riskDataLength: riskData?.length });
+        const riskDataLength = riskData?.length;
+        console.log('🔄 위험도 데이터/모드 변경 감지:', { showRiskMarkers, riskDataLength });
         if (showRiskMarkers && riskData && riskData.length > 0) {
             console.log('✅ 위험도 마커 추가 실행');
             // 지도가 준비되었는지 확인하고 마커 추가
@@ -62,8 +66,14 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
         } else {
             console.log('❌ 위험도 마커 숨김 또는 데이터 없음');
             // Hide risk markers if not showing or no data
-            riskMarkers.forEach(marker => marker.setMap(null));
-            setRiskMarkers([]);
+            if (riskMarkers.length > 0) {
+                riskMarkers.forEach(marker => {
+                    if (marker && marker.setMap) {
+                        marker.setMap(null);
+                    }
+                });
+                setRiskMarkers([]);
+            }
         }
     }, [riskData, showRiskMarkers]);
 
@@ -72,51 +82,177 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
         if (!mapRef.current) return;
         
         console.log('🔄 필터 타입 변경:', filterType);
+        console.log('🔄 showRiskMarkers 상태:', showRiskMarkers);
         console.log('🔄 현재 위험도 마커 개수:', riskMarkers.length);
         
-        // 위험도 마커 필터링
+        // 위험도 마커 필터링 - showRiskMarkers와 filterType 모두 고려
         if (riskMarkers.length > 0) {
             riskMarkers.forEach((marker, index) => {
-                if (filterType === 'all' || filterType === 'risk') {
-                    console.log(`✅ 위험도 마커 ${index + 1} 표시`);
-                    marker.setMap(mapRef.current);
-                } else {
-                    console.log(`❌ 위험도 마커 ${index + 1} 숨김`);
-                    marker.setMap(null);
+                if (marker && marker.setMap) {
+                    // showRiskMarkers가 true이고, filterType이 'all' 또는 'risk'일 때만 표시
+                    if (showRiskMarkers && (filterType === 'all' || filterType === 'risk')) {
+                        console.log(`✅ 위험도 마커 ${index + 1} 표시 (showRiskMarkers: ${showRiskMarkers}, filterType: ${filterType})`);
+                        marker.setMap(mapRef.current);
+                    } else {
+                        console.log(`❌ 위험도 마커 ${index + 1} 숨김 (showRiskMarkers: ${showRiskMarkers}, filterType: ${filterType})`);
+                        marker.setMap(null);
+                        // 숨김 후 상태 확인
+                        setTimeout(() => {
+                            const currentMap = marker.getMap();
+                            console.log(`🔍 마커 ${index + 1} 숨김 후 상태 확인: map=${currentMap ? '표시됨' : '숨겨짐'}`);
+                        }, 100);
+                    }
                 }
             });
         }
+    }, [filterType, showRiskMarkers, riskMarkers]);
+
+    // 시민 제보 데이터가 변경될 때 마커 업데이트
+    useEffect(() => {
+        const complaintDataLength = complaintData?.length;
+        console.log('🔄 시민 제보 데이터/모드 변경 감지:', { showComplaintMarkers, complaintDataLength });
+        if (showComplaintMarkers && complaintData && complaintData.length > 0) {
+            console.log('✅ 시민 제보 마커 추가 실행');
+            // 지도가 준비되었는지 확인하고 마커 추가
+            if (mapRef.current) {
+                addComplaintMarkers(complaintData);
+            } else {
+                console.log('⏳ 지도가 아직 준비되지 않음, 잠시 후 재시도');
+                // 지도가 준비되지 않았다면 잠시 후 재시도
+                setTimeout(() => {
+                    if (mapRef.current) {
+                        addComplaintMarkers(complaintData);
+                    }
+                }, 1000);
+            }
+        } else {
+            console.log('❌ 시민 제보 마커 숨김 또는 데이터 없음');
+            // Hide complaint markers if not showing or no data
+            if (complaintMarkers.length > 0) {
+                complaintMarkers.forEach(marker => {
+                    if (marker && marker.setMap) {
+                        marker.setMap(null);
+                    }
+                });
+                setComplaintMarkers([]);
+            }
+        }
+    }, [complaintData, showComplaintMarkers]);
+
+    // 필터 타입이 'alert'일 때 알림 마커 생성
+    useEffect(() => {
+        if (filterType === 'alert' && mapRef.current) {
+            console.log('🚨 알림 마커 생성 시작 (filterType: alert)');
+            
+            // 기존 일반 마커들 제거
+            if (markersRef.current.length > 0) {
+                markersRef.current.forEach(marker => {
+                    if (marker && marker.setMap) {
+                        marker.setMap(null);
+                    }
+                });
+                markersRef.current = [];
+                console.log('✅ 기존 일반 마커 제거 완료');
+            }
+            
+            createAlertMarkers();
+        } else if (filterType !== 'alert' && alertMarkersRef.current.length > 0) {
+            console.log('🚨 알림 마커 숨김 (filterType:', filterType, ')');
+            // 알림 마커 숨기기
+            alertMarkersRef.current.forEach(marker => {
+                if (marker && marker.setMap) {
+                    marker.setMap(null);
+                }
+            });
+            
+            // filterType이 'alert'가 아닐 때는 일반 마커 다시 로드
+            if (mapRef.current) {
+                console.log('🔄 일반 마커 다시 로드 시작');
+                fetchMarkers(mapRef.current);
+            }
+        }
+    }, [filterType]);
+
+    // 필터 타입 변경 시 시민 제보 마커도 함께 필터링
+    useEffect(() => {
+        if (!mapRef.current) return;
         
-    }, [filterType, riskMarkers]);
+        console.log('🔄 시민 제보 마커 필터링:', filterType);
+        console.log('🔄 showComplaintMarkers 상태:', showComplaintMarkers);
+        console.log('🔄 현재 시민 제보 마커 개수:', complaintMarkers.length);
+        
+        // 시민 제보 마커 필터링 - showComplaintMarkers와 filterType 모두 고려
+        if (complaintMarkers.length > 0) {
+            complaintMarkers.forEach((marker, index) => {
+                if (marker && marker.setMap) {
+                    // showComplaintMarkers가 true이고, filterType이 'all' 또는 'complaint'일 때만 표시
+                    if (showComplaintMarkers && (filterType === 'all' || filterType === 'complaint')) {
+                        console.log(`✅ 시민 제보 마커 ${index + 1} 표시 (showComplaintMarkers: ${showComplaintMarkers}, filterType: ${filterType})`);
+                        marker.setMap(mapRef.current);
+                    } else {
+                        console.log(`❌ 시민 제보 마커 ${index + 1} 숨김 (showComplaintMarkers: ${showComplaintMarkers}, filterType: ${filterType})`);
+                        marker.setMap(null);
+                    }
+                }
+            });
+        }
+    }, [filterType, showComplaintMarkers, complaintMarkers]);
 
     // 위험도 마커가 추가된 후 필터 상태 확인
     useEffect(() => {
         if (!mapRef.current || riskMarkers.length === 0) return;
         
         console.log('🔄 위험도 마커 상태 확인, 현재 필터:', filterType);
+        console.log('🔄 showRiskMarkers 상태:', showRiskMarkers);
         
         riskMarkers.forEach((marker, index) => {
-            if (filterType === 'all' || filterType === 'risk') {
-                console.log(`✅ 위험도 마커 ${index + 1} 상태 확인 - 표시`);
-                if (marker.getMap() !== mapRef.current) {
-                    marker.setMap(mapRef.current);
-                }
-            } else {
-                console.log(`❌ 위험도 마커 ${index + 1} 상태 확인 - 숨김`);
-                if (marker.getMap() !== null) {
-                    marker.setMap(null);
+            if (marker && marker.setMap) {
+                // showRiskMarkers가 true이고, filterType이 'all' 또는 'risk'일 때만 표시
+                if (showRiskMarkers && (filterType === 'all' || filterType === 'risk')) {
+                    console.log(`✅ 위험도 마커 ${index + 1} 상태 확인 - 표시 (showRiskMarkers: ${showRiskMarkers}, filterType: ${filterType})`);
+                    if (marker.getMap() !== mapRef.current) {
+                        marker.setMap(mapRef.current);
+                    }
+                } else {
+                    console.log(`❌ 위험도 마커 ${index + 1} 상태 확인 - 숨김 (showRiskMarkers: ${showRiskMarkers}, filterType: ${filterType})`);
+                    if (marker.getMap() !== null) {
+                        marker.setMap(null);
+                        // 숨김 후 상태 확인
+                        setTimeout(() => {
+                            const currentMap = marker.getMap();
+                            console.log(`🔍 마커 ${index + 1} 상태 확인 후 숨김 결과: map=${currentMap ? '표시됨' : '숨겨짐'}`);
+                        }, 100);
+                    }
                 }
             }
         });
         
-    }, [riskMarkers, filterType]);
+    }, [riskMarkers, filterType, showRiskMarkers]);
+
+    // showRiskMarkers가 false일 때 위험도 마커 숨김
+    useEffect(() => {
+        if (!mapRef.current || riskMarkers.length === 0) return;
+        
+        if (!showRiskMarkers) {
+            console.log('🔄 showRiskMarkers가 false - 모든 위험도 마커 숨김');
+            riskMarkers.forEach(marker => {
+                if (marker && marker.setMap) {
+                    console.log('🔄 위험도 마커 숨김:', marker);
+                    marker.setMap(null);
+                }
+            });
+        }
+    }, [showRiskMarkers, riskMarkers]);
 
     // 외부에서 호출할 수 있도록 함수 노출
     useEffect(() => {
         if (mapRef.current) {
             // 전역 함수로 노출 (Dashboard.jsx에서 호출 가능)
             window.moveToRiskMarker = moveToRiskMarker;
-            console.log('✅ moveToRiskMarker 함수를 전역으로 노출');
+            window.moveToComplaintMarker = moveToComplaintMarker;
+            window.moveToConstructionMarker = moveToConstructionMarker;
+            window.moveToAlertMarker = moveToAlertMarker;
+            console.log('✅ moveToRiskMarker, moveToComplaintMarker, moveToConstructionMarker, moveToAlertMarker 함수를 전역으로 노출');
         }
     }, [mapRef.current]);
 
@@ -144,7 +280,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
         risk: {
             name: '위험도',
             color: '#9B59B6',
-            icon: '🚨',
+            icon: '❗',
             size: { width: 30, height: 30 }
         }
     };
@@ -232,6 +368,72 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
         
         console.log(`🎨 생성된 HTML:`, htmlContent);
         return htmlContent;
+    };
+
+    // 시민 제보 마커 HTML 생성
+    const createComplaintMarkerContent = (status) => {
+        let color, icon;
+        
+        switch (status) {
+            case 'C': // 처리 완료
+                color = '#27ae60';
+                icon = '✅';
+                break;
+            case 'P': // 처리 중
+                color = '#f39c12';
+                icon = '🔄';
+                break;
+            case 'R': // 접수 완료
+                color = '#3498db';
+                icon = '📝';
+                break;
+            default:
+                color = '#95a5a6';
+                icon = '📋';
+        }
+        
+        const htmlContent = `
+            <div style="
+                width: 30px;
+                height: 30px;
+                position: relative;
+                margin: 0 auto;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: white;
+                border: 2px solid ${color};
+                border-radius: 50%;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            " onmouseover="this.style.transform='scale(1.2)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 6px rgba(0,0,0,0.2)'">
+                <div style="
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 16px;
+                    color: ${color};
+                    pointer-events: auto;
+                    cursor: pointer;
+                ">
+                    ${icon}
+                </div>
+            </div>
+        `;
+        
+        return htmlContent;
+    };
+
+    // 시민 제보 상태 텍스트 반환
+    const getComplaintStatusText = (status) => {
+        switch (status) {
+            case 'C': return '처리 완료';
+            case 'P': return '처리 중';
+            case 'R': return '접수 완료';
+            default: return '접수 완료';
+        }
     };
 
 
@@ -371,6 +573,296 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
         }
     };
 
+    // 시민 제보 마커를 찾아서 해당 위치로 이동하고 상세정보창 띄우기
+    const moveToComplaintMarker = (lat, lon, complaintData) => {
+        if (!mapRef.current) {
+            console.log('❌ 지도가 아직 준비되지 않음');
+            return;
+        }
+        
+        console.log('🎯 시민 제보 마커 위치로 이동:', { lat, lon, complaintData });
+        console.log('🔍 현재 시민 제보 마커 개수:', complaintMarkers.length);
+        
+        // 지도 중심을 해당 위치로 이동
+        const position = new window.naver.maps.LatLng(lat, lon);
+        mapRef.current.setCenter(position);
+        mapRef.current.setZoom(16); // 적절한 줌 레벨로 설정
+        
+        // 해당 위치의 시민 제보 마커 찾기
+        const targetMarker = complaintMarkers.find(marker => {
+            if (marker && marker.complaintData) {
+                const markerLat = marker.complaintData.lat;
+                const markerLon = marker.complaintData.lon;
+                
+                console.log('🔍 시민 제보 마커 좌표 비교:', {
+                    marker: { lat: markerLat, lon: markerLon },
+                    target: { lat, lon },
+                    diff: { 
+                        lat: Math.abs(markerLat - lat), 
+                        lon: Math.abs(markerLon - lon) 
+                    }
+                });
+                
+                // 좌표 차이가 매우 작은 경우 (약 10미터 이내)
+                return Math.abs(markerLat - lat) < 0.0001 && Math.abs(markerLon - lon) < 0.0001;
+            }
+            return false;
+        });
+        
+        if (targetMarker) {
+            console.log('✅ 해당 위치의 시민 제보 마커 찾음, 상세정보창 표시');
+            console.log('🎯 찾은 마커:', targetMarker);
+            console.log('🎯 마커의 시민 제보 데이터:', targetMarker.complaintData);
+            
+            // 마커가 지도에 표시되어 있는지 확인하고, 없다면 표시
+            if (!targetMarker.getMap()) {
+                console.log('🔄 마커를 지도에 표시');
+                targetMarker.setMap(mapRef.current);
+            }
+            
+            // 약간의 지연 후 마커 클릭 이벤트 트리거 (지도 이동 완료 후)
+            setTimeout(() => {
+                try {
+                    console.log('🚀 시민 제보 마커 클릭 이벤트 트리거 시도');
+                    window.naver.maps.Event.trigger(targetMarker, 'click');
+                    console.log('✅ 시민 제보 마커 클릭 이벤트 트리거 완료');
+                } catch (error) {
+                    console.error('❌ 시민 제보 마커 클릭 이벤트 트리거 실패:', error);
+                }
+            }, 800); // 지연 시간을 늘려서 지도 이동 완료 보장
+        } else {
+            console.log('⚠️ 해당 위치의 시민 제보 마커를 찾을 수 없음');
+            console.log('🔍 현재 시민 제보 마커들:', complaintMarkers.map(marker => ({
+                hasData: !!marker.complaintData,
+                coordinates: marker.complaintData ? {
+                    lat: marker.complaintData.lat,
+                    lon: marker.complaintData.lon
+                } : null
+            })));
+        }
+    };
+
+    // 공사 통제 마커로 이동하는 함수
+    const moveToConstructionMarker = (lat, lon, constructionData) => {
+        if (!mapRef.current) {
+            console.log('❌ 지도가 아직 준비되지 않음');
+            return;
+        }
+        
+        console.log('🎯 공사 통제 마커 위치로 이동:', { lat, lon, constructionData });
+        
+        // 지도 중심을 해당 위치로 이동
+        const position = new window.naver.maps.LatLng(lat, lon);
+        mapRef.current.setCenter(position);
+        mapRef.current.setZoom(16); // 적절한 줌 레벨로 설정
+        
+        // 공사중 마커는 이미 NaverMap에 표시되므로, 해당 위치로 이동만 수행
+        console.log('✅ 공사 통제 위치로 지도 이동 완료');
+        console.log('ℹ️ 공사중 마커는 이미 지도에 표시되어 있음 (construction 필터링 모드)');
+    };
+
+    // 알림 마커로 이동하는 함수
+    const moveToAlertMarker = (lat, lon, alertData) => {
+        if (!mapRef.current) {
+            console.log('❌ 지도가 아직 준비되지 않음');
+            return;
+        }
+        
+        console.log('🎯 알림 마커 위치로 이동:', { lat, lon, alertData });
+        
+        // 지도 중심을 해당 위치로 이동
+        const position = new window.naver.maps.LatLng(lat, lon);
+        mapRef.current.setCenter(position);
+        mapRef.current.setZoom(16); // 적절한 줌 레벨로 설정
+        
+        // 알림 마커는 이미 NaverMap에 표시되므로, 해당 위치로 이동만 수행
+        console.log('✅ 알림 위치로 지도 이동 완료');
+        console.log('ℹ️ 알림 마커는 이미 지도에 표시되어 있음 (alert 필터링 모드)');
+    };
+
+    // 알림 마커 생성 및 표시 함수
+    const createAlertMarkers = async () => {
+        if (!mapRef.current || filterType !== 'alert') {
+            console.log('❌ 알림 마커 생성 조건 불충족:', { mapRef: !!mapRef.current, filterType });
+            return;
+        }
+
+        try {
+            console.log('🚨 알림 마커 생성 시작');
+            
+            // 기존 알림 마커 제거
+            if (alertMarkersRef.current.length > 0) {
+                alertMarkersRef.current.forEach(marker => {
+                    if (marker.getMap()) {
+                        marker.setMap(null);
+                    }
+                });
+                alertMarkersRef.current = [];
+                console.log('✅ 기존 알림 마커 제거 완료');
+            }
+
+            // 알림 데이터 가져오기
+            const response = await fetch('http://localhost:3001/api/alert/monthly');
+            if (!response.ok) {
+                console.error('❌ 알림 데이터 조회 실패:', response.status);
+                return;
+            }
+
+            const data = await response.json();
+            const alerts = data.alerts || [];
+            console.log('📊 서버에서 받은 알림 데이터:', alerts.length, '건');
+
+            if (alerts.length === 0) {
+                console.log('ℹ️ 표시할 알림 데이터가 없습니다.');
+                return;
+            }
+
+            // 각 알림에 대해 위치 정보를 가져와서 마커 생성
+            for (const alert of alerts) {
+                try {
+                    const locationResponse = await fetch(`http://localhost:3001/api/alert/location/${alert.alert_idx}`);
+                    if (locationResponse.ok) {
+                        const locationData = await locationResponse.json();
+                        
+                        if (locationData.lat && locationData.lon) {
+                            const position = new window.naver.maps.LatLng(locationData.lat, locationData.lon);
+                            
+                            // 알림 마커 생성 (Dashboard.jsx와 동일한 스타일)
+                            const marker = new window.naver.maps.Marker({
+                                position: position,
+                                map: mapRef.current,
+                                icon: {
+                                    content: `
+                                        <div style="
+                                            background-color: #ff4757;
+                                            color: white;
+                                            border-radius: 50%;
+                                            width: 30px;
+                                            height: 30px;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            font-size: 16px;
+                                            font-weight: bold;
+                                            border: 3px solid white;
+                                            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                                            cursor: pointer;
+                                        ">
+                                            🚨
+                                        </div>
+                                    `,
+                                    size: new window.naver.maps.Size(30, 30),
+                                    anchor: new window.naver.maps.Point(15, 15)
+                                }
+                            });
+
+                            // 알림 정보 윈도우 생성
+                            const infoWindow = new window.naver.maps.InfoWindow({
+                                content: `
+                                    <div style="
+                                        padding: 15px;
+                                        min-width: 200px;
+                                        font-family: Arial, sans-serif;
+                                    ">
+                                        <h3 style="margin: 0 0 10px 0; color: #333;">🚨 알림 정보</h3>
+                                        <p style="margin: 5px 0; font-size: 14px;">
+                                            <strong>메시지:</strong> ${alert.alert_msg || '메시지 없음'}
+                                        </p>
+                                        <p style="margin: 5px 0; font-size: 14px;">
+                                            <strong>심각도:</strong> 
+                                            <span style="
+                                                color: ${getAlertLevelColor(alert.alert_level)};
+                                                font-weight: bold;
+                                            ">${getAlertLevelText(alert.alert_level)}</span>
+                                        </p>
+                                        <p style="margin: 5px 0; font-size: 14px;">
+                                            <strong>수신자:</strong> ${getRecipientText(alert.recepient_type)}
+                                        </p>
+                                        <p style="margin: 5px 0; font-size: 14px;">
+                                            <strong>전송시간:</strong> ${new Date(alert.sented_at).toLocaleString()}
+                                        </p>
+                                        <p style="margin: 5px 0; font-size: 14px;">
+                                            <strong>상태:</strong> ${alert.is_read === 'Y' ? '✅ 읽음' : '📬 안읽음'}
+                                        </p>
+                                    </div>
+                                `,
+                                maxWidth: 300,
+                                backgroundColor: '#fff',
+                                borderColor: '#ff4757',
+                                borderWidth: 2,
+                                anchorSize: new window.naver.maps.Size(10, 10),
+                                anchorColor: '#fff',
+                                pixelOffset: new window.naver.maps.Point(0, -10)
+                            });
+
+                            // 마커 클릭 이벤트
+                            window.naver.maps.Event.addListener(marker, 'click', () => {
+                                console.log('🎯 알림 마커 클릭:', alert);
+                                
+                                // 다른 정보 윈도우 닫기
+                                if (currentInfoWindowRef.current) {
+                                    currentInfoWindowRef.current.close();
+                                }
+                                
+                                // 현재 정보 윈도우 열기
+                                infoWindow.open(mapRef.current, marker);
+                                currentInfoWindowRef.current = infoWindow;
+                                
+                                // 마커에 정보 윈도우 참조 저장
+                                marker.infoWindow = infoWindow;
+                            });
+
+                            // 마커를 배열에 저장
+                            alertMarkersRef.current.push(marker);
+                            
+                            console.log('✅ 알림 마커 생성 완료:', { 
+                                alert_idx: alert.alert_idx, 
+                                position: { lat: locationData.lat, lon: locationData.lon } 
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ 알림 마커 생성 중 오류:', error);
+                }
+            }
+
+            console.log('🎯 총', alertMarkersRef.current.length, '개의 알림 마커가 생성되었습니다.');
+            
+        } catch (error) {
+            console.error('❌ 알림 마커 생성 중 오류:', error);
+        }
+    };
+
+    // 알림 심각도에 따른 색상 반환
+    const getAlertLevelColor = (alertLevel) => {
+        switch (alertLevel) {
+            case 'high': return '#e74c3c'; // 빨간색
+            case 'medium': return '#f39c12'; // 주황색
+            case 'low': return '#27ae60'; // 초록색
+            default: return '#95a5a6'; // 회색
+        }
+    };
+
+    // 알림 심각도 텍스트 반환
+    const getAlertLevelText = (alertLevel) => {
+        switch (alertLevel) {
+            case 'high': return '높음';
+            case 'medium': return '보통';
+            case 'low': return '낮음';
+            default: return '기타';
+        }
+    };
+
+    // 알림 수신자 유형 텍스트 반환
+    const getRecipientText = (recipientType) => {
+        switch (recipientType) {
+            case 'admin': return '관리자';
+            case 'citizen': return '시민';
+            case 'all': return '전체';
+            default: return '기타';
+        }
+    };
+
     // 위험도 마커 추가 함수
     const addRiskMarkers = (riskData) => {
         console.log('🔍 위험도 마커 추가 시작:', riskData);
@@ -429,6 +921,13 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                     }
                 });
                 
+                // 마커 생성 시 즉시 필터 상태에 따라 표시/숨김 결정
+                if (showRiskMarkers && (filterType === 'all' || filterType === 'risk')) {
+                    marker.setMap(mapRef.current);
+                } else {
+                    marker.setMap(null);
+                }
+                
                 console.log(`✅ 마커 생성 완료:`, marker);
                 console.log(`🗺️ 마커가 지도에 추가됨: map=${mapRef.current}, position=(${lat}, ${lon})`);
 
@@ -486,21 +985,125 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
         console.log(`🗺️ 지도에 표시될 마커들:`, newRiskMarkers);
         setRiskMarkers(newRiskMarkers);
 
-        // 현재 필터 상태에 따라 위험도 마커 표시/숨김 결정
-        setTimeout(() => {
-            console.log('🔍 위험도 마커 생성 후 필터 상태 확인:', filterType);
-            newRiskMarkers.forEach(marker => {
-                if (marker && marker.setMap) {
-                    if (filterType === 'all' || filterType === 'risk') {
-                        console.log('✅ 위험도 마커 표시 (생성 후)');
-                        marker.setMap(mapRef.current);
-                    } else {
-                        console.log('❌ 위험도 마커 숨김 (생성 후)');
-                        marker.setMap(null);
+        // 마커 생성 완료 후 상태 업데이트
+        console.log(`✅ 위험도 마커 생성 완료: ${newRiskMarkers.length}개`);
+        console.log(`🗺️ 지도에 표시될 마커들:`, newRiskMarkers);
+        setRiskMarkers(newRiskMarkers);
+    };
+
+    // 시민 제보 마커 추가 함수
+    const addComplaintMarkers = (complaintData) => {
+        console.log('🔍 시민 제보 마커 추가 시작:', complaintData);
+        console.log('🔍 mapRef.current 상태:', !!mapRef.current);
+        console.log('🔍 complaintData 상태:', !!complaintData, complaintData?.length);
+        
+        // 지도가 준비되지 않았다면 재시도
+        if (!mapRef.current) {
+            console.log('⏳ 지도가 아직 준비되지 않음, 1초 후 재시도');
+            setTimeout(() => {
+                addComplaintMarkers(complaintData);
+            }, 1000);
+            return;
+        }
+        
+        if (!complaintData || complaintData.length === 0) {
+            console.log('❌ 시민 제보 마커 추가 실패: 데이터 없음');
+            return;
+        }
+
+        // 기존 시민 제보 마커 제거
+        complaintMarkers.forEach(marker => {
+            if (marker && marker.setMap) {
+                marker.setMap(null);
+            }
+        });
+
+        const newComplaintMarkers = [];
+
+        complaintData.forEach((item, index) => {
+            console.log(`🔍 시민 제보 아이템 ${index + 1} 전체 데이터:`, item);
+            
+            const lat = item.lat;
+            const lon = item.lon;
+            
+            console.log(`📍 시민 제보 마커 ${index + 1}: lat=${lat}, lon=${lon}, status=${item.c_report_status}`);
+            
+            if (lat && lon) {
+                console.log(`🎯 시민 제보 마커 생성 시작: 위치: (${lat}, ${lon})`);
+                
+                const marker = new window.naver.maps.Marker({
+                    position: new window.naver.maps.LatLng(lat, lon),
+                    map: null, // 초기에는 숨김 상태로 생성
+                    zIndex: 900, // 위험도 마커보다 아래에 표시
+                    icon: {
+                        content: createComplaintMarkerContent(item.c_report_status),
+                        anchor: new window.naver.maps.Point(15, 15) // 마커 중앙점
                     }
+                });
+                
+                // 마커 생성 시 즉시 필터 상태에 따라 표시/숨김 결정
+                if (showComplaintMarkers && (filterType === 'all' || filterType === 'complaint')) {
+                    marker.setMap(mapRef.current);
+                } else {
+                    marker.setMap(null);
                 }
-            });
-        }, 200); // 지연 시간을 늘려서 마커 생성 완료 보장
+                
+                console.log(`✅ 시민 제보 마커 생성 완료:`, marker);
+
+                // 마커에 시민 제보 데이터 저장
+                marker.complaintData = item;
+                
+                // 마커 클릭 시 시민 제보 정보 표시 (토글 기능)
+                window.naver.maps.Event.addListener(marker, 'click', () => {
+                    // 현재 마커에 InfoWindow가 열려있는지 확인
+                    if (marker.infoWindow && marker.infoWindow.getMap()) {
+                        console.log('🔄 같은 시민 제보 마커 클릭 - InfoWindow 닫기');
+                        marker.infoWindow.close();
+                        marker.infoWindow = null;
+                        return;
+                    }
+                    
+                    // 기존 InfoWindow가 있다면 닫기
+                    if (window.currentComplaintInfoWindow) {
+                        window.currentComplaintInfoWindow.close();
+                    }
+                    
+                    const infoWindow = new window.naver.maps.InfoWindow({
+                        content: `
+                            <div style="padding: 10px; min-width: 250px;">
+                                <h4 style="margin: 0 0 10px 0; color: #3498db;">📝 시민 제보</h4>
+                                <p style="margin: 5px 0;"><strong>제보 번호:</strong> #${item.c_report_idx}</p>
+                                <p style="margin: 5px 0;"><strong>처리 상태:</strong> ${getComplaintStatusText(item.c_report_status)}</p>
+                                <p style="margin: 5px 0;"><strong>제보 일시:</strong> ${new Date(item.c_reported_at).toLocaleString('ko-KR')}</p>
+                                <p style="margin: 5px 0;"><strong>위치:</strong> ${item.addr || '주소 정보 없음'}</p>
+                                <p style="margin: 5px 0;"><strong>상세 내용:</strong> ${item.c_report_detail || '상세 정보가 없습니다.'}</p>
+                                <p style="margin: 5px 0;"><strong>제보자:</strong> ${item.c_reporter_name}</p>
+                                <p style="margin: 5px 0;"><strong>연락처:</strong> ${item.c_reporter_phone}</p>
+                            </div>
+                        `,
+                        backgroundColor: "#fff",
+                        borderColor: "#3498db",
+                        borderWidth: 2,
+                        anchorSize: new window.naver.maps.Size(20, 20),
+                        anchorColor: "#fff",
+                        pixelOffset: new window.naver.maps.Point(0, -15)
+                    });
+                    
+                    // 새 InfoWindow 표시하고 마커와 전역 변수에 저장
+                    infoWindow.open(mapRef.current, marker);
+                    marker.infoWindow = infoWindow;
+                    window.currentComplaintInfoWindow = infoWindow;
+                });
+
+                newComplaintMarkers.push(marker);
+                console.log(`📌 시민 제보 마커 ${index + 1} 배열에 추가됨`);
+            } else {
+                console.log(`❌ 시민 제보 마커 ${index + 1} 좌표 없음: lat=${lat}, lon=${lon}`);
+            }
+        });
+
+        console.log(`✅ 시민 제보 마커 생성 완료: ${newComplaintMarkers.length}개`);
+        setComplaintMarkers(newComplaintMarkers);
     };
 
     // ✅ 수정된 addMarker 함수
@@ -976,6 +1579,12 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
 
     // ✅ 수정된 fetchMarkers 함수
     const fetchMarkers = async (map) => {
+        // filterType이 'alert'일 때는 일반 마커를 로드하지 않음
+        if (filterType === 'alert') {
+            console.log('🚨 알림 모드: 일반 마커 로드 건너뜀');
+            return;
+        }
+        
         try {
             const response = await axios.get('http://localhost:3001/api/marker/allmarkers');
             const markerDataList = response.data;
@@ -1088,7 +1697,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                 style={{ width: "100%", height: "100%", borderRadius: "10px" }}
             ></div>
 
-            {/* 편집 모드 버튼 - 항상 표시 */}
+            {/* 편집 모드 버튼 - 항상 표시
             <button
                 onClick={handleToggleEditing}
                 style={{
@@ -1105,53 +1714,55 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                     fontWeight: 'bold'
                 }}>
                 {isEditing ? '편집 완료' : '편집 모드'}
-            </button>
+            </button> */}
 
-            {/* 마커 타입 필터링 - 항상 표시 */}
-            <div style={{
-                position: 'absolute',
-                top: '10px',
-                left: '10px',
-                zIndex: 100,
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                color: 'white',
-                padding: '10px',
-                borderRadius: '8px',
-                display: 'flex',
-                gap: '10px',
-            }}>
-                <button
-                    onClick={() => setFilterType('all')}
-                    style={{
-                        backgroundColor: filterType === 'all' ? '#2196F3' : 'transparent',
-                        color: 'white',
-                        border: '1px solid white',
-                        borderRadius: '5px',
-                        padding: '8px 12px',
-                        cursor: 'pointer',
-                        fontWeight: 'bold'
-                    }}
-                >
-                    모두 보기
-                </button>
-                {Object.entries(markerTypes).map(([type, config]) => (
+            {/* 마커 타입 필터링 - hideFilterButtons가 false일 때만 표시 */}
+            {!hideFilterButtons && (
+                <div style={{
+                    position: 'absolute',
+                    top: '10px',
+                    left: '10px',
+                    zIndex: 100,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    color: 'white',
+                    padding: '10px',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    gap: '10px',
+                }}>
                     <button
-                        key={type}
-                        onClick={() => setFilterType(type)}
+                        onClick={() => setFilterType('all')}
                         style={{
-                            backgroundColor: filterType === type ? config.color : 'transparent',
+                            backgroundColor: filterType === 'all' ? '#2196F3' : 'transparent',
                             color: 'white',
-                            border: `1px solid ${filterType === type ? config.color : 'white'}`,
+                            border: '1px solid white',
                             borderRadius: '5px',
                             padding: '8px 12px',
                             cursor: 'pointer',
                             fontWeight: 'bold'
                         }}
                     >
-                        {config.icon} {config.name}
+                        모두 보기
                     </button>
-                ))}
-            </div>
+                    {Object.entries(markerTypes).map(([type, config]) => (
+                        <button
+                            key={type}
+                            onClick={() => setFilterType(type)}
+                            style={{
+                                backgroundColor: filterType === type ? config.color : 'transparent',
+                                color: 'white',
+                                border: `1px solid ${filterType === type ? config.color : 'white'}`,
+                                borderRadius: '5px',
+                                padding: '8px 12px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            {config.icon} {config.name}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             {isEditing && !showRiskMarkers && (
                 <div style={{
@@ -1297,7 +1908,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                 </div>
             )}
 
-            {/* 위험도 마커 모드일 때 표시할 정보 */}
+            {/* 위험도 마커 모드일 때 표시할 정보
             {showRiskMarkers && (
                 <div style={{
                     position: 'absolute',
@@ -1313,7 +1924,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                 }}>
                     🗺️ 위험도 마커 모드 | 총 {riskData?.length || 0}개 구간
                 </div>
-            )}
+            )} */}
 
 
         </div>
