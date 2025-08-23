@@ -159,14 +159,6 @@ console.log(`날씨 조회 요청: lat=${lat}, lon=${lon}`); // 디버깅용
 });
 
 
-
-
-
-
-
-//현재 시간 분 단위로
-//const timestamp = Math.floor(Date.now() / (1000*60));
-
 // POST 
 router.post('/save_weather', (req, res) => {
 const {lat, lon, temperature, rain, snow, weather } = req.body;

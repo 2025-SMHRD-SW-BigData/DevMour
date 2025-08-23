@@ -1,5 +1,6 @@
 import React, {useState,useContext,useEffect,useRef} from "react";
 import { InfoContext } from "./context/InfoContext";
+import "./WeatherDisplay.css"
 
 const WeatherDisplay = ({}) => {
     console.log("출력중~")

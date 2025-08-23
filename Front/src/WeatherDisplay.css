@@ -1,0 +1,69 @@
+.weather-info {
+  background: #fff; 
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 20px 28px;
+  margin: 20px 0;
+  font-family: "Noto Sans KR", sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  justify-content: center;
+}
+
+.weather-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.weather-location {
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  color: #333;
+}
+
+/* 가로 배치 */
+.weather-row {
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+  gap: 20px;
+  margin-top: 10px;
+}
+
+/* 각각의 카드 */
+.detail-item {
+  flex: 1;
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  font-size: 0.95rem;
+  color: #444;
+}
+
+/* 온도 강조 */
+.weather-temp {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #ff6b6b;
+}
+
+/* 상태 강조 */
+.weather-condition {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.weather-placeholder {
+  background: #f5f6fa;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  color: #888;
+  font-size: 0.95rem;
+}
