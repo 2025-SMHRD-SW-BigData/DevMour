@@ -93,6 +93,29 @@ const RiskRankingDetail = () => {
         return '#27ae60'; // 초록색
     };
 
+    // 위험도 항목 클릭 시 처리
+    const handleRiskItemClick = (item, index) => {
+        console.log('🎯 위험도 항목 클릭:', { item, index });
+        
+        // 지도로 보기 모드로 전환
+        setShowMap(true);
+        
+        // 지도 전환 후 약간의 지연을 두고 마커로 이동
+        setTimeout(() => {
+            if (window.moveToRiskMarker) {
+                console.log('🚀 moveToRiskMarker 함수 호출');
+                window.moveToRiskMarker(
+                    item.coordinates.lat, 
+                    item.coordinates.lon, 
+                    item
+                );
+                console.log('✅ 위험도 마커 위치 이동 및 상세정보창 표시 완료');
+            } else {
+                console.log('⚠️ moveToRiskMarker 함수가 아직 준비되지 않음');
+            }
+        }, 1500); // 지도 로딩을 위한 충분한 시간
+    };
+
     if (loading) {
         return (
             <div className="detail-container">
@@ -295,7 +318,12 @@ const RiskRankingDetail = () => {
                                 {riskData.length > 0 ? (
                                     <div className="ranking-scroll-container">
                                         {riskData.map((item, index) => (
-                                            <div key={item.predIdx} className={`ranking-item ${item.totalRiskScore >= 8.0 ? 'high-risk' : item.totalRiskScore >= 6.0 ? 'medium-risk' : 'low-risk'}`}>
+                                            <div 
+                                                key={item.predIdx} 
+                                                className={`ranking-item ${item.totalRiskScore >= 8.0 ? 'high-risk' : item.totalRiskScore >= 6.0 ? 'medium-risk' : 'low-risk'}`}
+                                                onClick={() => handleRiskItemClick(item, index)}
+                                                style={{ cursor: 'pointer' }}
+                                            >
                                                 <div className="rank-number">#{index + 1}</div>
                                                 <div className="risk-details">
                                                     <span className="risk-level">

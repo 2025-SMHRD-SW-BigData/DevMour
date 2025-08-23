@@ -333,6 +333,12 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
             console.log('🎯 찾은 마커:', targetMarker);
             console.log('🎯 마커의 위험도 데이터:', targetMarker.riskData);
             
+            // 마커가 지도에 표시되어 있는지 확인하고, 없다면 표시
+            if (!targetMarker.getMap()) {
+                console.log('🔄 마커를 지도에 표시');
+                targetMarker.setMap(mapRef.current);
+            }
+            
             // 약간의 지연 후 마커 클릭 이벤트 트리거 (지도 이동 완료 후)
             setTimeout(() => {
                 try {
@@ -344,7 +350,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                     // 대안: 직접 InfoWindow 생성하여 표시
                     showRiskInfoWindowDirectly(targetMarker, targetMarker.riskData);
                 }
-            }, 500);
+            }, 800); // 지연 시간을 늘려서 지도 이동 완료 보장
         } else {
             console.log('⚠️ 해당 위치의 위험도 마커를 찾을 수 없음');
             console.log('🔍 현재 위험도 마커들:', riskMarkers.map(marker => ({
@@ -354,6 +360,14 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                     lon: marker.riskData.coordinates?.lon || marker.riskData.lon
                 } : null
             })));
+            
+            // 마커를 찾지 못했을 때도 직접 InfoWindow 표시 시도
+            console.log('🔄 마커를 찾지 못했지만 직접 InfoWindow 표시 시도');
+            const dummyMarker = {
+                getMap: () => mapRef.current,
+                getPosition: () => new window.naver.maps.LatLng(lat, lon)
+            };
+            showRiskInfoWindowDirectly(dummyMarker, riskData);
         }
     };
 
@@ -486,7 +500,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                     }
                 }
             });
-        }, 100);
+        }, 200); // 지연 시간을 늘려서 마커 생성 완료 보장
     };
 
     // ✅ 수정된 addMarker 함수
