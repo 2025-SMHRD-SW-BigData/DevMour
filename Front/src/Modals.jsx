@@ -251,7 +251,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                         </div>
                     ) : (
                         <>
-                                                    <div className="cctv-feed" style={{ 
+                            <div className="cctv-feed" style={{ 
                             width: '100%', 
                             height: '470px',
                             position: 'relative',

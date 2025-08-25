@@ -1,6 +1,6 @@
 import React , {useState, useEffect, useContext} from "react";
 import { useNavigate } from "react-router-dom";
-import { InfoContext } from "./context/InfoContext";
+import { InfoContext } from "./context/InfoContext.jsx";
 import "./Dashboard.css";
 import NaverMap from "./NaverMap";
 import Modals from "./Modals";
@@ -533,11 +533,14 @@ const Dashboard = () => {
 
       {/* 메인 */}
       <main className="main">
-        <NaverMap 
-          onMarkerClick={handleMarkerClick}
-          riskData={riskDetailData}
-          showRiskMarkers={true}
-        />
+        <div className="map-container">
+          <NaverMap 
+            onMarkerClick={handleMarkerClick}
+            riskData={riskDetailData}
+            showRiskMarkers={true}
+          />
+        </div>
+        
         <Modals 
           isOpen={isModalOpen} 
           onClose={() => setIsModalOpen(false)}
@@ -545,12 +548,10 @@ const Dashboard = () => {
           markerData={selectedMarkerData}
           isEditMode={false}
         />
+        
         <div className="weather-card">
-          <h3> 날씨 정보 및 예측</h3>
+          <h3>🌤️ 날씨 정보 및 예측</h3>
           <WeatherDisplay/>
-           {/* <div className="weather">
-
-          </div> */}
         </div>
       </main>
 
