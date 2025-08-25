@@ -48,6 +48,7 @@ export default function Index() {
     try {
       const success = await login(username, password);
       if (success) {
+        console.log('✅ 로그인 성공, Dashboard로 이동');
         setIsLoginOpen(false);
         setUsername("");
         setPassword("");
@@ -56,7 +57,8 @@ export default function Index() {
         setLoginError("아이디 또는 비밀번호가 올바르지 않습니다.");
       }
     } catch (error) {
-      setLoginError("로그인 중 오류가 발생했습니다.");
+      console.error('❌ 로그인 처리 오류:', error);
+      setLoginError("로그인 중 오류가 발생했습니다. 다시 시도해주세요.");
     } finally {
       setIsLoading(false);
     }

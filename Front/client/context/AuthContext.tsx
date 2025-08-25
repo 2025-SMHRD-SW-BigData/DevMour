@@ -27,27 +27,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      // 실제 로그인 API 호출 대신 간단한 검증
-      if (username === 'admin' && password === 'admin') {
-        const userData = {
-          id: 1,
-          username: username,
-          role: 'admin',
-          name: '관리자'
-        };
-        setUser(userData);
+      console.log('🔐 로그인 시도:', username);
+      
+      const response = await fetch('http://localhost:3001/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          admin_id: username,
+          admin_pw: password
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('✅ 로그인 성공:', data.user);
+        setUser(data.user);
         setIsAuthenticated(true);
-        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('user', JSON.stringify(data.user));
         return true;
+      } else {
+        console.log('❌ 로그인 실패:', data.message);
+        return false;
       }
-      return false;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('❌ 로그인 오류:', error);
       return false;
     }
   };
 
   const logout = () => {
+    console.log('🚪 로그아웃');
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem('user');
@@ -61,8 +73,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userData = JSON.parse(savedUser);
         setUser(userData);
         setIsAuthenticated(true);
+        console.log('🔄 로그인 상태 복원:', userData);
       } catch (error) {
-        console.error('Failed to parse saved user data:', error);
+        console.error('❌ 저장된 사용자 데이터 파싱 실패:', error);
         localStorage.removeItem('user');
       }
     }
