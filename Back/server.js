@@ -53,6 +53,9 @@ app.use('/api/complaint', require('./router/complaint'));
 // 공사 통제 관련 라우터 연결
 app.use('/api/construction', require('./router/construction'));
 
+// 업데이트 관련 라우터 연결
+app.use('/api/update', require('./router/update'));
+
 
 // 기본 라우트 추가 (선택사항)
 app.get('/', (req, res) => {
