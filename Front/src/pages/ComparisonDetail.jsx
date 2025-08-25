@@ -3,37 +3,130 @@ import { useNavigate } from 'react-router-dom';
 import '../Dashboard.css';
 import './DetailPages.css';
 
-// 막대 그래프 컴포넌트
-const BarChart = ({ currentValue, previousValue, label, unit = '', maxValue = null }) => {
-    const max = maxValue || Math.max(currentValue || 0, previousValue || 0) * 1.2;
-    const currentWidth = ((currentValue || 0) / max) * 100;
-    const previousWidth = ((previousValue || 0) / max) * 100;
+// 원그래프 컴포넌트
+const PieChart = ({ currentValue, previousValue, label, unit = '', maxValue = null }) => {
+    const total = (currentValue || 0) + (previousValue || 0);
+    const currentPercentage = total > 0 ? (currentValue || 0) / total : 0;
+    const previousPercentage = total > 0 ? (previousValue || 0) / total : 0;
+    
+    // 원그래프 크기 계산
+    const size = 200;
+    const radius = 80;
+    const strokeWidth = 40;
+    
+    // SVG 중심점
+    const centerX = size / 2;
+    const centerY = size / 2;
+    
+    // 원그래프 경로 계산
+    const circumference = 2 * Math.PI * radius;
+    
+    // 수치에 따른 색상 결정 (작은 수치: 회색, 큰 수치: 빨간색)
+    const isCurrentLarger = (currentValue || 0) > (previousValue || 0);
+    const largerColor = "#F44336"; // 빨간색
+    const smallerColor = "#9E9E9E"; // 회색
+    
+    // 현재값과 전년값 중 큰 값과 작은 값 구분
+    const largerValue = Math.max(currentValue || 0, previousValue || 0);
+    const smallerValue = Math.min(currentValue || 0, previousValue || 0);
+    
+    // 큰 값과 작은 값의 색상 할당
+    const largerStrokeDasharray = (largerValue / total) * circumference;
+    const smallerStrokeDasharray = (smallerValue / total) * circumference;
 
     return (
-        <div className="bar-chart">
+        <div className="pie-chart-container">
             <div className="chart-label">{label}</div>
-            <div className="chart-bars">
-                <div className="bar-group">
-                    <div className="bar-label">현재</div>
-                    <div className="bar-container">
-                        <div 
-                            className="bar current-bar" 
-                            style={{ width: `${currentWidth}%` }}
-                        >
-                            <span className="bar-value">{currentValue || 0}{unit}</span>
+            <div className="chart-content">
+                <div className="pie-chart">
+                    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                        {total > 0 ? (
+                            <>
+                                {/* 큰 값 구간 (주황색) */}
+                                <circle
+                                    cx={centerX}
+                                    cy={centerY}
+                                    r={radius}
+                                    fill="none"
+                                    stroke="url(#largerGradient)"
+                                    strokeWidth={strokeWidth}
+                                    strokeDasharray={`${largerStrokeDasharray} ${circumference}`}
+                                    strokeDashoffset="0"
+                                    transform="rotate(-90 100 100)"
+                                />
+                                {/* 작은 값 구간 (노란색) */}
+                                <circle
+                                    cx={centerX}
+                                    cy={centerY}
+                                    r={radius}
+                                    fill="none"
+                                    stroke="url(#smallerGradient)"
+                                    strokeWidth={strokeWidth}
+                                    strokeDasharray={`${smallerStrokeDasharray} ${circumference}`}
+                                    strokeDashoffset={`-${largerStrokeDasharray}`}
+                                    transform="rotate(-90 100 100)"
+                                />
+
+                                {/* 그라데이션 정의 */}
+                                <defs>
+                                    <linearGradient id="largerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#F44336" />
+                                        <stop offset="100%" stopColor="#D32F2F" />
+                                    </linearGradient>
+                                    <linearGradient id="smallerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#9E9E9E" />
+                                        <stop offset="100%" stopColor="#757575" />
+                                    </linearGradient>
+                                </defs>
+                            </>
+                        ) : (
+                            <circle
+                                cx={centerX}
+                                cy={centerY}
+                                r={radius}
+                                fill="none"
+                                stroke="#e9ecef"
+                                strokeWidth={strokeWidth}
+                            />
+                        )}
+                    </svg>
+
+                    {/* 중앙 정보 표시 - 증감률 */}
+                    <div className="chart-center">
+                        <div className="change-rate" style={{
+                            color: (currentValue || 0) > (previousValue || 0) ? '#F44336' : '#2196F3'
+                        }}>
+                            {(currentValue || 0) > (previousValue || 0) ? '+' : ''}
+                            {previousValue && previousValue > 0 
+                                ? (((currentValue || 0) - previousValue) / previousValue * 100).toFixed(2)
+                                : '0.00'
+                            }%
+                        </div>
+                        <div className="change-label">
+                            {(currentValue || 0) > (previousValue || 0) ? '증가' : '감소'}
                         </div>
                     </div>
                 </div>
-                <div className="bar-group">
-                    <div className="bar-label">전년</div>
-                    <div className="bar-container">
-                        <div 
-                            className="bar previous-bar" 
-                            style={{ width: `${previousWidth}%` }}
-                        >
-                            <span className="bar-value">{previousValue || 0}{unit}</span>
+
+                {/* 범례 */}
+                <div className="chart-legend">
+                    <div className="legend-item">
+                        <div className="legend-color smaller"></div>
+                        <div className="legend-text">
+                            <div className="legend-label">작은 수치</div>
+                            <div className="legend-count">{smallerValue}{unit}</div>
+                            <div className="legend-percentage">{total > 0 ? (smallerValue / total * 100).toFixed(1) : 0}%</div>
                         </div>
                     </div>
+                    <div className="legend-item">
+                        <div className="legend-color larger"></div>
+                        <div className="legend-text">
+                            <div className="legend-label">큰 수치</div>
+                            <div className="legend-count">{largerValue}{unit}</div>
+                            <div className="legend-percentage">{total > 0 ? (largerValue / total * 100).toFixed(1) : 0}%</div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -158,16 +251,18 @@ const ComparisonDetail = () => {
                                     전년: {comparisonData.riskPrediction?.lastYear?.count || 0}건
                                 </div>
                             </div>
-                            <div className="change-indicator" 
-                                 style={{ color: getTrendColor(
-                                     comparisonData.riskPrediction?.currentYear?.count, 
-                                     comparisonData.riskPrediction?.lastYear?.count
-                                 ) }}>
+                            <div className="change-indicator"
+                                style={{
+                                    color: getTrendColor(
+                                        comparisonData.riskPrediction?.currentYear?.count,
+                                        comparisonData.riskPrediction?.lastYear?.count
+                                    )
+                                }}>
                                 {getTrendIcon(
-                                    comparisonData.riskPrediction?.currentYear?.count, 
+                                    comparisonData.riskPrediction?.currentYear?.count,
                                     comparisonData.riskPrediction?.lastYear?.count
                                 )} {calculateChange(
-                                    comparisonData.riskPrediction?.currentYear?.count, 
+                                    comparisonData.riskPrediction?.currentYear?.count,
                                     comparisonData.riskPrediction?.lastYear?.count
                                 )}%
                             </div>
@@ -188,16 +283,18 @@ const ComparisonDetail = () => {
                                     전년: {comparisonData.citizenReport?.lastYear?.count || 0}건
                                 </div>
                             </div>
-                            <div className="change-indicator" 
-                                 style={{ color: getTrendColor(
-                                     comparisonData.citizenReport?.currentYear?.count, 
-                                     comparisonData.citizenReport?.lastYear?.count
-                                 ) }}>
+                            <div className="change-indicator"
+                                style={{
+                                    color: getTrendColor(
+                                        comparisonData.citizenReport?.currentYear?.count,
+                                        comparisonData.citizenReport?.lastYear?.count
+                                    )
+                                }}>
                                 {getTrendIcon(
-                                    comparisonData.citizenReport?.currentYear?.count, 
+                                    comparisonData.citizenReport?.currentYear?.count,
                                     comparisonData.citizenReport?.lastYear?.count
                                 )} {calculateChange(
-                                    comparisonData.citizenReport?.currentYear?.count, 
+                                    comparisonData.citizenReport?.currentYear?.count,
                                     comparisonData.citizenReport?.lastYear?.count
                                 )}%
                             </div>
@@ -213,16 +310,18 @@ const ComparisonDetail = () => {
                                     전년: {comparisonData.weather?.lastYear?.avgPrecipitation?.toFixed(1) || 0}mm
                                 </div>
                             </div>
-                            <div className="change-indicator" 
-                                 style={{ color: getTrendColor(
-                                     comparisonData.weather?.currentYear?.avgPrecipitation, 
-                                     comparisonData.weather?.lastYear?.avgPrecipitation
-                                 ) }}>
+                            <div className="change-indicator"
+                                style={{
+                                    color: getTrendColor(
+                                        comparisonData.weather?.currentYear?.avgPrecipitation,
+                                        comparisonData.weather?.lastYear?.avgPrecipitation
+                                    )
+                                }}>
                                 {getTrendIcon(
-                                    comparisonData.weather?.currentYear?.avgPrecipitation, 
+                                    comparisonData.weather?.currentYear?.avgPrecipitation,
                                     comparisonData.weather?.lastYear?.avgPrecipitation
                                 )} {calculateChange(
-                                    comparisonData.weather?.currentYear?.avgPrecipitation, 
+                                    comparisonData.weather?.currentYear?.avgPrecipitation,
                                     comparisonData.weather?.lastYear?.avgPrecipitation
                                 )}%
                             </div>
@@ -238,16 +337,18 @@ const ComparisonDetail = () => {
                                     전년: {comparisonData.weather?.lastYear?.avgTemp?.toFixed(1) || 0}°C
                                 </div>
                             </div>
-                            <div className="change-indicator" 
-                                 style={{ color: getTrendColor(
-                                     comparisonData.weather?.currentYear?.avgTemp, 
-                                     comparisonData.weather?.lastYear?.avgTemp
-                                 ) }}>
+                            <div className="change-indicator"
+                                style={{
+                                    color: getTrendColor(
+                                        comparisonData.weather?.currentYear?.avgTemp,
+                                        comparisonData.weather?.lastYear?.avgTemp
+                                    )
+                                }}>
                                 {getTrendIcon(
-                                    comparisonData.weather?.currentYear?.avgTemp, 
+                                    comparisonData.weather?.currentYear?.avgTemp,
                                     comparisonData.weather?.lastYear?.avgTemp
                                 )} {calculateChange(
-                                    comparisonData.weather?.currentYear?.avgTemp, 
+                                    comparisonData.weather?.currentYear?.avgTemp,
                                     comparisonData.weather?.lastYear?.avgTemp
                                 )}%
                             </div>
@@ -261,13 +362,13 @@ const ComparisonDetail = () => {
                         <div className="comparison-item">
                             <h3>⚠️ 위험도 예측 현황</h3>
                             <div className="chart-section">
-                                <BarChart 
+                                <PieChart
                                     currentValue={comparisonData.riskPrediction?.currentYear?.count || 0}
                                     previousValue={comparisonData.riskPrediction?.lastYear?.count || 0}
                                     label="건수 비교"
                                     unit="건"
                                 />
-                                <BarChart 
+                                <PieChart
                                     currentValue={comparisonData.riskPrediction?.currentYear?.avgRiskScore || 0}
                                     previousValue={comparisonData.riskPrediction?.lastYear?.avgRiskScore || 0}
                                     label="평균 위험도 비교"
@@ -280,7 +381,7 @@ const ComparisonDetail = () => {
                         <div className="comparison-item">
                             <h3>📋 시민 제보 현황</h3>
                             <div className="chart-section">
-                                <BarChart 
+                                <PieChart
                                     currentValue={comparisonData.citizenReport?.currentYear?.count || 0}
                                     previousValue={comparisonData.citizenReport?.lastYear?.count || 0}
                                     label="제보 건수 비교"
@@ -292,19 +393,19 @@ const ComparisonDetail = () => {
                         <div className="comparison-item">
                             <h3>🌤️ 기상 현황</h3>
                             <div className="chart-section">
-                                <BarChart 
+                                <PieChart
                                     currentValue={comparisonData.weather?.currentYear?.avgPrecipitation || 0}
                                     previousValue={comparisonData.weather?.lastYear?.avgPrecipitation || 0}
                                     label="평균 강수량 비교"
                                     unit="mm"
                                 />
-                                <BarChart 
+                                <PieChart
                                     currentValue={comparisonData.weather?.currentYear?.avgTemp || 0}
                                     previousValue={comparisonData.weather?.lastYear?.avgTemp || 0}
                                     label="평균 기온 비교"
                                     unit="°C"
                                 />
-                                <BarChart 
+                                <PieChart
                                     currentValue={comparisonData.weather?.currentYear?.avgSnowfall || 0}
                                     previousValue={comparisonData.weather?.lastYear?.avgSnowfall || 0}
                                     label="평균 강설량 비교"
