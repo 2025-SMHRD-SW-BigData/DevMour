@@ -772,6 +772,7 @@ const Dashboard = () => {
           )}
           
         </div>
+<<<<<<< HEAD
 
         {/* CCTV 추가 카드 */}
         <div className="card">
@@ -802,6 +803,8 @@ const Dashboard = () => {
             </button>
           </div>
         </div>
+=======
+>>>>>>> f213aac (첫페이지로그인)
       </aside>
 
     </div>

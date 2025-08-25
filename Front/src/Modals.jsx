@@ -70,12 +70,15 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                 // ✅ 일반 모드: API 호출하여 상세 정보 가져오기
                 console.log('✅ 일반 모드: API 호출하여 상세 정보 요청:', markerData.marker_id);
                 fetchMarkerDetail(markerData.marker_id, markerData.type || markerType);
+<<<<<<< HEAD
                 
                 // CCTV 마커인 경우 iframe 로딩 상태 초기화
                 if (markerData.type === 'cctv' || markerType === 'cctv') {
                     setVideoLoading(true);
                     setVideoError(false);
                 }
+=======
+>>>>>>> f213aac (첫페이지로그인)
             } else {
                 console.log('❌ marker_id가 설정되지 않음:', markerData);
                 setDetailData(null);
@@ -251,6 +254,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                         </div>
                     ) : (
                         <>
+<<<<<<< HEAD
                                                     <div className="cctv-feed" style={{ 
                             width: '100%', 
                             height: '470px',
@@ -343,6 +347,61 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                 </div>
                             )}
                         </div>
+=======
+                            <div className="cctv-feed">
+                                <div className="feed-overlay">실시간 스트리밍</div>
+                                {cctvData?.cctv_url ? (
+                                    <div className="video-player-container">
+                                        {videoLoading && (
+                                            <div className="video-loading">
+                                                <div className="spinner"></div>
+                                                <span>스트리밍 연결 중...</span>
+                                            </div>
+                                        )}
+                                        {videoError && (
+                                            <div className="video-loading">
+                                                <div style={{ fontSize: '48px', marginBottom: '10px' }}>❌</div>
+                                                <span>스트리밍 연결 실패</span>
+                                                <p style={{ fontSize: '14px', marginTop: '10px', opacity: 0.8 }}>
+                                                    URL을 확인하거나 새 창에서 열어보세요
+                                                </p>
+                                            </div>
+                                        )}
+                                        <video 
+                                            id="cctv-video-player"
+                                            controls
+                                            style={{
+                                                width: '100%',
+                                                height: 'auto',
+                                                maxHeight: '400px',
+                                                backgroundColor: '#000',
+                                                borderRadius: '8px',
+                                                display: videoLoading || videoError ? 'none' : 'block'
+                                            }}
+                                            onLoadStart={handleVideoLoadStart}
+                                            onCanPlay={handleVideoCanPlay}
+                                            onError={handleVideoError}
+                                        >
+                                            <source src={cctvData.cctv_url} type="video/mp4" />
+                                            <source src={cctvData.cctv_url} type="video/webm" />
+                                            <source src={cctvData.cctv_url} type="video/ogg" />
+                                            <source src={cctvData.cctv_url} type="application/x-mpegURL" />
+                                            <source src={cctvData.cctv_url} type="video/MP2T" />
+                                            브라우저가 비디오 태그를 지원하지 않습니다.
+                                        </video>
+                                    </div>
+                                ) : (
+                                    <div style={{ textAlign: 'center' }}>
+                                        <div style={{ fontSize: '48px', marginBottom: '10px' }}>📹</div>
+                                        <p>CCTV 피드 연결 중...</p>
+                                        <small>위치: {cctvLat?.toFixed(6) || 'N/A'}, {cctvLon?.toFixed(6) || 'N/A'}</small>
+                                        <p style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
+                                            스트리밍 URL이 설정되지 않았습니다.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+>>>>>>> f213aac (첫페이지로그인)
                             {cctvData?.cctv_url && (
                                 <div className="streaming-link-container">
                                     <a 
