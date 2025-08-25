@@ -38,6 +38,9 @@ const Modals = ({ isOpen, onClose, markerType, markerData }) => {
     const [loading, setLoading] = useState(false);
     const [videoLoading, setVideoLoading] = useState(false);
     const [videoError, setVideoError] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editFormData, setEditFormData] = useState({});
+    const [updateLoading, setUpdateLoading] = useState(false);
 
     // 마커 상세 정보 가져오기
     useEffect(() => {
@@ -90,6 +93,73 @@ const Modals = ({ isOpen, onClose, markerType, markerData }) => {
     const handleVideoError = () => {
         setVideoLoading(false);
         setVideoError(true);
+    };
+
+    // 수정 모드 전환
+    const handleEditMode = () => {
+        if (detailData?.detail) {
+            setEditFormData({
+                control_desc: detailData.detail.control_desc || '',
+                control_st_tm: detailData.detail.control_st_tm ? detailData.detail.control_st_tm.split('T')[0] : '',
+                control_ed_tm: detailData.detail.control_ed_tm ? detailData.detail.control_ed_tm.split('T')[0] : '',
+                control_addr: detailData.detail.control_addr || '',
+                control_type: detailData.detail.control_type || 'construction'
+            });
+        }
+        setIsEditMode(true);
+    };
+
+    // 수정 모드 취소
+    const handleCancelEdit = () => {
+        setIsEditMode(false);
+        setEditFormData({});
+    };
+
+    // 폼 데이터 변경 핸들러
+    const handleFormChange = (field, value) => {
+        setEditFormData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    // 데이터 업데이트
+    const handleUpdate = async () => {
+        if (!detailData?.detail?.road_idx) {
+            alert('업데이트할 데이터를 찾을 수 없습니다.');
+            return;
+        }
+
+        setUpdateLoading(true);
+        try {
+            const response = await fetch('http://localhost:3001/api/update/road-control', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    road_idx: detailData.detail.road_idx,
+                    ...editFormData
+                }),
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                alert('성공적으로 업데이트되었습니다.');
+                setIsEditMode(false);
+                setEditFormData({});
+                // 데이터 새로고침
+                fetchMarkerDetail(markerData.marker_id);
+            } else {
+                const errorData = await response.json();
+                alert(`업데이트 실패: ${errorData.message || '알 수 없는 오류가 발생했습니다.'}`);
+            }
+        } catch (error) {
+            console.error('업데이트 오류:', error);
+            alert('업데이트 중 오류가 발생했습니다.');
+        } finally {
+            setUpdateLoading(false);
+        }
     };
 
     if (!isOpen) return null;
@@ -255,7 +325,27 @@ const Modals = ({ isOpen, onClose, markerType, markerData }) => {
             <>
                 <div className="modal-header construction">
                     <h2>{markerData?.icon || '🚧'} 공사 현황 - {controlData?.control_type === 'construction' ? '공사중' : '통제중'}</h2>
-                    <span className="close" onClick={onClose}>&times;</span>
+                    <div className="header-actions">
+                        {!isEditMode && controlData && (
+                            <button 
+                                className="edit-btn" 
+                                onClick={handleEditMode}
+                                style={{
+                                    background: '#4CAF50',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '8px 16px',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    marginRight: '10px'
+                                }}
+                            >
+                                ✏️ 수정
+                            </button>
+                        )}
+                        <span className="close" onClick={onClose}>&times;</span>
+                    </div>
                 </div>
                 <div className="modal-body">
                     {loading ? (
@@ -278,59 +368,149 @@ const Modals = ({ isOpen, onClose, markerType, markerData }) => {
                         </div>
                     ) : (
                         <>
-                            <div className="construction-status">
-                                <h4>🏗️ 공사 진행 상황</h4>
-                                <p><strong>공사 종류:</strong> {controlData?.control_desc || '도로 포장 공사'}</p>
-                                <p><strong>시작일:</strong> {controlData?.control_st_tm ? new Date(controlData.control_st_tm).toLocaleDateString('ko-KR') : '2024년 1월 15일'}</p>
-                                <p><strong>예상 완료일:</strong> {controlData?.control_ed_tm ? new Date(controlData.control_ed_tm).toLocaleDateString('ko-KR') : '2024년 3월 20일'}</p>
-                                <p><strong>현재 단계:</strong> 포장층 시공 중</p>
-                                {controlData?.control_addr && (
-                                    <p><strong>통제 주소:</strong> {controlData.control_addr}</p>
-                                )}
-                                <p><strong>위치:</strong> {controlLat?.toFixed(6) || 'N/A'}, {controlLon?.toFixed(6) || 'N/A'}</p>
-                            </div>
-
-                            <div className="construction-progress">
-                                <h4>📈 공사 진행률</h4>
-                                <div className="progress-bar">
-                                    <div className="progress-fill" style={{ width: '65%' }}></div>
-                                </div>
-                                <p>65% 완료 (예상 35일 남음)</p>
-                            </div>
-
-                            <div className="analysis-results">
-                                <div className="analysis-card">
-                                    <h4>⚠️ 안전 관리 현황</h4>
-                                    <div className="detection-item">
-                                        <span>안전장비 착용률</span>
-                                        <span className="marker-type-construction">98%</span>
+                            {isEditMode ? (
+                                <div className="edit-form">
+                                    <h4>✏️ 공사 정보 수정</h4>
+                                    <div className="form-group">
+                                        <label>공사 종류:</label>
+                                        <input
+                                            type="text"
+                                            value={editFormData.control_desc || ''}
+                                            onChange={(e) => handleFormChange('control_desc', e.target.value)}
+                                            placeholder="공사 종류를 입력하세요"
+                                        />
                                     </div>
-                                    <div className="detection-item">
-                                        <span>안전사고 발생</span>
-                                        <span className="marker-type-construction">0건</span>
+                                    <div className="form-group">
+                                        <label>시작일:</label>
+                                        <input
+                                            type="date"
+                                            value={editFormData.control_st_tm || ''}
+                                            onChange={(e) => handleFormChange('control_st_tm', e.target.value)}
+                                        />
                                     </div>
-                                    <div className="detection-item">
-                                        <span>교통 통제 준수</span>
-                                        <span className="marker-type-construction">100%</span>
+                                    <div className="form-group">
+                                        <label>예상 완료일:</label>
+                                        <input
+                                            type="date"
+                                            value={editFormData.control_ed_tm || ''}
+                                            onChange={(e) => handleFormChange('control_ed_tm', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>통제 주소:</label>
+                                        <input
+                                            type="text"
+                                            value={editFormData.control_addr || ''}
+                                            onChange={(e) => handleFormChange('control_addr', e.target.value)}
+                                            placeholder="통제 주소를 입력하세요"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>통제 타입:</label>
+                                        <select
+                                            value={editFormData.control_type || 'construction'}
+                                            onChange={(e) => handleFormChange('control_type', e.target.value)}
+                                        >
+                                            <option value="construction">공사중</option>
+                                            <option value="flood">홍수 통제</option>
+                                        </select>
+                                    </div>
+                                    <div className="form-actions">
+                                        <button 
+                                            className="cancel-btn" 
+                                            onClick={handleCancelEdit}
+                                            style={{
+                                                background: '#f44336',
+                                                color: 'white',
+                                                border: 'none',
+                                                padding: '10px 20px',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                fontSize: '14px',
+                                                marginRight: '10px'
+                                            }}
+                                        >
+                                            ❌ 취소
+                                        </button>
+                                        <button 
+                                            className="update-btn" 
+                                            onClick={handleUpdate}
+                                            disabled={updateLoading}
+                                            style={{
+                                                background: updateLoading ? '#ccc' : '#4CAF50',
+                                                color: 'white',
+                                                border: 'none',
+                                                padding: '10px 20px',
+                                                borderRadius: '4px',
+                                                cursor: updateLoading ? 'not-allowed' : 'pointer',
+                                                fontSize: '14px'
+                                            }}
+                                        >
+                                            {updateLoading ? '⏳ 업데이트 중...' : '✅ 수정 완료'}
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="analysis-card">
-                                    <h4>🚦 교통 영향</h4>
-                                    <p>차선 축소: 2차선 → 1차선</p>
-                                    <p>제한속도: 30km/h</p>
-                                    <p>우회로: 북쪽 500m 지점</p>
+                            ) : (
+                                <div className="construction-status">
+                                    <h4>🏗️ 공사 진행 상황</h4>
+                                    <p><strong>공사 종류:</strong> {controlData?.control_desc || '도로 포장 공사'}</p>
+                                    <p><strong>시작일:</strong> {controlData?.control_st_tm ? new Date(controlData.control_st_tm).toLocaleDateString('ko-KR') : '2024년 1월 15일'}</p>
+                                    <p><strong>예상 완료일:</strong> {controlData?.control_ed_tm ? new Date(controlData.control_ed_tm).toLocaleDateString('ko-KR') : '2024년 3월 20일'}</p>
+                                    <p><strong>현재 단계:</strong> 포장층 시공 중</p>
+                                    {controlData?.control_addr && (
+                                        <p><strong>통제 주소:</strong> {controlData.control_addr}</p>
+                                    )}
+                                    <p><strong>위치:</strong> {controlLat?.toFixed(6) || 'N/A'}, {controlLon?.toFixed(6) || 'N/A'}</p>
                                 </div>
-                            </div>
+                            )}
 
-                            <div className="recommendations-card">
-                                <h4>💡 주의사항</h4>
-                                <ul>
-                                    <li>공사 구간 진입 시 속도 감속 필수</li>
-                                    <li>안전 표지판 및 신호 준수</li>
-                                    <li>공사 차량 우선 통행</li>
-                                    <li>야간 운전 시 주의</li>
-                                </ul>
-                            </div>
+                            {!isEditMode && (
+                                <div className="construction-progress">
+                                    <h4>📈 공사 진행률</h4>
+                                    <div className="progress-bar">
+                                        <div className="progress-fill" style={{ width: '65%' }}></div>
+                                    </div>
+                                    <p>65% 완료 (예상 35일 남음)</p>
+                                </div>
+                            )}
+
+                            {!isEditMode && (
+                                <>
+                                    <div className="analysis-results">
+                                        <div className="analysis-card">
+                                            <h4>⚠️ 안전 관리 현황</h4>
+                                            <div className="detection-item">
+                                                <span>안전장비 착용률</span>
+                                                <span className="marker-type-construction">98%</span>
+                                            </div>
+                                            <div className="detection-item">
+                                                <span>안전사고 발생</span>
+                                                <span className="marker-type-construction">0건</span>
+                                            </div>
+                                            <div className="detection-item">
+                                                <span>교통 통제 준수</span>
+                                                <span className="marker-type-construction">100%</span>
+                                            </div>
+                                        </div>
+                                        <div className="analysis-card">
+                                            <h4>🚦 교통 영향</h4>
+                                            <p>차선 축소: 2차선 → 1차선</p>
+                                            <p>제한속도: 30km/h</p>
+                                            <p>우회로: 북쪽 500m 지점</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="recommendations-card">
+                                        <h4>💡 주의사항</h4>
+                                        <ul>
+                                            <li>공사 구간 진입 시 속도 감속 필수</li>
+                                            <li>안전 표지판 및 신호 준수</li>
+                                            <li>공사 차량 우선 통행</li>
+                                            <li>야간 운전 시 주의</li>
+                                        </ul>
+                                    </div>
+                                </>
+                            )}
                         </>
                     )}
                 </div>
