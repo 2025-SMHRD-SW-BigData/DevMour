@@ -2,7 +2,7 @@
 .detail-container {
     width: 100%;
     margin: 0;
-    padding: 15px;
+    padding: 11px;
     background-color: #f0f2f5;
     min-height: 100vh;
     box-sizing: border-box;
@@ -13,7 +13,7 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
-    padding: 20px;
+    padding: 10px;
     background: white;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -46,7 +46,7 @@
 .detail-content {
     display: flex;
     flex-direction: column;
-    gap: 25px;
+    gap: 5px;
 }
 
 /* 새로운 좌우 패널 레이아웃 */
@@ -121,6 +121,263 @@
     font-size: 0.9em;
     color: #666;
     margin: 0;
+}
+
+/* 세로 바 막대 그래프 */
+.bar-chart {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.chart-header {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    color: white;
+}
+
+.chart-header .total-count {
+    font-size: 3em;
+    font-weight: bold;
+    margin: 0;
+    color: white;
+}
+
+.chart-header .total-label {
+    font-size: 1.1em;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.bars-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    padding: 0 10px;
+}
+
+.bar-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 0;
+    width: 100%;
+    min-width: 0;
+}
+
+.bar-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 100px;
+    max-width: 100px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.status-icon {
+    font-size: 1.2em;
+}
+
+.status-text {
+    color: #333;
+    font-size: 0.9em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bar-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    min-width: 0;
+    max-width: calc(100% - 120px);
+}
+
+.bar-fill {
+    height: 35px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    min-width: 40px;
+    transition: all 0.3s ease;
+    position: relative;
+    flex-shrink: 0;
+    max-width: 100%;
+}
+
+.bar-fill.completed {
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    color: white;
+}
+
+.bar-fill.in-progress {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    color: white;
+}
+
+.bar-fill.received {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+}
+
+.bar-value {
+    font-weight: 600;
+    font-size: 0.85em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+}
+
+.bar-percentage {
+    color: #666;
+    font-weight: 600;
+    font-size: 0.85em;
+    min-width: 45px;
+    max-width: 45px;
+    text-align: right;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* ComplaintDetail.jsx용 새로운 수직 바 차트 스타일 */
+.complaint-bar-chart {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 5px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.complaint-chart-header {
+    text-align: center;
+    padding: 1px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    color: white;
+    margin-bottom: 1px;
+}
+
+.complaint-chart-header .total-count {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 0;
+    color: white;
+}
+
+.complaint-chart-header .total-label {
+    font-size: 1.1em;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.complaint-bars-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    width:70%;
+}
+
+.complaint-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 15px 0;
+    width: 100%;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.complaint-bar-item:last-child {
+    border-bottom: none;
+}
+
+.complaint-bar-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 120px;
+    max-width: 120px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.complaint-status-icon {
+    font-size: 1.5em;
+}
+
+.complaint-status-text {
+    color: #333;
+    font-size: 1em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.complaint-bar-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    position: relative;
+    min-width: 0;
+}
+
+.complaint-bar-fill {
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 15px;
+    min-width: 60px;
+    transition: all 0.3s ease;
+    position: relative;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.complaint-bar-fill.completed {
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    color: white;
+}
+
+.complaint-bar-fill.in-progress {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    color: white;
+}
+
+.complaint-bar-fill.received {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+}
+
+.complaint-bar-value {
+    font-weight: 600;
+    font-size: 1em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+}
+
+.complaint-bar-percentage {
+    color: #666;
+    font-weight: 600;
+    font-size: 1em;
+    min-width: 60px;
+    max-width: 60px;
+    text-align: right;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 /* 범례 */
@@ -412,6 +669,161 @@
 
 .metric-value {
     font-weight: 500;
+}
+
+/* 전년 대비 비교 스타일 */
+.period-info {
+    color: #666;
+    font-size: 1.1em;
+    margin: 10px 0 0 0;
+    font-style: italic;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.comparison-item {
+    padding: 25px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.comparison-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.comparison-item h3 {
+    margin: 0 0 20px 0;
+    color: #333;
+    font-size: 1.3em;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 12px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+
+
+.avg-risk-score {
+    margin-top: 10px;
+    padding: 10px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    font-size: 0.9em;
+    color: #555;
+    line-height: 1.4;
+}
+
+/* 막대 그래프 스타일 */
+.chart-section {
+    margin-top: 15px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.bar-chart {
+    margin-bottom: 25px;
+}
+
+.bar-chart:last-child {
+    margin-bottom: 0;
+}
+
+.chart-label {
+    font-size: 1em;
+    color: #333;
+    margin-bottom: 15px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.chart-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.bar-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bar-label {
+    min-width: 45px;
+    font-size: 0.85em;
+    color: #555;
+    font-weight: 600;
+}
+
+.bar-container {
+    flex: 1;
+    height: 35px;
+    background: #f8f9fa;
+    border-radius: 18px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #e9ecef;
+}
+
+.bar {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 12px;
+    border-radius: 18px;
+    transition: width 0.4s ease;
+    position: relative;
+}
+
+.current-bar {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.previous-bar {
+    background: linear-gradient(90deg, #95a5a6 0%, #7f8c8d 100%);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(149, 165, 166, 0.3);
+}
+
+.bar-value {
+    font-size: 0.8em;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.loading, .error {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+    font-size: 1.1em;
+}
+
+.error {
+    color: #e74c3c;
 }
 
 /* 요인 분석 */

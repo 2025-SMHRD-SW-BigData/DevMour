@@ -310,6 +310,7 @@ const RiskRankingDetail = () => {
                                     riskData={riskData}
                                     showRiskMarkers={true}
                                     filterType="risk"
+                                    hideFilterButtons={true}
                                     key="risk-map"
                                 />
                             </div>

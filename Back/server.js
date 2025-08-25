@@ -44,6 +44,15 @@ app.use('/api/report', reportRouter);
 // 전년도 동기간 대비 라우터 연결
 app.use('/api/comparison', require('./router/comparison'));
 
+// 연도별 비교 라우터 연결
+app.use('/api/yearlycomparison', require('./router/yearlycomparison'));
+
+// 시민 제보 관련 라우터 연결
+app.use('/api/complaint', require('./router/complaint'));
+
+// 공사 통제 관련 라우터 연결
+app.use('/api/construction', require('./router/construction'));
+
 
 // 기본 라우트 추가 (선택사항)
 app.get('/', (req, res) => {

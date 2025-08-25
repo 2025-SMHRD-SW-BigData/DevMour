@@ -62,6 +62,66 @@ router.get('/recent', (req, res) => {
     });
 });
 
+// 동일년도의 동일 월 기준 알림 목록 조회
+router.get('/monthly', (req, res) => {
+    console.log('✅ 월별 알림 목록 조회 요청 수신');
+    
+    conn.connect(err => {
+        if (err) {
+            console.error('❌ 데이터베이스 연결 실패:', err);
+            return res.status(500).json({ error: '데이터베이스 연결 실패' });
+        }
+
+        // 현재 년도와 월 기준으로 알림 데이터 조회
+        const sql = `
+            SELECT 
+                alert_idx,
+                pred_idx,
+                road_idx,
+                recepient_type,
+                alert_msg,
+                alert_level,
+                sented_at,
+                is_read,
+                admin_id,
+                lat,
+                lon,
+                addr
+            FROM t_alert 
+            WHERE YEAR(sented_at) = YEAR(CURDATE()) 
+            AND MONTH(sented_at) = MONTH(CURDATE())
+            ORDER BY sented_at DESC
+        `;
+
+        conn.query(sql, (err, results) => {
+            if (err) {
+                console.error('❌ 월별 알림 조회 실패:', err);
+                return res.status(500).json({ error: '월별 알림 조회 실패' });
+            }
+
+            console.log('✅ 월별 알림 조회 성공:', results.length, '건');
+            
+            // 응답 데이터 포맷팅 (새로운 필드들 포함)
+            const alerts = results.map(alert => ({
+                alert_idx: alert.alert_idx,
+                pred_idx: alert.pred_idx,
+                road_idx: alert.road_idx,
+                recepient_type: alert.recepient_type,
+                alert_msg: alert.alert_msg,
+                alert_level: alert.alert_level,
+                sented_at: alert.sented_at,
+                is_read: alert.is_read,
+                admin_id: alert.admin_id,
+                lat: alert.lat ? parseFloat(alert.lat) : null,
+                lon: alert.lon ? parseFloat(alert.lon) : null,
+                addr: alert.addr || null
+            }));
+
+            res.json({ alerts });
+        });
+    });
+});
+
 // 알림의 위치 정보 조회
 router.get('/location/:alertId', (req, res) => {
     const alertId = req.params.alertId;
