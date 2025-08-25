@@ -159,15 +159,14 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
         } else if (filterType === 'risk' && mapRef.current) {
             console.log('🚨 위험도 모드: 일반 마커 숨김 (filterType: risk)');
             
-            // 기존 일반 마커들 제거
+            // 기존 일반 마커들 숨기기 (제거하지 않음)
             if (markersRef.current.length > 0) {
                 markersRef.current.forEach(marker => {
                     if (marker && marker.setMap) {
                         marker.setMap(null);
                     }
                 });
-                markersRef.current = [];
-                console.log('✅ 위험도 모드에서 일반 마커 제거 완료');
+                console.log('✅ 위험도 모드에서 일반 마커 숨김 완료 (마커 배열 유지)');
             }
         } else if (filterType !== 'alert' && filterType !== 'risk' && alertMarkersRef.current.length > 0) {
             console.log('🚨 알림 마커 숨김 (filterType:', filterType, ')');
@@ -183,6 +182,15 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                 console.log('🔄 일반 마커 다시 로드 시작');
                 fetchMarkers(mapRef.current);
             }
+        } else if (filterType === 'all' && mapRef.current && markersRef.current.length > 0) {
+            // "모두 보기" 모드로 돌아올 때 숨겨진 일반 마커들 다시 표시
+            console.log('🔄 모두 보기 모드: 숨겨진 일반 마커들 다시 표시');
+            markersRef.current.forEach(marker => {
+                if (marker && marker.setMap) {
+                    marker.setMap(mapRef.current);
+                }
+            });
+            console.log('✅ 일반 마커들 다시 표시 완료');
         }
     }, [filterType]);
 
@@ -1636,6 +1644,8 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                 cctv: cctvDataList.length,
                 roadControl: roadControlDataList.length
             });
+            console.log('🔍 CCTV 데이터 샘플:', cctvDataList.slice(0, 2));
+            console.log('🔍 도로통제 데이터 샘플:', roadControlDataList.slice(0, 2));
 
             // ✅ CCTV 마커 처리
             cctvDataList.forEach(cctvData => {
@@ -1755,6 +1765,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
             markersRef.current = newNaverMarkers;
 
             console.log(`지도에 총 ${newMarkers.length}개의 마커가 추가되었습니다. (CCTV: ${cctvDataList.length}, 도로통제: ${roadControlDataList.length})`);
+            console.log('🔍 생성된 마커 데이터 상세:', newMarkers.map(m => ({ id: m.id, type: m.type, name: m.name, lat: m.lat, lng: m.lng })));
 
         } catch (error) {
             console.error('❌ 마커 데이터 로드 실패:', error.response ? error.response.data : error.message);
@@ -1764,6 +1775,9 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
     // ✅ 수정된 마커 필터링 useEffect
     useEffect(() => {
         if (!mapRef.current || markersRef.current.length === 0 || markers.length === 0) return;
+
+        console.log('🔄 마커 필터링 시작:', { filterType, markersCount: markers.length });
+        console.log('🔄 현재 마커 데이터 types:', markers.map(m => ({ id: m.id, type: m.type, name: m.name })));
 
         // ✅ 배열 길이 체크 및 안전한 접근
         const minLength = Math.min(markersRef.current.length, markers.length);
@@ -1778,10 +1792,14 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                 continue;
             }
 
+            console.log(`🔍 마커 ${i}: type=${markerData.type}, filterType=${filterType}, 일치=${filterType === 'all' || markerData.type === filterType}`);
+
             if (filterType === 'all' || markerData.type === filterType) {
                 naverMarker.setMap(mapRef.current);
+                console.log(`✅ 마커 ${i} 표시: ${markerData.type}`);
             } else {
                 naverMarker.setMap(null);
+                console.log(`❌ 마커 ${i} 숨김: ${markerData.type}`);
             }
         }
 
