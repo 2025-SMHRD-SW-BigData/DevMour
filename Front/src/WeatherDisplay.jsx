@@ -149,24 +149,23 @@ if (weatherData) {
             <p>날씨 정보를 불러오는 중...</p>
         </div>
     ): weatherData ?(
-      <div className="weather-info">
+      <div className="weather-info" style={{height:'80px', width:'1000px'}}>
           <div className="weather-main">
-            <h4 style={{ textAlign: 'center' }}>📍 {addressData?.address?.full || weatherData.city}</h4>
+            <h4 style={{ textAlign: 'center', margin: '0 0 8px 0' }}>📍 {addressData?.address?.full || weatherData.city}</h4>
 
-            <div style={{display: 'flex', 
-                        gap: '20px', 
+            <div style={{width : '1000px',
+                        height : '50px',
+                        display: 'flex', 
+                        gap: '10px', 
                         justifyContent: 'space-between',
-                        marginTop: '20px' }}>            
+                        marginTop: '8px' }}>            
             <div className="detail-item">🌡{weatherData.temperature.toFixed(1)}°C</div>
             <div className="detail-item">{weatherData.description}</div>
-            <div className="detail-item">💧 강수량: {weatherData?.rain?.['1h'] ? `${weatherData.rain['1h']}mm/h` : '없음'}
-            </div>
-            <div className="detail-item">❄️ 강설량: {weatherData?.snow?.['1h'] ? `${weatherData.snow['1h']}mm/h` : '없음'}
-            </div>
+            <div className="detail-item">💧 강수량: {weatherData?.rain?.['1h'] ? `${weatherData.rain['1h']}mm/h` : '없음'}</div>
+            <div className="detail-item">❄️ 강설량: {weatherData?.snow?.['1h'] ? `${weatherData.snow['1h']}mm/h` : '없음'} </div>
 
             </div>
-      <div className="weather-details">
-          </div>
+      
           </div>
         </div>
     ):(

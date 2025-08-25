@@ -369,7 +369,7 @@ const Dashboard = () => {
     <div className="container">
       {/* 헤더 */}
       <header className="header">
-        <div>도로 안전 관리 시스템</div>
+        <div className="header-title">도로 안전 관리 시스템</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <span style={{ fontSize: '12px', color: '#666' }}>
             📍 현재 위치: {lat ? lat.toFixed(6) : 'N/A'}, {lon ? lon.toFixed(6) : 'N/A'}
@@ -544,35 +544,22 @@ const Dashboard = () => {
           markerType={selectedMarkerType}
           markerData={selectedMarkerData}
         />
-        <div className="card">
+        <div className="weather-card">
           <h3> 날씨 정보 및 예측</h3>
           <WeatherDisplay/>
-          <div className="weather">
-            {/* <div className="weather-item">
-              <h4>☀️ 맑음</h4>
-              <p>22℃</p>
-            </div>
-            <div className="weather-item">
-              <h4>☁️ 흐림</h4>
-              <p>18℃</p>
-            </div>
-            <div className="weather-item">
-              <h4>🌧️ 비</h4>
-              <p>15℃</p>
-            </div>
-            <div className="weather-item">
-              <h4>❄️ 눈</h4>
-              <p>-2℃</p>
-            </div> */}
-          </div>
+           {/* <div className="weather">
+
+          </div> */}
         </div>
       </main>
 
       {/* 오른쪽 패널 */}
       <aside className="right-panel">
         <div className="card" style={{ textAlign: "center" }}>
+          
+          
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1px' }}>
-            <h3>&nbsp;종합 위험도 점수</h3>
+         <h3>&nbsp;종합 위험도 점수</h3>
             <button className="detail-btn" onClick={() => nav('/risk-score')}>
               상세보기
             </button>
