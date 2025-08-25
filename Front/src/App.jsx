@@ -10,6 +10,7 @@ import ConstructionDetail from "./pages/ConstructionDetail";
 import RiskScoreDetail from "./pages/RiskScoreDetail";
 import ComparisonDetail from "./pages/ComparisonDetail";
 import AlertDetail from "./pages/AlertDetail";
+import CCTVAdd from "./pages/CCTVAdd";
 
 function App() {
     const [lat, setLat] = useState(35.159983);
@@ -35,6 +36,7 @@ function App() {
                 <Route path = '/risk-score' element = {<RiskScoreDetail></RiskScoreDetail>}></Route>
                 <Route path = '/comparison' element = {<ComparisonDetail></ComparisonDetail>}></Route>
                 <Route path = '/alerts' element = {<AlertDetail></AlertDetail>}></Route>
+                <Route path = '/cctv-add' element = {<CCTVAdd></CCTVAdd>}></Route>
             </Routes>
         </InfoContext.Provider>
     )

@@ -1,0 +1,503 @@
+/* CCTVAdd 컴포넌트 전용 스타일 */
+
+/* 전체 컨테이너 */
+.cctv-add-container {
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* 페이지 헤더 */
+.page-header {
+    text-align: center;
+    margin-bottom: 30px;
+    color: white;
+}
+
+.page-header h1 {
+    margin: 0 0 15px 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.page-header p {
+    margin: 0;
+    font-size: 1.1rem;
+    opacity: 0.9;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* 메인 레이아웃 */
+.main-content-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+    height: calc(100vh - 40px);
+}
+
+/* 왼쪽 패널 - URL 입력 및 정보 */
+.left-panel {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+/* 오른쪽 패널 - 지도 */
+.right-panel {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    flex-direction: column;
+}
+
+/* URL 입력 섹션 */
+.url-input-section {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    padding: 25px;
+    border-radius: 12px;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.url-input-section h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+.url-input {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.url-input:focus {
+    outline: none;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.url-input::placeholder {
+    color: #666;
+    opacity: 0.7;
+}
+
+/* 버튼 그룹 */
+.button-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+    text-align: center;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(79, 172, 254, 0.6);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    color: #333;
+    box-shadow: 0 4px 15px rgba(168, 237, 234, 0.4);
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(168, 237, 234, 0.6);
+}
+
+/* 추출된 정보 섹션 */
+.extracted-info {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 25px;
+    border-radius: 12px;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.extracted-info h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.info-grid {
+    display: grid;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+}
+
+.info-item label {
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.info-item span {
+    font-weight: 600;
+    color: #fff;
+}
+
+.status-active {
+    background: rgba(76, 175, 80, 0.8);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+/* URL 미리보기 */
+.url-preview {
+    margin-bottom: 20px;
+}
+
+.url-preview label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.url-display {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    word-break: break-all;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 좌표 입력 섹션 */
+.coordinates-section {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    padding: 25px;
+    border-radius: 12px;
+    color: #333;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.coordinates-section h4 {
+    margin: 0 0 20px 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.coordinates-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.coordinate-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.8);
+    color: #333;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.coordinate-input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.coordinate-input:disabled {
+    background: rgba(255, 255, 255, 0.5);
+    color: #666;
+    cursor: not-allowed;
+}
+
+/* 선택된 좌표 표시 */
+.selected-coordinates {
+    background: rgba(76, 175, 80, 0.1);
+    border: 2px solid rgba(76, 175, 80, 0.3);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+    color: #2e7d32;
+}
+
+.selected-coordinates span {
+    font-size: 0.95rem;
+}
+
+/* 데이터베이스 추가 버튼 */
+.btn-success {
+    background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+    color: white;
+    padding: 15px 30px;
+    font-size: 1rem;
+    box-shadow: 0 4px 15px rgba(86, 171, 47, 0.4);
+    width: 100%;
+}
+
+.btn-success:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(86, 171, 47, 0.6);
+}
+
+.btn-success:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* 지도 섹션 */
+.map-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.map-section h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* AddMap 컴포넌트 스타일 */
+.add-map-container {
+    flex: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.naver-map {
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    border: 2px solid rgba(102, 126, 234, 0.2);
+}
+
+/* 성공/에러 메시지 */
+.success-message,
+.error-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 20px 25px;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out;
+    max-width: 400px;
+}
+
+.success-message {
+    background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+    box-shadow: 0 4px 20px rgba(86, 171, 47, 0.4);
+}
+
+.error-message {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    box-shadow: 0 4px 20px rgba(255, 107, 107, 0.4);
+}
+
+.success-icon,
+.error-icon {
+    font-size: 1.5rem;
+    margin-right: 10px;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* 사용 예시 */
+.usage-example {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 30px;
+    margin-top: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.usage-example h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+}
+
+.usage-example ol {
+    margin: 0;
+    padding-left: 20px;
+    color: #555;
+    line-height: 1.8;
+}
+
+.usage-example li {
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1200px) {
+    .main-content-layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        height: auto;
+    }
+    
+    .left-panel,
+    .right-panel {
+        height: auto;
+    }
+    
+    .right-panel {
+        order: -1;
+    }
+    
+    .coordinates-inputs {
+        grid-template-columns: 1fr;
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 768px) {
+    .cctv-add-container {
+        padding: 15px;
+    }
+    
+    .left-panel,
+    .right-panel {
+        padding: 20px;
+    }
+    
+    .url-input-section,
+    .extracted-info,
+    .coordinates-section {
+        padding: 20px;
+    }
+    
+    .btn {
+        padding: 15px 20px;
+        font-size: 1rem;
+    }
+}
+
+/* 스크롤바 스타일링 */
+.left-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.left-panel::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.left-panel::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.3);
+    border-radius: 4px;
+}
+
+.left-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 126, 234, 0.5);
+}
