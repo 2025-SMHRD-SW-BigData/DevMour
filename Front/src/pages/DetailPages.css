@@ -725,7 +725,7 @@
     line-height: 1.4;
 }
 
-/* 막대 그래프 스타일 */
+/* 원그래프 스타일 */
 .chart-section {
     margin-top: 15px;
     padding: 20px;
@@ -739,80 +739,115 @@
     justify-content: flex-start;
 }
 
-.bar-chart {
-    margin-bottom: 25px;
+.pie-chart-container {
+    margin-bottom: 30px;
+    text-align: center;
 }
 
-.bar-chart:last-child {
+.pie-chart-container:last-child {
     margin-bottom: 0;
 }
 
 .chart-label {
     font-size: 1em;
     color: #333;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     font-weight: 600;
     text-align: center;
 }
 
-.chart-bars {
+.chart-content {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-}
-
-.bar-group {
-    display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 25px;
 }
 
-.bar-label {
-    min-width: 45px;
-    font-size: 0.85em;
-    color: #555;
-    font-weight: 600;
+.pie-chart {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.bar-container {
-    flex: 1;
-    height: 35px;
+.chart-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.change-rate {
+    font-size: 2.2em;
+    font-weight: bold;
+    margin: 0;
+}
+
+.change-label {
+    font-size: 0.9em;
+    color: #666;
+    margin: 0;
+}
+
+.chart-legend {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+}
+
+.legend-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 8px;
     background: #f8f9fa;
-    border-radius: 18px;
-    overflow: hidden;
-    position: relative;
+    border-radius: 8px;
     border: 1px solid #e9ecef;
+    flex: 1;
+    text-align: center;
 }
 
-.bar {
-    height: 100%;
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.legend-color.larger {
+    background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
+}
+
+.legend-color.smaller {
+    background: linear-gradient(135deg, #9E9E9E 0%, #757575 100%);
+}
+
+.legend-text {
     display: flex;
+    flex-direction: column;
+    gap: 4px;
     align-items: center;
-    justify-content: flex-end;
-    padding-right: 12px;
-    border-radius: 18px;
-    transition: width 0.4s ease;
-    position: relative;
 }
 
-.current-bar {
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-    color: white;
+.legend-label {
+    font-weight: 500;
+    color: #333;
+    font-size: 0.95em;
+}
+
+.legend-count {
+    color: #666;
+    font-size: 0.85em;
+}
+
+.legend-percentage {
+    color: #667eea;
     font-weight: 600;
-    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
-}
-
-.previous-bar {
-    background: linear-gradient(90deg, #95a5a6 0%, #7f8c8d 100%);
-    color: white;
-    font-weight: 600;
-    box-shadow: 0 2px 4px rgba(149, 165, 166, 0.3);
-}
-
-.bar-value {
-    font-size: 0.8em;
-    white-space: nowrap;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    font-size: 0.9em;
 }
 
 .loading, .error {
