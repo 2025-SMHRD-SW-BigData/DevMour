@@ -38,14 +38,11 @@ router.get('/allmarkers', (req, res) => {
     });
 });
 
-// 마커 상세 정보 가져오기 라우터
+// 마커 상세 정보 가져오기 라우터 - t_cctv와 t_road_control에서 직접 조회
 router.get('/detail/:markerId', (req, res) => {
     console.log('✅ 마커 상세 정보 요청 수신:', req.params.markerId);
     
     const markerId = req.params.markerId;
-    
-    // 먼저 마커 기본 정보 조회
-    const markerSql = 'SELECT * FROM t_markers WHERE marker_id = ?';
     
     conn.connect(err => {
         if (err) {
@@ -53,78 +50,40 @@ router.get('/detail/:markerId', (req, res) => {
             return res.status(500).send('데이터베이스 연결 실패');
         }
 
-        conn.query(markerSql, [markerId], (err, markerRows) => {
+        // ✅ 먼저 t_cctv에서 조회 시도
+        const cctvSql = 'SELECT * FROM t_cctv WHERE cctv_idx = ?';
+        console.log('📹 CCTV 조회 시도:', cctvSql, '파라미터:', markerId);
+        
+        conn.query(cctvSql, [markerId], (err, cctvRows) => {
             if (err) {
-                console.error('❌ 마커 정보 조회 실패:', err);
-                return res.status(500).send('마커 정보 조회 실패');
+                console.error('❌ CCTV 조회 실패:', err);
+                // 에러가 발생해도 계속 진행
             }
-
-            if (markerRows.length === 0) {
-                return res.status(404).send('마커를 찾을 수 없습니다.');
-            }
-
-            const marker = markerRows[0];
-            const markerType = marker.marker_type;
             
-            console.log('🔍 마커 정보:', {
-                marker_id: marker.marker_id,
-                marker_type: marker.marker_type,
-                cctv_idx: marker.cctv_idx,
-                control_idx: marker.control_idx,
-                lat: marker.lat,
-                lon: marker.lon
-            });
-
-            // 마커 타입에 따라 상세 정보 조회
-            let detailSql = '';
-            let detailParams = [];
-
-            switch (markerType) {
-                case 'cctv':
-                    detailSql = 'SELECT * FROM t_cctv WHERE cctv_idx = ?';
-                    detailParams = [marker.cctv_idx];
-                    console.log('📹 CCTV 상세 정보 조회:', { sql: detailSql, params: detailParams });
-                    break;
-                case 'construction':
-                case 'flood':
-                    detailSql = 'SELECT * FROM t_road_control WHERE control_idx = ?';
-                    detailParams = [marker.control_idx];
-                    console.log('🚧 도로 통제 상세 정보 조회:', { sql: detailSql, params: detailParams });
-                    break;
-                default:
-                    return res.status(400).send('지원하지 않는 마커 타입입니다.');
-            }
-
-            // control_idx나 cctv_idx가 null인 경우 처리
-            if (detailParams[0] === null || detailParams[0] === undefined) {
-                console.log('⚠️ 상세 정보 인덱스가 null입니다. 기본 정보만 반환합니다.');
+            if (cctvRows.length > 0) {
+                // ✅ CCTV 정보 발견
+                const cctvData = cctvRows[0];
+                console.log('✅ CCTV 정보 조회 성공:', cctvData);
+                
                 const result = {
-                    marker: marker,
-                    detail: null,
-                    message: `${markerType} 타입 마커의 상세 정보가 설정되지 않았습니다.`
+                    marker: {
+                        marker_id: cctvData.cctv_idx,
+                        marker_type: 'cctv',
+                        cctv_idx: cctvData.cctv_idx,
+                        control_idx: null,
+                        lat: cctvData.lat,
+                        lon: cctvData.lon
+                    },
+                    detail: cctvData
                 };
-                return res.status(200).json(result);
-            }
-
-            conn.query(detailSql, detailParams, (err, detailRows) => {
-                if (err) {
-                    console.error('❌ 상세 정보 조회 실패:', err);
-                    return res.status(500).send('상세 정보 조회 실패');
-                }
-
-                console.log('📊 상세 정보 조회 결과:', {
-                    found: detailRows.length > 0,
-                    rows: detailRows
-                });
-
-                const result = {
-                    marker: marker,
-                    detail: detailRows.length > 0 ? detailRows[0] : null
-                };
-
-                console.log('✅ 마커 상세 정보 조회 성공');
+                
                 res.status(200).json(result);
-            });
+                return;
+            }
+            
+                    // ✅ CCTV에서 찾을 수 없는 경우, 404 반환
+        console.log('❌ CCTV 정보를 찾을 수 없음:', markerId);
+        return res.status(404).send('CCTV 정보를 찾을 수 없습니다.');
         });
     });
 });

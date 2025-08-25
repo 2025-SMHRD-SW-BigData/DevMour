@@ -27,6 +27,12 @@ app.use(express.urlencoded({ extended: true }));
 // 마커 관련 라우터
 app.use('/api/marker', require('./router/marker'));
 
+// CCTV 관련 라우터
+app.use('/api/cctv', require('./router/cctv'));
+
+// 도로 통제 관련 라우터
+app.use('/api/road-control', require('./router/road-control'));
+
 // 알림 관련 라우터
 app.use('/api/alert', require('./router/alert'));
 

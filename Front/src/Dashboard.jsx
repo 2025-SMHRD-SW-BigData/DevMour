@@ -543,6 +543,7 @@ const Dashboard = () => {
           onClose={() => setIsModalOpen(false)}
           markerType={selectedMarkerType}
           markerData={selectedMarkerData}
+          isEditMode={false}
         />
         <div className="weather-card">
           <h3> 날씨 정보 및 예측</h3>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../Dashboard.css';
 import './DetailPages.css';
 import NaverMap from '../NaverMap.jsx';
+import Modals from '../Modals.jsx';
 
 const ConstructionDetail = () => {
     const nav = useNavigate();
@@ -15,6 +16,10 @@ const ConstructionDetail = () => {
         total: 0
     });
     const [showMap, setShowMap] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedMarkerType, setSelectedMarkerType] = useState(null);
+    const [selectedMarkerData, setSelectedMarkerData] = useState(null);
+    const [isEditMode, setIsEditMode] = useState(false);
 
     // 공사 통제 데이터 조회
     useEffect(() => {
@@ -98,11 +103,66 @@ const ConstructionDetail = () => {
                     item.lon, 
                     item
                 );
-                console.log('✅ 공사 통제 마커 위치 이동 완료');
-            } else {
-                console.log('⚠️ moveToConstructionMarker 함수가 아직 준비되지 않음');
             }
-        }, 1500); // 지도 로딩을 위한 충분한 시간
+        }, 100);
+    };
+
+    // 마커 클릭 핸들러 (Dashboard.jsx와 동일한 방식)
+    const handleMarkerClick = (markerType, markerData) => {
+        console.log('🎯 ConstructionDetail handleMarkerClick 호출:', { markerType, markerData });
+        setSelectedMarkerType(markerType);
+        
+        // ✅ 마커 데이터 구조 확인 및 변환
+        if (markerData) {
+            // control_idx가 있는 경우 (도로 통제 마커)
+            if (markerData.control_idx) {
+                setSelectedMarkerData({
+                    ...markerData,
+                    marker_id: markerData.control_idx, // control_idx를 marker_id로 사용
+                    type: markerData.type || markerType,
+                    icon: markerData.icon || '🚧'
+                });
+            } else {
+                // cctv_idx가 있는 경우 (CCTV 마커)
+                setSelectedMarkerData({
+                    ...markerData,
+                    marker_id: markerData.cctv_idx || markerData.marker_id,
+                    type: markerData.type || markerType,
+                    icon: markerData.icon || '📹'
+                });
+            }
+        }
+        
+        setIsModalOpen(true);
+        console.log('✅ 공사중 모달 상태 업데이트 완료');
+    };
+
+    // 수정 버튼 클릭 핸들러
+    const handleEditClick = (item) => {
+        console.log('✏️ 수정 버튼 클릭:', item);
+        console.log('📊 전달할 데이터:', {
+            control_idx: item.control_idx,
+            lat: item.lat,
+            lon: item.lon,
+            control_desc: item.control_desc
+        });
+        
+        setSelectedMarkerType('construction');
+        // ✅ control_idx를 직접 사용하여 모달 데이터 설정
+        setSelectedMarkerData({
+            marker_id: item.control_idx, // control_idx를 marker_id로 사용
+            control_idx: item.control_idx, // control_idx도 함께 전달
+            road_idx: item.road_idx || item.control_idx, // road_idx가 없으면 control_idx 사용
+            icon: '🚧',
+            lat: item.lat,
+            lng: item.lon,
+            type: 'construction',
+            name: item.control_desc || '공사중',
+            ...item // 기존 데이터를 함께 전달
+        });
+        setIsEditMode(true);
+        setIsModalOpen(true);
+        console.log('✅ 공사중 모달 수정 모드 열기 완료');
     };
 
     if (loading) {
@@ -256,6 +316,7 @@ const ConstructionDetail = () => {
                                     filterType="construction"
                                     hideFilterButtons={true}
                                     key="construction-map"
+                                    onMarkerClick={handleMarkerClick}
                                 />
                             </div>
                         ) : (
@@ -263,21 +324,31 @@ const ConstructionDetail = () => {
                                 {constructionData.length > 0 ? (
                                     <div className="ranking-scroll-container">
                                         {constructionData.map((item, index) => (
-                                            <div 
-                                                key={item.control_idx} 
-                                                className="ranking-item"
-                                                onClick={() => handleConstructionItemClick(item, index)}
-                                                style={{ cursor: 'pointer' }}
-                                            >
-                                                <div className="rank-number">#{index + 1}</div>
-                                                <div className="risk-details">
-                                                    <span className="risk-level">
-                                                        {getStatusIcon(item.control_ed_tm)} {getStatusText(item.control_ed_tm)}
-                                                    </span>
-                                                    <span className="risk-score" style={{ color: getStatusColor(item.control_ed_tm) }}>
-                                                        {new Date(item.created_at).toLocaleDateString()}
-                                                    </span>
-                                                </div>
+                                                                                         <div 
+                                                 key={item.control_idx} 
+                                                 className="ranking-item"
+                                                 onClick={() => handleConstructionItemClick(item, index)}
+                                                 style={{ cursor: 'pointer' }}
+                                             >
+                                                 <div className="rank-number">#{index + 1}</div>
+                                                 <div className="risk-details">
+                                                     <span className="risk-level">
+                                                         {getStatusIcon(item.control_ed_tm)} {getStatusText(item.control_ed_tm)}
+                                                     </span>
+                                                     <span className="risk-score" style={{ color: getStatusColor(item.control_ed_tm) }}>
+                                                         {new Date(item.created_at).toLocaleDateString()}
+                                                     </span>
+                                                     <button 
+                                                         className="edit-item-btn"
+                                                         onClick={(e) => {
+                                                             e.stopPropagation();
+                                                             handleEditClick(item);
+                                                         }}
+                                                         title="수정"
+                                                     >
+                                                         ✏️
+                                                     </button>
+                                                 </div>
                                                 <div className="risk-info">
                                                     <div className="location-name">{item.control_addr || '주소 정보 없음'}</div>
                                                     <div className="risk-description">
@@ -306,6 +377,18 @@ const ConstructionDetail = () => {
                     </div>
                 </div>
             </div>
+
+            {/* 공사중 모달 */}
+            <Modals 
+                isOpen={isModalOpen} 
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setIsEditMode(false);
+                }}
+                markerType={selectedMarkerType}
+                markerData={selectedMarkerData}
+                isEditMode={isEditMode}
+            />
         </div>
     );
 };
