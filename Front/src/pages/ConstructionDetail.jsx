@@ -15,6 +15,11 @@ const ConstructionDetail = () => {
         total: 0
     });
     const [showMap, setShowMap] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedMarkerType, setSelectedMarkerType] = useState(null);
+    const [selectedMarkerData, setSelectedMarkerData] = useState(null);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [isEditLoading, setIsEditLoading] = useState(false);
 
     // 공사 통제 데이터 조회
     useEffect(() => {
@@ -102,9 +107,72 @@ const ConstructionDetail = () => {
             } else {
                 console.log('⚠️ moveToConstructionMarker 함수가 아직 준비되지 않음');
             }
-        }, 1500); // 지도 로딩을 위한 충분한 시간
-    };
+        }, 1500);
+    
+        setIsModalOpen(true);
+        console.log('✅ 공사중 모달 상태 업데이트 완료');
+  
 
+    // 수정 버튼 클릭 핸들러
+    const handleEditClick = async (item) => {
+        console.log('✏️ 수정 버튼 클릭:', item);
+        
+        // 데이터 유효성 검사
+        if (!item || !item.control_idx) {
+            console.error('❌ 수정할 데이터가 유효하지 않습니다:', item);
+            alert('수정할 데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.');
+            return;
+        }
+        
+        // 필수 데이터 확인
+        const requiredFields = ['lat', 'lon', 'control_desc'];
+        const missingFields = requiredFields.filter(field => !item[field]);
+        
+        if (missingFields.length > 0) {
+            console.warn('⚠️ 일부 데이터가 누락되었습니다:', missingFields);
+            console.log('📊 현재 데이터 상태:', item);
+        }
+        
+        // 수정 버튼 로딩 상태 표시
+        setIsEditLoading(true);
+        
+        try {
+            // 데이터 준비
+            const markerData = {
+                marker_id: item.control_idx,
+                control_idx: item.control_idx,
+                road_idx: item.road_idx || item.control_idx,
+                icon: '🚧',
+                lat: item.lat,
+                lng: item.lon,
+                type: 'construction',
+                name: item.control_desc || '공사중',
+                ...item
+            };
+            
+            console.log('📊 전달할 데이터:', markerData);
+            
+            // 데이터 설정
+            setSelectedMarkerType('construction');
+            setSelectedMarkerData(markerData);
+            
+            // 약간의 딜레이 후 모달 열기 (데이터가 완전히 설정되도록)
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            setIsEditMode(true);
+            setIsModalOpen(true);
+            
+            console.log('✅ 공사중 모달 수정 모드 열기 완료');
+            
+        } catch (error) {
+            console.error('❌ 수정 모드 설정 중 오류:', error);
+            alert('수정 모드를 열 수 없습니다. 다시 시도해주세요.');
+        } finally {
+            setIsEditLoading(false);
+        }
+    };
+    }
+    
     if (loading) {
         return (
             <div className="detail-container">
@@ -263,20 +331,35 @@ const ConstructionDetail = () => {
                                 {constructionData.length > 0 ? (
                                     <div className="ranking-scroll-container">
                                         {constructionData.map((item, index) => (
-                                            <div 
-                                                key={item.control_idx} 
-                                                className="ranking-item"
-                                                onClick={() => handleConstructionItemClick(item, index)}
-                                                style={{ cursor: 'pointer' }}
-                                            >
-                                                <div className="rank-number">#{index + 1}</div>
-                                                <div className="risk-details">
+                                                                                         <div 
+                                                 key={item.control_idx} 
+                                                 className="ranking-item"
+                                                 onClick={() => handleConstructionItemClick(item, index)}
+                                                 style={{ cursor: 'pointer' }}
+                                             >
+                                                 <div className="rank-number">#{index + 1}</div>
+                                                                                                 <div className="risk-details">
                                                     <span className="risk-level">
                                                         {getStatusIcon(item.control_ed_tm)} {getStatusText(item.control_ed_tm)}
                                                     </span>
                                                     <span className="risk-score" style={{ color: getStatusColor(item.control_ed_tm) }}>
                                                         {new Date(item.created_at).toLocaleDateString()}
                                                     </span>
+                                                </div>
+                                                
+                                                {/* 수정 버튼을 risk-details 아래로 이동 */}
+                                                <div className="edit-button-container">
+                                                    <button 
+                                                        className="edit-item-btn"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleEditClick(item);
+                                                        }}
+                                                        title="수정"
+                                                        disabled={isEditLoading}
+                                                    >
+                                                        {isEditLoading ? '⏳ 로딩 중...' : '✏️ 수정'}
+                                                    </button>
                                                 </div>
                                                 <div className="risk-info">
                                                     <div className="location-name">{item.control_addr || '주소 정보 없음'}</div>

@@ -78,6 +78,39 @@ router.get('/detail/:cctvId', (req, res) => {
     });
 });
 
+// CCTV 이름 중복 확인
+router.get('/check-duplicate/:cctvName', (req, res) => {
+    console.log('✅ CCTV 이름 중복 확인 요청 수신:', req.params.cctvName);
+
+    const cctvName = decodeURIComponent(req.params.cctvName);
+
+    conn.connect(err => {
+        if (err) {
+            console.error('❌ 데이터베이스 연결 실패:', err);
+            return res.status(500).json({ error: '데이터베이스 연결 실패' });
+        }
+
+        const sql = 'SELECT COUNT(*) as count FROM t_cctv WHERE cctv_name = ?';
+        
+        conn.query(sql, [cctvName], (err, rows) => {
+            if (err) {
+                console.error('❌ CCTV 중복 확인 실패:', err);
+                return res.status(500).json({ error: 'CCTV 중복 확인 실패' });
+            }
+
+            const isDuplicate = rows[0].count > 0;
+            console.log('✅ CCTV 중복 확인 완료:', { cctvName, isDuplicate });
+
+            res.json({
+                success: true,
+                isDuplicate,
+                cctvName,
+                message: isDuplicate ? '이미 등록된 CCTV입니다.' : '사용 가능한 CCTV 이름입니다.'
+            });
+        });
+    });
+});
+
 // CCTV 추가
 router.post('/add', (req, res) => {
     console.log('✅ CCTV 추가 요청 수신');
