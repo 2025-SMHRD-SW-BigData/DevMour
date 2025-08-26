@@ -1246,7 +1246,6 @@
     align-items: flex-end;
     gap: 1px;
     min-width: 10px;
-    position: relative;
 }
 
 .risk-level {
@@ -1278,36 +1277,6 @@
     font-size: 0.8em;
     font-weight: 500;
     text-align: center;
-}
-
-/* 리스트 아이템 수정 버튼 스타일 */
-.edit-item-btn {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    transition: all 0.3s ease;
-    z-index: 10;
-}
-
-.edit-item-btn:hover {
-    background: #45a049;
-    transform: scale(1.1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.edit-item-btn:active {
-    transform: scale(0.95);
 }
 
 /* 민원 리스트 스타일 */

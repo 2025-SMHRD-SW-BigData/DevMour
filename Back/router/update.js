@@ -22,7 +22,7 @@ router.put('/road-control', (req, res) => {
         }
 
         const {
-            control_idx,
+            road_idx,
             control_desc,
             control_st_tm,
             control_ed_tm,
@@ -31,10 +31,10 @@ router.put('/road-control', (req, res) => {
         } = req.body;
 
         // 필수 필드 검증
-        if (!control_idx) {
+        if (!road_idx) {
             return res.status(400).json({
                 success: false,
-                message: 'control_idx는 필수입니다.'
+                message: 'road_idx는 필수입니다.'
             });
         }
 
@@ -57,7 +57,7 @@ router.put('/road-control', (req, res) => {
         const endTime = control_ed_tm ? new Date(control_ed_tm).toISOString().slice(0, 19).replace('T', ' ') : null;
 
         console.log('📝 업데이트 데이터:', {
-            control_idx,
+            road_idx,
             control_desc,
             startTime,
             endTime,
@@ -74,7 +74,7 @@ router.put('/road-control', (req, res) => {
                 control_ed_tm = ?,
                 control_addr = ?,
                 control_type = ?
-            WHERE control_idx = ?
+            WHERE road_idx = ?
         `;
 
         conn.query(updateQuery, [
@@ -83,7 +83,7 @@ router.put('/road-control', (req, res) => {
             endTime,
             control_addr || null,
             control_type || 'construction',
-            control_idx
+            road_idx
         ], (err, result) => {
             if (err) {
                 console.error('❌ 도로 통제 정보 업데이트 실패:', err);
@@ -95,10 +95,10 @@ router.put('/road-control', (req, res) => {
             }
 
             if (result.affectedRows === 0) {
-                console.log('⚠️ 업데이트된 데이터가 없음:', control_idx);
+                console.log('⚠️ 업데이트된 데이터가 없음:', road_idx);
                 return res.status(404).json({
                     success: false,
-                    message: '해당 control_idx를 가진 데이터를 찾을 수 없습니다.'
+                    message: '해당 road_idx를 가진 데이터를 찾을 수 없습니다.'
                 });
             }
 
@@ -107,10 +107,10 @@ router.put('/road-control', (req, res) => {
             // 업데이트된 데이터 조회
             const selectQuery = `
                 SELECT * FROM t_road_control 
-                WHERE control_idx = ?
+                WHERE road_idx = ?
             `;
 
-            conn.query(selectQuery, [control_idx], (err, rows) => {
+            conn.query(selectQuery, [road_idx], (err, rows) => {
                 if (err) {
                     console.error('❌ 업데이트된 데이터 조회 실패:', err);
                     return res.status(500).json({ 

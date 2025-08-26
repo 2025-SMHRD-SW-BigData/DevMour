@@ -33,84 +33,36 @@ const generateCCTVReport = async (markerData) => {
         }
 };
 
-const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEditMode = false }) => {
+const Modals = ({ isOpen, onClose, markerType, markerData }) => {
     const [detailData, setDetailData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [videoLoading, setVideoLoading] = useState(false);
     const [videoError, setVideoError] = useState(false);
-    const [isEditMode, setIsEditMode] = useState(initialEditMode);
+    const [isEditMode, setIsEditMode] = useState(false);
     const [editFormData, setEditFormData] = useState({});
     const [updateLoading, setUpdateLoading] = useState(false);
 
     // 마커 상세 정보 가져오기
     useEffect(() => {
-        // ✅ isOpen이 true일 때만 실행
-        if (!isOpen) {
-            return;
-        }
-        
-        console.log('🔍 Modals useEffect 실행:', { isOpen, markerData, isEditMode });
-        
-        if (markerData) {
-            // ✅ 수정 모드인 경우: API 호출 없이 직접 데이터 사용
-            if (isEditMode && markerData.control_idx) {
-                console.log('✅ 수정 모드: 직접 데이터 사용');
-                setDetailData({
-                    marker: {
-                        marker_id: markerData.control_idx,
-                        marker_type: 'construction',
-                        control_idx: markerData.control_idx,
-                        lat: markerData.lat,
-                        lon: markerData.lng || markerData.lon
-                    },
-                    detail: markerData
-                });
-                setLoading(false);
-            } else if (markerData.marker_id) {
-                // ✅ 일반 모드: API 호출하여 상세 정보 가져오기
-                console.log('✅ 일반 모드: API 호출하여 상세 정보 요청:', markerData.marker_id);
-                fetchMarkerDetail(markerData.marker_id, markerData.type || markerType);
-            } else {
-                console.log('❌ marker_id가 설정되지 않음:', markerData);
-                setDetailData(null);
-                setLoading(false);
-            }
+        console.log('🔍 Modals useEffect 실행:', { isOpen, markerData });
+        if (isOpen && markerData?.marker_id) {
+            console.log('✅ 마커 상세 정보 요청:', markerData.marker_id);
+            fetchMarkerDetail(markerData.marker_id);
         } else {
             console.log('❌ 마커 상세 정보 요청 조건 불충족:', { 
                 isOpen, 
                 hasMarkerData: !!markerData, 
-                markerId: markerData?.marker_id,
-                isEditMode
+                markerId: markerData?.marker_id 
             });
         }
-    }, [isOpen, markerData, isEditMode]);
+    }, [isOpen, markerData]);
 
-    // ✅ isEditMode prop이 변경될 때 상태 업데이트
-    useEffect(() => {
-        setIsEditMode(initialEditMode);
-    }, [initialEditMode]);
-
-    const fetchMarkerDetail = async (markerId, markerType) => {
-        console.log('🚀 fetchMarkerDetail 시작:', { markerId, markerType });
+    const fetchMarkerDetail = async (markerId) => {
+        console.log('🚀 fetchMarkerDetail 시작:', markerId);
         setLoading(true);
-        
         try {
-            let apiUrl;
-            
-            // ✅ 마커 타입에 따라 다른 API 엔드포인트 사용
-            if (markerType === 'construction' || markerType === 'flood') {
-                // 도로 통제 마커: road-control API 사용
-                apiUrl = `http://localhost:3001/api/road-control/detail/${markerId}`;
-                console.log('🚧 도로 통제 API 호출:', apiUrl);
-            } else {
-                // CCTV 마커: marker API 사용 (기존 방식)
-                apiUrl = `http://localhost:3001/api/marker/detail/${markerId}`;
-                console.log('📹 CCTV API 호출:', apiUrl);
-            }
-            
-            const response = await fetch(apiUrl);
+            const response = await fetch(`http://localhost:3001/api/marker/detail/${markerId}`);
             console.log('📡 API 응답:', response.status, response.ok);
-            
             if (response.ok) {
                 const data = await response.json();
                 console.log('📊 받은 데이터:', data);
@@ -173,14 +125,8 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
 
     // 데이터 업데이트
     const handleUpdate = async () => {
-        // ✅ control_idx를 여러 소스에서 찾기
-        const controlIdx = detailData?.detail?.control_idx || 
-                          markerData?.control_idx || 
-                          detailData?.detail?.marker_id || 
-                          markerData?.marker_id;
-        
-        if (!controlIdx) {
-            alert('업데이트할 데이터를 찾을 수 없습니다. control_idx가 필요합니다.');
+        if (!detailData?.detail?.road_idx) {
+            alert('업데이트할 데이터를 찾을 수 없습니다.');
             return;
         }
 
@@ -192,7 +138,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    control_idx: controlIdx,
+                    road_idx: detailData.detail.road_idx,
                     ...editFormData
                 }),
             });
