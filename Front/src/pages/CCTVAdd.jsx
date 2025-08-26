@@ -58,7 +58,7 @@ const CCTVAdd = () => {
     };
 
     // 정보 추출 버튼 클릭
-    const handleExtract = () => {
+    const handleExtract = async () => {
         if (!cctvUrl.trim()) {
             setError('CCTV URL을 입력해주세요.');
             return;
@@ -66,6 +66,27 @@ const CCTVAdd = () => {
 
         try {
             const data = extractCCTVInfo(cctvUrl);
+            
+            // CCTV 이름 중복 확인
+            try {
+                const duplicateCheckResponse = await fetch(`http://localhost:3001/api/cctv/check-duplicate/${encodeURIComponent(data.cctv_name)}`);
+                
+                if (duplicateCheckResponse.ok) {
+                    const duplicateResult = await duplicateCheckResponse.json();
+                    
+                    if (duplicateResult.isDuplicate) {
+                        alert('이미 등록된 cctv입니다');
+                        setError('이미 등록된 CCTV입니다.');
+                        setExtractedData(null);
+                        return;
+                    }
+                } else {
+                    console.warn('⚠️ 중복 확인 실패, 계속 진행합니다.');
+                }
+            } catch (duplicateError) {
+                console.warn('⚠️ 중복 확인 중 오류 발생, 계속 진행합니다:', duplicateError);
+            }
+            
             setExtractedData(data);
             setManualLat(data.lat);
             setManualLon(data.lon);

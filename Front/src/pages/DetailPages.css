@@ -1282,22 +1282,20 @@
 
 /* 리스트 아이템 수정 버튼 스타일 */
 .edit-item-btn {
-    position: absolute;
-    top: 8px;
-    right: 8px;
     background: #4CAF50;
     color: white;
     border: none;
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
+    border-radius: 8px;
+    padding: 8px 16px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 14px;
+    font-weight: 500;
     transition: all 0.3s ease;
-    z-index: 10;
+    min-width: 80px;
+    height: 36px;
 }
 
 .edit-item-btn:hover {
@@ -1308,6 +1306,14 @@
 
 .edit-item-btn:active {
     transform: scale(0.95);
+}
+
+/* 수정 버튼 컨테이너 스타일 */
+.edit-button-container {
+    display: flex;
+    justify-content: flex-end;
+    margin: 8px 0;
+    padding: 0 8px;
 }
 
 /* 민원 리스트 스타일 */
@@ -1603,7 +1609,6 @@
     padding-bottom: 10px;
 }
 
-<<<<<<< HEAD
 /* CCTV 추가 페이지 스타일 */
 .cctv-add-container {
     width: 100%;

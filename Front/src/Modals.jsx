@@ -65,6 +65,16 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                     },
                     detail: markerData
                 });
+                
+                // ✅ 수정 모드에서 editFormData도 함께 설정
+                setEditFormData({
+                    control_desc: markerData.control_desc || '',
+                    control_st_tm: markerData.control_st_tm ? markerData.control_st_tm.slice(0, 16) : '',
+                    control_ed_tm: markerData.control_ed_tm ? markerData.control_ed_tm.slice(0, 16) : '',
+                    control_addr: markerData.control_addr || '',
+                    control_type: markerData.control_type || 'construction'
+                });
+                
                 setLoading(false);
             } else if (markerData.marker_id) {
                 // ✅ 일반 모드: API 호출하여 상세 정보 가져오기
