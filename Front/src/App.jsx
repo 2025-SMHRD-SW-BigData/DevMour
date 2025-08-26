@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
+import Index from "./Index";
 import Dashboard from "./Dashboard";
 import NaverMap from "./NaverMap";
 import { InfoContext } from "./context/InfoContext";
@@ -25,7 +26,8 @@ function App() {
     return(
         <InfoContext.Provider value = {{lat, setLat, lon, setLon, updateLocation}}>
             <Routes>
-                <Route path = '/' element={<Dashboard></Dashboard>}></Route>
+                <Route path = '/' element={<Index></Index>}></Route>
+                <Route path = '/dashboard' element={<Dashboard></Dashboard>}></Route>
                 <Route path = '/navermap' element = {<NaverMap></NaverMap>}></Route>
                 <Route path = '/weatherdisplay' element = {<WeatherDisplay></WeatherDisplay>}></Route>
                 
