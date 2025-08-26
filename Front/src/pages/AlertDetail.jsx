@@ -206,7 +206,7 @@ const AlertDetail = () => {
             <div className="detail-container">
                 <div className="detail-header">
                     <h1>🚨 알림 상세</h1>
-                    <button className="back-btn" onClick={() => nav('/')}>
+                    <button className="back-btn" onClick={() => nav('/dashboard')}>
                         ← 대시보드로 돌아가기
                     </button>
                 </div>
@@ -223,7 +223,7 @@ const AlertDetail = () => {
             <div className="detail-container">
                 <div className="detail-header">
                     <h1>🚨 알림 상세</h1>
-                    <button className="back-btn" onClick={() => nav('/')}>
+                    <button className="back-btn" onClick={() => nav('/dashboard')}>
                         ← 대시보드로 돌아가기
                     </button>
                 </div>
@@ -241,7 +241,7 @@ const AlertDetail = () => {
             {/* 헤더 */}
             <div className="detail-header">
                 <h1>🚨 알림 상세</h1>
-                <button className="back-btn" onClick={() => nav('/')}>
+                <button className="back-btn" onClick={() => nav('/dashboard')}>
                     ← 대시보드로 돌아가기
                 </button>
             </div>

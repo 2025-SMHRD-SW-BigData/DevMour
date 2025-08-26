@@ -186,7 +186,7 @@ const ComparisonDetail = () => {
             <div className="detail-container">
                 <div className="detail-header">
                     <h1>📊 전년 대비 추이 분석</h1>
-                    <button className="back-btn" onClick={() => nav('/')}>
+                    <button className="back-btn" onClick={() => nav('/dashboard')}>
                         ← 대시보드로 돌아가기
                     </button>
                 </div>
@@ -200,7 +200,7 @@ const ComparisonDetail = () => {
             <div className="detail-container">
                 <div className="detail-header">
                     <h1>📊 전년 대비 추이 분석</h1>
-                    <button className="back-btn" onClick={() => nav('/')}>
+                    <button className="back-btn" onClick={() => nav('/dashboard')}>
                         ← 대시보드로 돌아가기
                     </button>
                 </div>
@@ -214,7 +214,7 @@ const ComparisonDetail = () => {
             <div className="detail-container">
                 <div className="detail-header">
                     <h1>📊 전년 대비 추이 분석</h1>
-                    <button className="back-btn" onClick={() => nav('/')}>
+                    <button className="back-btn" onClick={() => nav('/dashboard')}>
                         ← 대시보드로 돌아가기
                     </button>
                 </div>
@@ -232,7 +232,7 @@ const ComparisonDetail = () => {
             <div className="detail-header">
                 <h1>📊 전년 대비 추이 분석</h1>
                 <p className="period-info">{currentMonth}월 기준 {lastYear}년 vs {currentYear}년 비교</p>
-                <button className="back-btn" onClick={() => nav('/')}>
+                <button className="back-btn" onClick={() => nav('/dashboard')}>
                     ← 대시보드로 돌아가기
                 </button>
             </div>

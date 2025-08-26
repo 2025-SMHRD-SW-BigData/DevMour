@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
+import Index from "./Index";
 import Dashboard from "./Dashboard";
 import NaverMap from "./NaverMap";
 import { InfoContext } from "./context/InfoContext";
@@ -10,6 +11,7 @@ import ConstructionDetail from "./pages/ConstructionDetail";
 import RiskScoreDetail from "./pages/RiskScoreDetail";
 import ComparisonDetail from "./pages/ComparisonDetail";
 import AlertDetail from "./pages/AlertDetail";
+import CCTVAdd from "./pages/CCTVAdd";
 
 function App() {
     const [lat, setLat] = useState(35.159983);
@@ -24,7 +26,8 @@ function App() {
     return(
         <InfoContext.Provider value = {{lat, setLat, lon, setLon, updateLocation}}>
             <Routes>
-                <Route path = '/' element={<Dashboard></Dashboard>}></Route>
+                <Route path = '/' element={<Index></Index>}></Route>
+                <Route path = '/dashboard' element={<Dashboard></Dashboard>}></Route>
                 <Route path = '/navermap' element = {<NaverMap></NaverMap>}></Route>
                 <Route path = '/weatherdisplay' element = {<WeatherDisplay></WeatherDisplay>}></Route>
                 
@@ -35,6 +38,7 @@ function App() {
                 <Route path = '/risk-score' element = {<RiskScoreDetail></RiskScoreDetail>}></Route>
                 <Route path = '/comparison' element = {<ComparisonDetail></ComparisonDetail>}></Route>
                 <Route path = '/alerts' element = {<AlertDetail></AlertDetail>}></Route>
+                <Route path = '/cctv-add' element = {<CCTVAdd></CCTVAdd>}></Route>
             </Routes>
         </InfoContext.Provider>
     )

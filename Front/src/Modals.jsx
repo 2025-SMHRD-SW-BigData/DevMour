@@ -33,36 +33,90 @@ const generateCCTVReport = async (markerData) => {
         }
 };
 
-const Modals = ({ isOpen, onClose, markerType, markerData }) => {
+const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEditMode = false }) => {
     const [detailData, setDetailData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [videoLoading, setVideoLoading] = useState(false);
     const [videoError, setVideoError] = useState(false);
-    const [isEditMode, setIsEditMode] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(initialEditMode);
     const [editFormData, setEditFormData] = useState({});
     const [updateLoading, setUpdateLoading] = useState(false);
 
     // 마커 상세 정보 가져오기
     useEffect(() => {
-        console.log('🔍 Modals useEffect 실행:', { isOpen, markerData });
-        if (isOpen && markerData?.marker_id) {
-            console.log('✅ 마커 상세 정보 요청:', markerData.marker_id);
-            fetchMarkerDetail(markerData.marker_id);
+        // ✅ isOpen이 true일 때만 실행
+        if (!isOpen) {
+            return;
+        }
+        
+        console.log('🔍 Modals useEffect 실행:', { isOpen, markerData, isEditMode });
+        
+        if (markerData) {
+            // ✅ 수정 모드인 경우: API 호출 없이 직접 데이터 사용
+            if (isEditMode && markerData.control_idx) {
+                console.log('✅ 수정 모드: 직접 데이터 사용');
+                setDetailData({
+                    marker: {
+                        marker_id: markerData.control_idx,
+                        marker_type: 'construction',
+                        control_idx: markerData.control_idx,
+                        lat: markerData.lat,
+                        lon: markerData.lng || markerData.lon
+                    },
+                    detail: markerData
+                });
+                setLoading(false);
+            } else if (markerData.marker_id) {
+                // ✅ 일반 모드: API 호출하여 상세 정보 가져오기
+                console.log('✅ 일반 모드: API 호출하여 상세 정보 요청:', markerData.marker_id);
+                fetchMarkerDetail(markerData.marker_id, markerData.type || markerType);
+                
+                // CCTV 마커인 경우 iframe 로딩 상태 초기화
+                if (markerData.type === 'cctv' || markerType === 'cctv') {
+                    setVideoLoading(true);
+                    setVideoError(false);
+                }
+            } else {
+                console.log('❌ marker_id가 설정되지 않음:', markerData);
+                setDetailData(null);
+                setLoading(false);
+            }
         } else {
             console.log('❌ 마커 상세 정보 요청 조건 불충족:', { 
                 isOpen, 
                 hasMarkerData: !!markerData, 
-                markerId: markerData?.marker_id 
+                markerId: markerData?.marker_id,
+                isEditMode
             });
         }
-    }, [isOpen, markerData]);
+    }, [isOpen, markerData, isEditMode]);
 
-    const fetchMarkerDetail = async (markerId) => {
-        console.log('🚀 fetchMarkerDetail 시작:', markerId);
+    // ✅ isEditMode prop이 변경될 때 상태 업데이트
+    useEffect(() => {
+        setIsEditMode(initialEditMode);
+    }, [initialEditMode]);
+
+    const fetchMarkerDetail = async (markerId, markerType) => {
+        console.log('🚀 fetchMarkerDetail 시작:', { markerId, markerType });
         setLoading(true);
+        
         try {
-            const response = await fetch(`http://localhost:3001/api/marker/detail/${markerId}`);
+            let apiUrl;
+            
+            // ✅ 마커 타입에 따라 다른 API 엔드포인트 사용
+            if (markerType === 'construction' || markerType === 'flood') {
+                // 도로 통제 마커: road-control API 사용
+                apiUrl = `http://localhost:3001/api/road-control/detail/${markerId}`;
+                console.log('🚧 도로 통제 API 호출:', apiUrl);
+            } else {
+                // CCTV 마커: marker API 사용 (기존 방식)
+                apiUrl = `http://localhost:3001/api/marker/detail/${markerId}`;
+                console.log('📹 CCTV API 호출:', apiUrl);
+            }
+            
+            const response = await fetch(apiUrl);
             console.log('📡 API 응답:', response.status, response.ok);
+            
             if (response.ok) {
                 const data = await response.json();
                 console.log('📊 받은 데이터:', data);
@@ -125,8 +179,14 @@ const Modals = ({ isOpen, onClose, markerType, markerData }) => {
 
     // 데이터 업데이트
     const handleUpdate = async () => {
-        if (!detailData?.detail?.road_idx) {
-            alert('업데이트할 데이터를 찾을 수 없습니다.');
+        // ✅ control_idx를 여러 소스에서 찾기
+        const controlIdx = detailData?.detail?.control_idx || 
+                          markerData?.control_idx || 
+                          detailData?.detail?.marker_id || 
+                          markerData?.marker_id;
+        
+        if (!controlIdx) {
+            alert('업데이트할 데이터를 찾을 수 없습니다. control_idx가 필요합니다.');
             return;
         }
 
@@ -138,7 +198,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData }) => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    road_idx: detailData.detail.road_idx,
+                    control_idx: controlIdx,
                     ...editFormData
                 }),
             });
@@ -191,59 +251,98 @@ const Modals = ({ isOpen, onClose, markerType, markerData }) => {
                         </div>
                     ) : (
                         <>
-                            <div className="cctv-feed">
-                                <div className="feed-overlay">실시간 스트리밍</div>
-                                {cctvData?.cctv_url ? (
-                                    <div className="video-player-container">
-                                        {videoLoading && (
-                                            <div className="video-loading">
-                                                <div className="spinner"></div>
-                                                <span>스트리밍 연결 중...</span>
-                                            </div>
-                                        )}
-                                        {videoError && (
-                                            <div className="video-loading">
-                                                <div style={{ fontSize: '48px', marginBottom: '10px' }}>❌</div>
-                                                <span>스트리밍 연결 실패</span>
-                                                <p style={{ fontSize: '14px', marginTop: '10px', opacity: 0.8 }}>
-                                                    URL을 확인하거나 새 창에서 열어보세요
-                                                </p>
-                                            </div>
-                                        )}
-                                        <video 
-                                            id="cctv-video-player"
-                                            controls
-                                            style={{
-                                                width: '100%',
-                                                height: 'auto',
-                                                maxHeight: '400px',
-                                                backgroundColor: '#000',
-                                                borderRadius: '8px',
-                                                display: videoLoading || videoError ? 'none' : 'block'
-                                            }}
-                                            onLoadStart={handleVideoLoadStart}
-                                            onCanPlay={handleVideoCanPlay}
-                                            onError={handleVideoError}
-                                        >
-                                            <source src={cctvData.cctv_url} type="video/mp4" />
-                                            <source src={cctvData.cctv_url} type="video/webm" />
-                                            <source src={cctvData.cctv_url} type="video/ogg" />
-                                            <source src={cctvData.cctv_url} type="application/x-mpegURL" />
-                                            <source src={cctvData.cctv_url} type="video/MP2T" />
-                                            브라우저가 비디오 태그를 지원하지 않습니다.
-                                        </video>
-                                    </div>
-                                ) : (
-                                    <div style={{ textAlign: 'center' }}>
-                                        <div style={{ fontSize: '48px', marginBottom: '10px' }}>📹</div>
-                                        <p>CCTV 피드 연결 중...</p>
-                                        <small>위치: {cctvLat?.toFixed(6) || 'N/A'}, {cctvLon?.toFixed(6) || 'N/A'}</small>
-                                        <p style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
-                                            스트리밍 URL이 설정되지 않았습니다.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
+                            <div className="cctv-feed" style={{ 
+                            width: '100%', 
+                            height: '470px',
+                            position: 'relative',
+                            marginBottom: '20px'
+                        }}>
+                            <div className="feed-overlay" style={{
+                                position: 'absolute',
+                                top: '10px',
+                                left: '10px',
+                                background: 'rgba(0,0,0,0.7)',
+                                color: 'white',
+                                padding: '5px 10px',
+                                borderRadius: '4px',
+                                fontSize: '14px',
+                                zIndex: 5
+                            }}>실시간 스트리밍</div>
+                            {cctvData?.cctv_url ? (
+                                <div className="video-player-container" style={{ 
+                                    position: 'relative',
+                                    width: '100%',
+                                    height: '100%'
+                                }}>
+                                    {/* iframe으로 CCTV 페이지 임베드 */}
+                                    <iframe
+                                        src={cctvData.cctv_url}
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            backgroundColor: '#000',
+                                            transform: 'scale(2.0)',
+                                            transformOrigin: 'center center',
+                                            marginTop: '140px'
+                                        }}
+                                        title="CCTV 스트리밍"
+                                        allowFullScreen
+                                        sandbox="allow-scripts allow-same-origin allow-forms"
+                                        onLoad={() => {
+                                            console.log('✅ CCTV iframe 로딩 완료');
+                                            setVideoLoading(false);
+                                            setVideoError(false);
+                                        }}
+                                        onError={() => {
+                                            console.error('❌ CCTV iframe 로딩 실패');
+                                            setVideoLoading(false);
+                                            setVideoError(true);
+                                        }}
+                                    />
+                                    {videoLoading && (
+                                        <div className="video-loading" style={{
+                                            position: 'absolute',
+                                            top: '50%',
+                                            left: '50%',
+                                            transform: 'translate(-50%, -50%)',
+                                            zIndex: 10
+                                        }}>
+                                            <div className="spinner"></div>
+                                            <span>스트리밍 연결 중...</span>
+                                        </div>
+                                    )}
+                                    {videoError && (
+                                        <div className="video-loading" style={{
+                                            position: 'absolute',
+                                            top: '50%',
+                                            left: '50%',
+                                            transform: 'translate(-50%, -50%)',
+                                            zIndex: 10,
+                                            backgroundColor: 'rgba(0,0,0,0.8)',
+                                            padding: '20px',
+                                            borderRadius: '8px'
+                                        }}>
+                                            <div style={{ fontSize: '48px', marginBottom: '10px' }}>❌</div>
+                                            <span>스트리밍 연결 실패</span>
+                                            <p style={{ fontSize: '14px', marginTop: '10px', opacity: 0.8 }}>
+                                                새 창에서 열어보세요
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '48px', marginBottom: '10px' }}>📹</div>
+                                    <p>CCTV 피드 연결 중...</p>
+                                    <small>위치: {cctvLat?.toFixed(6) || 'N/A'}, {cctvLon?.toFixed(6) || 'N/A'}</small>
+                                    <p style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
+                                        스트리밍 URL이 설정되지 않았습니다.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                             {cctvData?.cctv_url && (
                                 <div className="streaming-link-container">
                                     <a 

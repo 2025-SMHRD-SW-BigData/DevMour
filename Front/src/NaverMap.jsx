@@ -139,7 +139,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
         }
     }, [complaintData, showComplaintMarkers]);
 
-    // 필터 타입이 'alert'일 때 알림 마커 생성
+    // 필터 타입이 'alert' 또는 'risk'일 때 마커 처리
     useEffect(() => {
         if (filterType === 'alert' && mapRef.current) {
             console.log('🚨 알림 마커 생성 시작 (filterType: alert)');
@@ -156,7 +156,19 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
             }
             
             createAlertMarkers();
-        } else if (filterType !== 'alert' && alertMarkersRef.current.length > 0) {
+        } else if (filterType === 'risk' && mapRef.current) {
+            console.log('🚨 위험도 모드: 일반 마커 숨김 (filterType: risk)');
+            
+            // 기존 일반 마커들 숨기기 (제거하지 않음)
+            if (markersRef.current.length > 0) {
+                markersRef.current.forEach(marker => {
+                    if (marker && marker.setMap) {
+                        marker.setMap(null);
+                    }
+                });
+                console.log('✅ 위험도 모드에서 일반 마커 숨김 완료 (마커 배열 유지)');
+            }
+        } else if (filterType !== 'alert' && filterType !== 'risk' && alertMarkersRef.current.length > 0) {
             console.log('🚨 알림 마커 숨김 (filterType:', filterType, ')');
             // 알림 마커 숨기기
             alertMarkersRef.current.forEach(marker => {
@@ -165,11 +177,20 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                 }
             });
             
-            // filterType이 'alert'가 아닐 때는 일반 마커 다시 로드
+            // filterType이 'alert'나 'risk'가 아닐 때는 일반 마커 다시 로드
             if (mapRef.current) {
                 console.log('🔄 일반 마커 다시 로드 시작');
                 fetchMarkers(mapRef.current);
             }
+        } else if (filterType === 'all' && mapRef.current && markersRef.current.length > 0) {
+            // "모두 보기" 모드로 돌아올 때 숨겨진 일반 마커들 다시 표시
+            console.log('🔄 모두 보기 모드: 숨겨진 일반 마커들 다시 표시');
+            markersRef.current.forEach(marker => {
+                if (marker && marker.setMap) {
+                    marker.setMap(mapRef.current);
+                }
+            });
+            console.log('✅ 일반 마커들 다시 표시 완료');
         }
     }, [filterType]);
 
@@ -258,30 +279,44 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
 
 
 
-    const markerTypes = {
-        cctv: {
-            name: 'CCTV',
-            color: '#FF4444',
-            icon: '📹',
-            size: { width: 30, height: 30 }
-        },
-        construction: {
-            name: '공사중',
-            color: '#FF8800',
-            icon: '🚧',
-            size: { width: 30, height: 30 }
-        },
-        flood: {
-            name: '침수',
-            color: '#4488FF',
-            icon: '🌊',
-            size: { width: 30, height: 30 }
-        },
-        risk: {
-            name: '위험도',
-            color: '#9B59B6',
-            icon: '❗',
-            size: { width: 30, height: 30 }
+    // ✅ 마커 타입별 설정 (markerTypes 객체 제거, 직접 설정으로 변경)
+    const getMarkerConfig = (type) => {
+        switch (type) {
+            case 'cctv':
+                return {
+                    name: 'CCTV',
+                    color: '#4CAF50',
+                    icon: '📹',
+                    size: { width: 30, height: 30 }
+                };
+            case 'construction':
+                return {
+                    name: '공사중',
+                    color: '#FF9800',
+                    icon: '🚧',
+                    size: { width: 30, height: 30 }
+                };
+            case 'flood':
+                return {
+                    name: '침수',
+                    color: '#2196F3',
+                    icon: '🌊',
+                    size: { width: 30, height: 30 }
+                };
+            case 'risk':
+                return {
+                    name: '위험도',
+                    color: '#FF5722',
+                    icon: '🚨',
+                    size: { width: 30, height: 30 }
+                };
+            default:
+                return {
+                    name: '마커',
+                    color: '#9B59B6',
+                    icon: '📍',
+                    size: { width: 30, height: 30 }
+                };
         }
     };
 
@@ -309,7 +344,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
 
 
     const createMarkerContent = (type) => {
-        const config = markerTypes[type];
+        const config = getMarkerConfig(type);
         return `
       <div style="
         background-color: ${config.color};
@@ -967,8 +1002,8 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                         anchorColor: "#fff",
                         pixelOffset: new window.naver.maps.Point(0, -9) // 마커 높이의 절반만큼 위로
                     });
-                    
-                    // 새 InfoWindow 표시하고 마커와 전역 변수에 저장
+
+                                        // 새 InfoWindow 표시하고 마커와 전역 변수에 저장
                     infoWindow.open(mapRef.current, marker);
                     marker.infoWindow = infoWindow; // 마커에 직접 InfoWindow 참조 저장
                     window.currentRiskInfoWindow = infoWindow;
@@ -1128,9 +1163,9 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                 lat,
                 lng,
                 type,
-                name: markerTypes[type].name,
-                icon: markerTypes[type].icon,
-                color: markerTypes[type].color
+                name: getMarkerConfig(type).name,
+                icon: getMarkerConfig(type).icon,
+                color: getMarkerConfig(type).color
             };
 
             const naverMarker = new window.naver.maps.Marker({
@@ -1577,7 +1612,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
         };
     }, []);
 
-    // ✅ 수정된 fetchMarkers 함수
+    // ✅ 수정된 fetchMarkers 함수 - t_cctv와 t_road_control에서 직접 마커 데이터 가져오기
     const fetchMarkers = async (map) => {
         // filterType이 'alert'일 때는 일반 마커를 로드하지 않음
         if (filterType === 'alert') {
@@ -1585,56 +1620,139 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
             return;
         }
         
+        // filterType이 'risk'일 때는 일반 마커를 로드하지 않음
+        if (filterType === 'risk') {
+            console.log('🚨 위험도 모드: 일반 마커 로드 건너뜀');
+            return;
+        }
+        
         try {
-            const response = await axios.get('http://localhost:3001/api/marker/allmarkers');
-            const markerDataList = response.data;
+            // ✅ t_cctv와 t_road_control 테이블에서 직접 마커 데이터 가져오기
+            const [cctvResponse, roadControlResponse] = await Promise.all([
+                axios.get('http://localhost:3001/api/cctv/all'),
+                axios.get('http://localhost:3001/api/road-control/all')
+            ]);
+            
+            const cctvDataList = cctvResponse.data || [];
+            const roadControlDataList = roadControlResponse.data || [];
             
             // ✅ 배열들을 초기화
             const newMarkers = [];
             const newNaverMarkers = [];
 
-            console.log('✅ 서버에서 마커 데이터 로드 성공:', markerDataList);
+            console.log('✅ 서버에서 마커 데이터 로드 성공:', {
+                cctv: cctvDataList.length,
+                roadControl: roadControlDataList.length
+            });
+            console.log('🔍 CCTV 데이터 샘플:', cctvDataList.slice(0, 2));
+            console.log('🔍 도로통제 데이터 샘플:', roadControlDataList.slice(0, 2));
 
-            markerDataList.forEach(markerData => {
-                const lat = parseFloat(markerData.lat);
-                const lon = parseFloat(markerData.lon);
-                const { marker_type, marker_id } = markerData;
+            // ✅ CCTV 마커 처리
+            cctvDataList.forEach(cctvData => {
+                const lat = parseFloat(cctvData.lat);
+                const lon = parseFloat(cctvData.lon);
+                const { cctv_idx, cctv_name } = cctvData;
 
-                if (isNaN(lat) || isNaN(lon) || !markerTypes[marker_type]) {
-                    console.error('유효하지 않은 마커 데이터:', markerData);
+                if (isNaN(lat) || isNaN(lon)) {
+                    console.error('유효하지 않은 CCTV 데이터:', cctvData);
                     return;
                 }
 
                 const newMarkerData = {
-                    id: marker_id, // ✅ DB의 marker_id 사용
-                    marker_id: marker_id, // ✅ Modals에서 사용할 marker_id 추가
+                    id: cctv_idx,
+                    marker_id: cctv_idx, // Modals에서 사용할 marker_id
+                    cctv_idx: cctv_idx, // CCTV 상세 정보 조회용
                     lat,
                     lng: lon,
-                    type: marker_type,
-                    name: markerTypes[marker_type].name,
-                    icon: markerTypes[marker_type].icon,
-                    color: markerTypes[marker_type].color
+                    type: 'cctv',
+                    name: cctv_name || 'CCTV',
+                    icon: '📹',
+                    color: '#4CAF50'
                 };
 
                 const naverMarker = new window.naver.maps.Marker({
                     position: new window.naver.maps.LatLng(lat, lon),
                     map: map,
                     icon: {
-                        content: createMarkerContent(marker_type),
+                        content: createMarkerContent('cctv'),
                         anchor: new window.naver.maps.Point(15, 15)
                     }
                 });
 
-                // ✅ 마커 클릭 이벤트를 즉시 등록
+                // ✅ 마커 클릭 이벤트 등록
                 window.naver.maps.Event.addListener(naverMarker, 'click', () => {
-                    console.log("마커클릭:", marker_type, "marker_id:", marker_id);
+                    console.log("CCTV 마커 클릭:", cctv_idx);
                     
                     // ✅ InfoContext의 lat, lon 값 업데이트
                     setLat(lat);
                     setLon(lon);
                     
                     if (onMarkerClick) {
-                        onMarkerClick(marker_type, newMarkerData);
+                        onMarkerClick('cctv', newMarkerData);
+                    }
+                });
+
+                newMarkers.push(newMarkerData);
+                newNaverMarkers.push(naverMarker);
+            });
+
+            // ✅ 도로 통제 마커 처리 (공사중, 침수)
+            roadControlDataList.forEach(controlData => {
+                const lat = parseFloat(controlData.lat);
+                const lon = parseFloat(controlData.lon);
+                const { control_idx, control_type, control_desc } = controlData;
+
+                if (isNaN(lat) || isNaN(lon) || !control_type) {
+                    console.error('유효하지 않은 도로 통제 데이터:', controlData);
+                    return;
+                }
+
+                // ✅ control_type에 따른 마커 설정
+                let markerType, markerIcon, markerColor;
+                if (control_type === 'construction') {
+                    markerType = 'construction';
+                    markerIcon = '🚧';
+                    markerColor = '#FF9800';
+                } else if (control_type === 'flood') {
+                    markerType = 'flood';
+                    markerIcon = '🌊';
+                    markerColor = '#2196F3';
+                } else {
+                    console.warn('지원하지 않는 도로 통제 타입:', control_type);
+                    return;
+                }
+
+                const newMarkerData = {
+                    id: control_idx,
+                    marker_id: control_idx, // Modals에서 사용할 marker_id
+                    control_idx: control_idx, // 도로 통제 상세 정보 조회용
+                    lat,
+                    lng: lon,
+                    type: markerType,
+                    name: control_desc || `${markerType === 'construction' ? '공사중' : '침수'}`,
+                    icon: markerIcon,
+                    color: markerColor
+                };
+
+                const naverMarker = new window.naver.maps.Marker({
+                    position: new window.naver.maps.LatLng(lat, lon),
+                    map: map,
+                    icon: {
+                        content: createMarkerContent(markerType),
+                        anchor: new window.naver.maps.Point(15, 15)
+                    }
+                });
+
+                // ✅ 마커 클릭 이벤트 등록
+                window.naver.maps.Event.addListener(naverMarker, 'click', () => {
+                    console.log(`${markerType} 마커 클릭:`, control_idx);
+                    
+                    // ✅ InfoContext의 lat, lon 값 업데이트
+                    setLat(lat);
+                    setLon(lon);
+                    
+                    if (onMarkerClick) {
+                        onMarkerClick(markerType, newMarkerData);
                     }
                 });
 
@@ -1646,7 +1764,8 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
             setMarkers(newMarkers);
             markersRef.current = newNaverMarkers;
 
-            console.log(`지도에 총 ${markerDataList.length}개의 마커가 추가되었습니다.`);
+            console.log(`지도에 총 ${newMarkers.length}개의 마커가 추가되었습니다. (CCTV: ${cctvDataList.length}, 도로통제: ${roadControlDataList.length})`);
+            console.log('🔍 생성된 마커 데이터 상세:', newMarkers.map(m => ({ id: m.id, type: m.type, name: m.name, lat: m.lat, lng: m.lng })));
 
         } catch (error) {
             console.error('❌ 마커 데이터 로드 실패:', error.response ? error.response.data : error.message);
@@ -1656,6 +1775,9 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
     // ✅ 수정된 마커 필터링 useEffect
     useEffect(() => {
         if (!mapRef.current || markersRef.current.length === 0 || markers.length === 0) return;
+
+        console.log('🔄 마커 필터링 시작:', { filterType, markersCount: markers.length });
+        console.log('🔄 현재 마커 데이터 types:', markers.map(m => ({ id: m.id, type: m.type, name: m.name })));
 
         // ✅ 배열 길이 체크 및 안전한 접근
         const minLength = Math.min(markersRef.current.length, markers.length);
@@ -1670,10 +1792,14 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                 continue;
             }
 
+            console.log(`🔍 마커 ${i}: type=${markerData.type}, filterType=${filterType}, 일치=${filterType === 'all' || markerData.type === filterType}`);
+
             if (filterType === 'all' || markerData.type === filterType) {
                 naverMarker.setMap(mapRef.current);
+                console.log(`✅ 마커 ${i} 표시: ${markerData.type}`);
             } else {
                 naverMarker.setMap(null);
+                console.log(`❌ 마커 ${i} 숨김: ${markerData.type}`);
             }
         }
 
@@ -1744,23 +1870,42 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                     >
                         모두 보기
                     </button>
-                    {Object.entries(markerTypes).map(([type, config]) => (
+                    {['cctv', 'construction', 'flood'].map((type) => {
+                        const config = getMarkerConfig(type);
+                        return (
+                            <button
+                                key={type}
+                                onClick={() => setFilterType(type)}
+                                style={{
+                                    backgroundColor: filterType === type ? config.color : 'transparent',
+                                    color: 'white',
+                                    border: `1px solid ${filterType === type ? config.color : 'white'}`,
+                                    borderRadius: '5px',
+                                    padding: '8px 12px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                {config.icon} {config.name}
+                            </button>
+                        );
+                    })}
+                    {showRiskMarkers && (
                         <button
-                            key={type}
-                            onClick={() => setFilterType(type)}
+                            onClick={() => setFilterType('risk')}
                             style={{
-                                backgroundColor: filterType === type ? config.color : 'transparent',
+                                backgroundColor: filterType === 'risk' ? '#FF5722' : 'transparent',
                                 color: 'white',
-                                border: `1px solid ${filterType === type ? config.color : 'white'}`,
+                                border: `1px solid ${filterType === 'risk' ? '#FF5722' : 'white'}`,
                                 borderRadius: '5px',
                                 padding: '8px 12px',
                                 cursor: 'pointer',
                                 fontWeight: 'bold'
                             }}
                         >
-                            {config.icon} {config.name}
+                            🚨 위험도
                         </button>
-                    ))}
+                    )}
                 </div>
             )}
 
@@ -1777,30 +1922,33 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                     border: '1px solid #ddd'
                 }}>
                     <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', fontWeight: 'bold' }}>마커 선택</h4>
-                    {Object.entries(markerTypes).map(([type, config]) => (
-                        <div key={type} style={{ marginBottom: '8px' }}>
-                            <label style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                cursor: 'pointer',
-                                fontSize: '13px'
-                            }}>
-                                <input
-                                    type="radio"
-                                    name="markerType"
-                                    value={type}
-                                    checked={selectedMarkerType === type}
-                                    onChange={(e) => {
-                                        console.log('마커 타입 변경:', e.target.value);
-                                        setSelectedMarkerType(e.target.value);
-                                    }}
-                                    style={{ marginRight: '8px' }}
-                                />
-                                <span style={{ marginRight: '5px', fontSize: '16px' }}>{config.icon}</span>
-                                {config.name}
-                            </label>
-                        </div>
-                    ))}
+                    {['cctv', 'construction', 'flood'].map((type) => {
+                        const config = getMarkerConfig(type);
+                        return (
+                            <div key={type} style={{ marginBottom: '8px' }}>
+                                <label style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    cursor: 'pointer',
+                                    fontSize: '13px'
+                                }}>
+                                    <input
+                                        type="radio"
+                                        name="markerType"
+                                        value={type}
+                                        checked={selectedMarkerType === type}
+                                        onChange={(e) => {
+                                            console.log('마커 타입 변경:', e.target.value);
+                                            setSelectedMarkerType(e.target.value);
+                                        }}
+                                        style={{ marginRight: '8px' }}
+                                    />
+                                    <span style={{ marginRight: '5px', fontSize: '16px' }}>{config.icon}</span>
+                                    {config.name}
+                                </label>
+                            </div>
+                        );
+                    })}
                     <button
                         onClick={clearAllMarkers}
                         style={{
@@ -1847,7 +1995,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                             borderRadius: '4px'
                         }}>
                             <div>
-                                <span style={{ marginRight: '5px' }}>{markerTypes[marker.type].icon}</span>
+                                <span style={{ marginRight: '5px' }}>{getMarkerConfig(marker.type).icon}</span>
                                 <span>{marker.name}</span>
                                 <br />
                                 <small style={{ color: '#ccc' }}>
@@ -1886,7 +2034,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                     fontSize: '12px'
                 }}>
                     <p>📍 지도를 클릭하여 마커를 추가하세요</p>
-                    <p>현재 선택된 마커: {markerTypes[selectedMarkerType].icon} {markerTypes[selectedMarkerType].name}</p>
+                    <p>현재 선택된 마커: {getMarkerConfig(selectedMarkerType).icon} {getMarkerConfig(selectedMarkerType).name}</p>
                     <p>편집모드 상태: {isEditingRef.current ? 'ON' : 'OFF'}</p>
                 </div>
             )}

@@ -67,7 +67,7 @@ router.put('/road-control', (req, res) => {
 
         // 업데이트 쿼리 실행
         const updateQuery = `
-            UPDATE t_road_control 
+            UPDATE t_road_control
             SET 
                 control_desc = ?,
                 control_st_tm = ?,

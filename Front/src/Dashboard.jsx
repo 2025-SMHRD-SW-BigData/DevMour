@@ -1,6 +1,6 @@
 import React , {useState, useEffect, useContext} from "react";
 import { useNavigate } from "react-router-dom";
-import { InfoContext } from "./context/InfoContext";
+import { InfoContext } from "./context/InfoContext.jsx";
 import "./Dashboard.css";
 import NaverMap from "./NaverMap";
 import Modals from "./Modals";
@@ -533,23 +533,24 @@ const Dashboard = () => {
 
       {/* 메인 */}
       <main className="main">
-        <NaverMap 
-          onMarkerClick={handleMarkerClick}
-          riskData={riskDetailData}
-          showRiskMarkers={true}
-        />
+        <div className="map-container">
+          <NaverMap 
+            onMarkerClick={handleMarkerClick}
+            riskData={riskDetailData}
+            showRiskMarkers={true}
+          />
+        </div>
+        
         <Modals 
           isOpen={isModalOpen} 
           onClose={() => setIsModalOpen(false)}
           markerType={selectedMarkerType}
           markerData={selectedMarkerData}
         />
+        
         <div className="weather-card">
-          <h3> 날씨 정보 및 예측</h3>
+          <h3>🌤️ 날씨 정보 및 예측</h3>
           <WeatherDisplay/>
-           {/* <div className="weather">
-
-          </div> */}
         </div>
       </main>
 
@@ -770,6 +771,36 @@ const Dashboard = () => {
             </div>
           )}
           
+        </div>
+
+        {/* CCTV 추가 카드 */}
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <h3>&nbsp;📹 CCTV 관리</h3>
+            <button className="detail-btn" onClick={() => nav('/cctv-add')}>
+              CCTV 추가
+            </button>
+          </div>
+          <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+            <div style={{ fontSize: '24px', marginBottom: '10px' }}>📹</div>
+            <p style={{ fontSize: '12px', margin: '0 0 15px 0' }}>새로운 CCTV를 추가하여</p>
+            <p style={{ fontSize: '12px', margin: '0 0 15px 0' }}>실시간 모니터링을 확장하세요</p>
+            <button 
+              className="detail-btn" 
+              onClick={() => nav('/cctv-add')}
+              style={{ 
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                cursor: 'pointer'
+              }}
+            >
+              📹 CCTV 추가하기
+            </button>
+          </div>
         </div>
       </aside>
 
