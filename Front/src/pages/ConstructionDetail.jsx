@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../Dashboard.css';
 import './DetailPages.css';
 import NaverMap from '../NaverMap.jsx';
+import Modals from '../Modals.jsx';
 
 const ConstructionDetail = () => {
     const nav = useNavigate();
@@ -103,15 +104,39 @@ const ConstructionDetail = () => {
                     item.lon, 
                     item
                 );
-                console.log('✅ 공사 통제 마커 위치 이동 완료');
-            } else {
-                console.log('⚠️ moveToConstructionMarker 함수가 아직 준비되지 않음');
             }
-        }, 1500);
-    
+        }, 100);
+    };
+
+    // 마커 클릭 핸들러 (Dashboard.jsx와 동일한 방식)
+    const handleMarkerClick = (markerType, markerData) => {
+        console.log('🎯 ConstructionDetail handleMarkerClick 호출:', { markerType, markerData });
+        setSelectedMarkerType(markerType);
+        
+        // ✅ 마커 데이터 구조 확인 및 변환
+        if (markerData) {
+            // control_idx가 있는 경우 (도로 통제 마커)
+            if (markerData.control_idx) {
+                setSelectedMarkerData({
+                    ...markerData,
+                    marker_id: markerData.control_idx, // control_idx를 marker_id로 사용
+                    type: markerData.type || markerType,
+                    icon: markerData.icon || '🚧'
+                });
+            } else {
+                // cctv_idx가 있는 경우 (CCTV 마커)
+                setSelectedMarkerData({
+                    ...markerData,
+                    marker_id: markerData.cctv_idx || markerData.marker_id,
+                    type: markerData.type || markerType,
+                    icon: markerData.icon || '📹'
+                });
+            }
+        }
+        
         setIsModalOpen(true);
         console.log('✅ 공사중 모달 상태 업데이트 완료');
-  
+    };
 
     // 수정 버튼 클릭 핸들러
     const handleEditClick = async (item) => {
@@ -171,8 +196,7 @@ const ConstructionDetail = () => {
             setIsEditLoading(false);
         }
     };
-    }
-    
+
     if (loading) {
         return (
             <div className="detail-container">
@@ -242,14 +266,11 @@ const ConstructionDetail = () => {
                                         <div 
                                             className="complaint-bar-fill in-progress"
                                             style={{ 
-                                                width: summaryStats.total > 0 ? `${(summaryStats.ongoing / summaryStats.total) * 100}%` : '0%'
+                                                width: summaryStats.total > 0 ? `${Math.max((summaryStats.ongoing / summaryStats.total) * 100, 5)}%` : '5%'
                                             }}
                                         >
                                             <span className="complaint-bar-value">{summaryStats.ongoing}건</span>
                                         </div>
-                                        <span className="complaint-bar-percentage">
-                                            {summaryStats.total > 0 ? `${((summaryStats.ongoing / summaryStats.total) * 100).toFixed(1)}%` : '0%'}
-                                        </span>
                                     </div>
                                 </div>
                                 
@@ -263,14 +284,11 @@ const ConstructionDetail = () => {
                                         <div 
                                             className="complaint-bar-fill completed"
                                             style={{ 
-                                                width: summaryStats.total > 0 ? `${(summaryStats.completed / summaryStats.total) * 100}%` : '0%'
+                                                width: summaryStats.total > 0 ? `${Math.max((summaryStats.completed / summaryStats.total) * 100, 5)}%` : '5%'
                                             }}
                                         >
                                             <span className="complaint-bar-value">{summaryStats.completed}건</span>
                                         </div>
-                                        <span className="complaint-bar-percentage">
-                                            {summaryStats.total > 0 ? `${((summaryStats.completed / summaryStats.total) * 100).toFixed(1)}%` : '0%'}
-                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -324,6 +342,7 @@ const ConstructionDetail = () => {
                                     filterType="construction"
                                     hideFilterButtons={true}
                                     key="construction-map"
+                                    onMarkerClick={handleMarkerClick}
                                 />
                             </div>
                         ) : (
@@ -389,6 +408,18 @@ const ConstructionDetail = () => {
                     </div>
                 </div>
             </div>
+
+            {/* 공사중 모달 */}
+            <Modals 
+                isOpen={isModalOpen} 
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setIsEditMode(false);
+                }}
+                markerType={selectedMarkerType}
+                markerData={selectedMarkerData}
+                isEditMode={isEditMode}
+            />
         </div>
     );
 };

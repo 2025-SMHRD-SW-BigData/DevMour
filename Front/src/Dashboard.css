@@ -47,7 +47,7 @@ body, html, #root {
 .header {
   grid-area: header;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   padding: 0 20px;
   background-color: #ffffff;
@@ -57,12 +57,18 @@ body, html, #root {
   font-weight: bold;
   height: 50px;
   flex-shrink: 0;
+  position: relative;
 }
 
 .header-title {
   text-align: center;
   font-size: 16px;
   color: #2c3e50;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5em;
 }
 
 
@@ -106,19 +112,22 @@ body, html, #root {
 /* 날씨 카드 */
 .weather-card {
   background-color: #ffffff;
-  padding: 12px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  margin-top: 8px;
+  padding: 4px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  margin-top: 2px;
   flex-shrink: 0;
+  text-indent: 10px;
+
 }
 
 .weather-card h3 {
-  margin: 0 0 8px 0;
-  font-size: 14px;
+  margin: 0 0 2px 0;
+  font-size: 10px;
   color: #333;
   border-bottom: 1px solid #eee;
-  padding-bottom: 6px;
+  padding-bottom: 2px;
+  font-size: 1em;
 }
 
 /* 공통 카드 스타일 */
@@ -166,23 +175,10 @@ body, html, #root {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* 날씨 정보 */
-
-/* .weather-info {
-  width: 100%;
-  max-width: 800px;
-  margin: 10px auto;
-  padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 12px;
-  background-color: #f9f9f9;
-  font-family: 'Arial', sans-serif;
-  
-} */
-
+/* 
 .weather-main {
   width: 100%;
-}
+} */
 
 .weather-item {
   

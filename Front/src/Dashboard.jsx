@@ -370,7 +370,13 @@ const Dashboard = () => {
       {/* 헤더 */}
       <header className="header">
         <div className="header-title">도로 안전 관리 시스템</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '15px',
+          position: 'absolute',
+          right: '20px'
+        }}>
           <span style={{ fontSize: '12px', color: '#666' }}>
             📍 현재 위치: {lat ? lat.toFixed(6) : 'N/A'}, {lon ? lon.toFixed(6) : 'N/A'}
           </span>
@@ -546,10 +552,11 @@ const Dashboard = () => {
           onClose={() => setIsModalOpen(false)}
           markerType={selectedMarkerType}
           markerData={selectedMarkerData}
+          isEditMode={false}
         />
         
         <div className="weather-card">
-          <h3>🌤️ 날씨 정보 및 예측</h3>
+          <h3>  날씨 정보 및 예측</h3>
           <WeatherDisplay/>
         </div>
       </main>

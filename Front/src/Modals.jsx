@@ -33,7 +33,7 @@ const generateCCTVReport = async (markerData) => {
         }
 };
 
-const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEditMode = false }) => {
+const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEditMode = false, onUpdateComplete }) => {
     const [detailData, setDetailData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [videoLoading, setVideoLoading] = useState(false);
@@ -118,6 +118,10 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                 // 도로 통제 마커: road-control API 사용
                 apiUrl = `http://localhost:3001/api/road-control/detail/${markerId}`;
                 console.log('🚧 도로 통제 API 호출:', apiUrl);
+            } else if (markerType === 'complaint') {
+                // 시민 제보 마커: complaint API 사용
+                apiUrl = `http://localhost:3001/api/complaint/${markerId}`;
+                console.log('📝 시민 제보 API 호출:', apiUrl);
             } else {
                 // CCTV 마커: marker API 사용 (기존 방식)
                 apiUrl = `http://localhost:3001/api/marker/detail/${markerId}`;
@@ -130,7 +134,21 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
             if (response.ok) {
                 const data = await response.json();
                 console.log('📊 받은 데이터:', data);
-                setDetailData(data);
+                
+                // 시민 제보 데이터 구조 맞추기
+                if (markerType === 'complaint') {
+                    setDetailData({
+                        marker: {
+                            marker_id: data.complaint.c_report_idx,
+                            marker_type: 'complaint',
+                            lat: data.complaint.lat,
+                            lon: data.complaint.lon
+                        },
+                        detail: data.complaint
+                    });
+                } else {
+                    setDetailData(data);
+                }
             } else {
                 console.error('❌ 마커 상세 정보 조회 실패:', response.status);
                 setDetailData(null);
@@ -162,16 +180,40 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
     // 수정 모드 전환
     const handleEditMode = () => {
         if (detailData?.detail) {
-            setEditFormData({
-                control_desc: detailData.detail.control_desc || '',
-                control_st_tm: detailData.detail.control_st_tm ? detailData.detail.control_st_tm.split('T')[0] : '',
-                control_ed_tm: detailData.detail.control_ed_tm ? detailData.detail.control_ed_tm.split('T')[0] : '',
-                control_addr: detailData.detail.control_addr || '',
-                control_type: detailData.detail.control_type || 'construction'
-            });
+            if (markerType === 'complaint') {
+                // 시민 제보 수정 모드
+                setEditFormData({
+                    c_report_status: detailData.detail.c_report_status || 'R',
+                    c_report_detail: detailData.detail.c_report_detail || '',
+                    addr: detailData.detail.addr || ''
+                });
+            } else {
+                // 기존 도로 통제 수정 모드
+                setEditFormData({
+                    control_desc: detailData.detail.control_desc || '',
+                    control_st_tm: detailData.detail.control_st_tm ? detailData.detail.control_st_tm.split('T')[0] : '',
+                    control_ed_tm: detailData.detail.control_ed_tm ? detailData.detail.control_ed_tm.split('T')[0] : '',
+                    control_addr: detailData.detail.control_addr || '',
+                    control_type: detailData.detail.control_type || 'construction'
+                });
+            }
         }
         setIsEditMode(true);
     };
+
+    // 전역 함수로 편집 모드로 모달 열기
+    useEffect(() => {
+        window.openComplaintModalInEditMode = () => {
+            console.log('🔄 편집 모드로 모달 열기');
+            if (detailData?.detail) {
+                handleEditMode();
+            }
+        };
+        
+        return () => {
+            window.openComplaintModalInEditMode = null;
+        };
+    }, [detailData]);
 
     // 수정 모드 취소
     const handleCancelEdit = () => {
@@ -189,37 +231,74 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
 
     // 데이터 업데이트
     const handleUpdate = async () => {
-        // ✅ control_idx를 여러 소스에서 찾기
-        const controlIdx = detailData?.detail?.control_idx || 
-                          markerData?.control_idx || 
-                          detailData?.detail?.marker_id || 
-                          markerData?.marker_id;
-        
-        if (!controlIdx) {
-            alert('업데이트할 데이터를 찾을 수 없습니다. control_idx가 필요합니다.');
-            return;
-        }
-
         setUpdateLoading(true);
         try {
-            const response = await fetch('http://localhost:3001/api/update/road-control', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    control_idx: controlIdx,
-                    ...editFormData
-                }),
-            });
+            let response;
+            
+            if (markerType === 'complaint') {
+                // 시민 제보 업데이트
+                const reportIdx = detailData?.detail?.c_report_idx || 
+                                 markerData?.c_report_idx || 
+                                 detailData?.detail?.marker_id || 
+                                 markerData?.marker_id;
+                
+                if (!reportIdx) {
+                    alert('업데이트할 시민 제보를 찾을 수 없습니다. c_report_idx가 필요합니다.');
+                    return;
+                }
+
+                response = await fetch('http://localhost:3001/api/complaint/update', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        c_report_idx: reportIdx,
+                        ...editFormData
+                    }),
+                });
+            } else {
+                // 기존 도로 통제 업데이트
+                const controlIdx = detailData?.detail?.control_idx || 
+                                  markerData?.control_idx || 
+                                  detailData?.detail?.marker_id || 
+                                  markerData?.marker_id;
+                
+                if (!controlIdx) {
+                    alert('업데이트할 데이터를 찾을 수 없습니다. control_idx가 필요합니다.');
+                    return;
+                }
+
+                response = await fetch('http://localhost:3001/api/update/road-control', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        control_idx: controlIdx,
+                        ...editFormData
+                    }),
+                });
+            }
 
             if (response.ok) {
                 const result = await response.json();
                 alert('성공적으로 업데이트되었습니다.');
                 setIsEditMode(false);
                 setEditFormData({});
+                
+                // 시민 제보 업데이트 완료 시 부모 컴포넌트에 알림
+                if (markerType === 'complaint' && onUpdateComplete) {
+                    console.log('✅ 시민 제보 업데이트 완료 - 부모 컴포넌트에 알림');
+                    onUpdateComplete();
+                }
+                
                 // 데이터 새로고침
-                fetchMarkerDetail(markerData.marker_id);
+                if (markerType === 'complaint') {
+                    fetchMarkerDetail(markerData?.c_report_idx || markerData?.marker_id);
+                } else {
+                    fetchMarkerDetail(markerData.marker_id);
+                }
             } else {
                 const errorData = await response.json();
                 alert(`업데이트 실패: ${errorData.message || '알 수 없는 오류가 발생했습니다.'}`);
@@ -837,6 +916,229 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
         );
     };
 
+    const renderComplaintModal = () => {
+        const complaintData = detailData?.detail;
+        
+        // 안전한 좌표 변환 함수
+        const safeCoordinate = (value, fallback) => {
+            if (value === null || value === undefined) return fallback;
+            const num = parseFloat(value);
+            return isNaN(num) ? fallback : num;
+        };
+        
+        const complaintLat = safeCoordinate(complaintData?.lat, markerData?.lat);
+        const complaintLon = safeCoordinate(complaintData?.lon, markerData?.lon);
+        
+        return (
+            <>
+                <div className="modal-header complaint">
+                    <h2>{markerData?.icon || '📝'} 시민 제보 상세</h2>
+                    <div className="header-actions">
+                        {!isEditMode && complaintData && (
+                            <button 
+                                className="edit-btn" 
+                                onClick={handleEditMode}
+                                style={{
+                                    background: '#3498db',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '8px 16px',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    marginRight: '10px'
+                                }}
+                            >
+                                ✏️ 수정
+                            </button>
+                        )}
+                        <span className="close" onClick={onClose}>&times;</span>
+                    </div>
+                </div>
+                <div className="modal-body">
+                    {loading ? (
+                        <div style={{ textAlign: 'center', padding: '20px' }}>
+                            <div style={{ fontSize: '48px', marginBottom: '10px' }}>⏳</div>
+                            <p>정보를 불러오는 중...</p>
+                        </div>
+                    ) : !complaintData ? (
+                        <div style={{ textAlign: 'center', padding: '20px' }}>
+                            <div style={{ fontSize: '48px', marginBottom: '10px' }}>⚠️</div>
+                            <p>상세 정보가 설정되지 않았습니다.</p>
+                            <p style={{ fontSize: '14px', color: '#666' }}>
+                                이 마커는 기본 정보만 포함하고 있습니다.
+                            </p>
+                            <div style={{ marginTop: '20px', textAlign: 'left' }}>
+                                <p><strong>마커 타입:</strong> {markerData?.type || 'complaint'}</p>
+                                <p><strong>위치:</strong> {complaintLat?.toFixed(6) || 'N/A'}, {complaintLon?.toFixed(6) || 'N/A'}</p>
+                                <p><strong>상태:</strong> 기본 정보만 표시</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            {isEditMode ? (
+                                <div className="edit-form">
+                                    <h4>✏️ 시민 제보 정보 수정</h4>
+                                    <div className="form-group">
+                                        <label>처리 상태:</label>
+                                        <select
+                                            value={editFormData.c_report_status || ''}
+                                            onChange={(e) => handleFormChange('c_report_status', e.target.value)}
+                                        >
+                                            <option value="R">접수 완료</option>
+                                            <option value="P">처리 중</option>
+                                            <option value="C">처리 완료</option>
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label style={{ color: '#999' }}>상세 설명: (편집 불가)</label>
+                                        <textarea
+                                            value={editFormData.c_report_detail || ''}
+                                            onChange={(e) => handleFormChange('c_report_detail', e.target.value)}
+                                            placeholder="상세 설명을 입력하세요"
+                                            rows="4"
+                                            disabled
+                                            style={{ backgroundColor: '#f5f5f5', color: '#666' }}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label style={{ color: '#999' }}>주소: (편집 불가)</label>
+                                        <input
+                                            type="text"
+                                            value={editFormData.addr || ''}
+                                            onChange={(e) => handleFormChange('addr', e.target.value)}
+                                            placeholder="주소를 입력하세요"
+                                            disabled
+                                            style={{ backgroundColor: '#f5f5f5', color: '#666' }}
+                                        />
+                                    </div>
+                                    <div className="form-actions">
+                                        <button 
+                                            className="cancel-btn" 
+                                            onClick={handleCancelEdit}
+                                            style={{
+                                                background: '#f44336',
+                                                color: 'white',
+                                                border: 'none',
+                                                padding: '10px 20px',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                fontSize: '14px',
+                                                marginRight: '10px'
+                                            }}
+                                        >
+                                            ❌ 취소
+                                        </button>
+                                        <button 
+                                            className="update-btn" 
+                                            onClick={handleUpdate}
+                                            disabled={updateLoading}
+                                            style={{
+                                                background: updateLoading ? '#ccc' : '#3498db',
+                                                color: 'white',
+                                                border: 'none',
+                                                padding: '10px 20px',
+                                                borderRadius: '4px',
+                                                cursor: updateLoading ? 'not-allowed' : 'pointer',
+                                                fontSize: '14px'
+                                            }}
+                                        >
+                                            {updateLoading ? '⏳ 업데이트 중...' : '✅ 수정 완료'}
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="complaint-info">
+                                    <h4>📝 제보 정보</h4>
+                                    <p><strong>제보 번호:</strong> #{complaintData?.c_report_idx}</p>
+                                    <p><strong>처리 상태:</strong> {getComplaintStatusText(complaintData?.c_report_status)}</p>
+                                    <p><strong>제보 일시:</strong> {complaintData?.c_reported_at ? new Date(complaintData.c_reported_at).toLocaleString('ko-KR') : 'N/A'}</p>
+                                    <p><strong>위치:</strong> {complaintData?.addr || '주소 정보 없음'}</p>
+                                    <p><strong>상세 내용:</strong> {complaintData?.c_report_detail || '상세 정보가 없습니다.'}</p>
+                                    <p><strong>제보자:</strong> {complaintData?.c_reporter_name}</p>
+                                    <p><strong>연락처:</strong> {complaintData?.c_reporter_phone}</p>
+                                    <p><strong>좌표:</strong> {complaintLat?.toFixed(6) || 'N/A'}, {complaintLon?.toFixed(6) || 'N/A'}</p>
+                                    
+                                    {/* 첨부 파일 정보 */}
+                                    {(complaintData?.c_report_file1 || complaintData?.c_report_file2 || complaintData?.c_report_file3) && (
+                                        <div className="attachment-info">
+                                            <h4>📎 첨부 파일</h4>
+                                            {complaintData?.c_report_file1 && (
+                                                <p><strong>파일 1:</strong> {complaintData.c_report_file1}</p>
+                                            )}
+                                            {complaintData?.c_report_file2 && (
+                                                <p><strong>파일 2:</strong> {complaintData.c_report_file2}</p>
+                                            )}
+                                            {complaintData?.c_report_file3 && (
+                                                <p><strong>파일 3:</strong> {complaintData.c_report_file3}</p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {!isEditMode && (
+                                <>
+                                    <div className="analysis-results">
+                                        <div className="analysis-card">
+                                            <h4>📊 처리 현황</h4>
+                                            <div className="detection-item">
+                                                <span>접수 일시</span>
+                                                <span className="marker-type-complaint">
+                                                    {complaintData?.c_reported_at ? new Date(complaintData.c_reported_at).toLocaleDateString('ko-KR') : 'N/A'}
+                                                </span>
+                                            </div>
+                                            <div className="detection-item">
+                                                <span>처리 담당자</span>
+                                                <span className="marker-type-complaint">
+                                                    {complaintData?.admin_id || '미배정'}
+                                                </span>
+                                            </div>
+                                            <div className="detection-item">
+                                                <span>우선순위</span>
+                                                <span className="marker-type-complaint">
+                                                    {complaintData?.c_report_status === 'C' ? '완료' : 
+                                                     complaintData?.c_report_status === 'P' ? '높음' : '보통'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="analysis-card">
+                                            <h4>📍 위치 정보</h4>
+                                            <p>주소: {complaintData?.addr || '주소 정보 없음'}</p>
+                                            <p>좌표: {complaintLat?.toFixed(6) || 'N/A'}, {complaintLon?.toFixed(6) || 'N/A'}</p>
+                                            <p>제보자: {complaintData?.c_reporter_name}</p>
+                                            <p>연락처: {complaintData?.c_reporter_phone}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="recommendations-card">
+                                        <h4>💡 처리 가이드</h4>
+                                        <ul>
+                                            <li>접수 완료 상태: 담당자 배정 및 현장 확인</li>
+                                            <li>처리 중 상태: 진행 상황 업데이트 및 소통</li>
+                                            <li>처리 완료 상태: 결과 확인 및 민원인 통보</li>
+                                            <li>긴급 민원: 즉시 현장 출동 및 조치</li>
+                                        </ul>
+                                    </div>
+                                </>
+                            )}
+                        </>
+                    )}
+                </div>
+            </>
+        );
+    };
+
+    // 시민 제보 상태 텍스트 반환 함수
+    const getComplaintStatusText = (status) => {
+        switch (status) {
+            case 'C': return '처리 완료';
+            case 'P': return '처리 중';
+            case 'R': return '접수 완료';
+            default: return '접수 완료';
+        }
+    };
+
     const renderModalContent = () => {
         switch (markerType) {
             case 'cctv':
@@ -845,6 +1147,8 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                 return renderConstructionModal();
             case 'flood':
                 return renderFloodModal();
+            case 'complaint':
+                return renderComplaintModal();
             default:
                 return renderCCTVModal();
         }
@@ -870,6 +1174,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                         {markerType === 'cctv' && '상세 분석'}
                         {markerType === 'construction' && '공사 일정'}
                         {markerType === 'flood' && '긴급 신고'}
+                        {markerType === 'complaint' && '긴급 출동'}
                     </button>
                 </div>
             </div>

@@ -76,6 +76,7 @@
     padding: 25px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
 }
 
 .summary-card h2, .main-score-card h2, .overview-section h2 {
@@ -84,6 +85,9 @@
     font-size: 1.5em;
     border-bottom: 2px solid #667eea;
     padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 /* 원 그래프 컨테이너 */
@@ -108,6 +112,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
+
 }
 
 .total-count {
@@ -286,7 +291,7 @@
     display: flex;
     flex-direction: column;
     gap: 1px;
-    width:70%;
+    width: 100%;
 }
 
 .complaint-bar-item {
@@ -331,20 +336,37 @@
     gap: 15px;
     position: relative;
     min-width: 0;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 2px;
+    border: 1px solid #e9ecef;
+    overflow: hidden;
 }
 
 .complaint-bar-fill {
     height: 40px;
-    border-radius: 8px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     padding-right: 15px;
-    min-width: 60px;
-    transition: all 0.3s ease;
+    min-width: 40px;
+    max-width: calc(100% - 30px);
+    transition: all 0.5s ease;
     position: relative;
     flex-shrink: 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    animation: barGrow 0.8s ease-out;
+}
+
+@keyframes barGrow {
+    from {
+        width: 0% !important;
+        opacity: 0.7;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .complaint-bar-fill.completed {
@@ -364,20 +386,28 @@
 
 .complaint-bar-value {
     font-weight: 600;
-    font-size: 1em;
+    font-size: 0.9em;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     white-space: nowrap;
+    min-width: 30px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .complaint-bar-percentage {
     color: #666;
     font-weight: 600;
-    font-size: 1em;
-    min-width: 60px;
-    max-width: 60px;
+    font-size: 0.9em;
+    min-width: 50px;
+    max-width: 50px;
     text-align: right;
     flex-shrink: 0;
     white-space: nowrap;
+    background: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
 }
 
 /* 범례 */
@@ -1990,5 +2020,42 @@
     
     .map-container {
         height: 400px;
+    }
+}
+
+/* 통계 업데이트 시 시각적 피드백 */
+.summary-card.updating {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #3498db;
+    box-shadow: 0 4px 16px rgba(52, 152, 219, 0.2);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 4px 16px rgba(52, 152, 219, 0.2);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(52, 152, 219, 0.4);
+    }
+    100% {
+        box-shadow: 0 4px 16px rgba(52, 152, 219, 0.2);
+    }
+}
+
+.updating-indicator {
+    font-size: 14px;
+    color: #3498db;
+    font-weight: 500;
+    margin-left: 10px;
+    animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0.5;
     }
 }

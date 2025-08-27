@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../Dashboard.css';
 import './DetailPages.css';
 import NaverMap from '../NaverMap.jsx';
+import Modals from '../Modals.jsx';
 
 const ComplaintDetail = () => {
     const nav = useNavigate();
@@ -16,6 +17,9 @@ const ComplaintDetail = () => {
         total: 0
     });
     const [showMap, setShowMap] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalData, setModalData] = useState(null);
+    const [isStatsUpdating, setIsStatsUpdating] = useState(false);
 
     // 시민 제보 데이터 조회
     useEffect(() => {
@@ -131,6 +135,64 @@ const ComplaintDetail = () => {
         }, 1500); // 지도 로딩을 위한 충분한 시간
     };
 
+    // 시민 제보 모달 열기 (지도 마커 클릭 시 - 일반 모드)
+    const openComplaintModal = (data) => {
+        console.log('📝 시민 제보 모달 열기 (일반 모드):', data);
+        setModalData(data);
+        setIsModalOpen(true);
+        // 지도 마커 클릭 시에는 편집 모드가 아닌 일반 모드로 열기
+    };
+
+    // 시민 제보 모달 닫기
+    const closeComplaintModal = () => {
+        console.log('📝 시민 제보 모달 닫기');
+        setIsModalOpen(false);
+        setModalData(null);
+    };
+
+    // 모달에서 업데이트 완료 후 호출되는 함수
+    const handleModalUpdateComplete = () => {
+        console.log('🔄 모달 업데이트 완료 - 통계 재계산 시작');
+        setIsStatsUpdating(true);
+        
+        // 시민 제보 데이터를 다시 가져와서 통계 업데이트
+        fetchComplaintData().finally(() => {
+            // 통계 업데이트 완료 후 로딩 상태 해제
+            setTimeout(() => {
+                setIsStatsUpdating(false);
+            }, 500); // 0.5초 후 로딩 상태 해제
+        });
+    };
+
+    // 민원 편집 버튼 클릭 핸들러
+    const handleEditComplaint = (item) => {
+        console.log('✏️ 민원 편집 버튼 클릭:', item);
+        setModalData({
+            marker_id: item.c_report_idx,
+            type: 'complaint',
+            lat: item.lat,
+            lng: item.lon,
+            c_report_idx: item.c_report_idx,
+            icon: '📝'
+        });
+        setIsModalOpen(true);
+        // 모달이 열린 후 편집 모드로 설정
+        setTimeout(() => {
+            if (window.openComplaintModalInEditMode) {
+                window.openComplaintModalInEditMode();
+            }
+        }, 100);
+    };
+
+    // 전역 함수로 모달 열기 함수 등록
+    useEffect(() => {
+        window.openComplaintModal = openComplaintModal;
+        
+        return () => {
+            window.openComplaintModal = null;
+        };
+    }, []);
+
     if (loading) {
         return (
             <div className="detail-container">
@@ -181,8 +243,11 @@ const ComplaintDetail = () => {
                 {/* 왼쪽 패널 */}
                 <div className="detail-left-panel">
                     {/* 요약 통계 카드 */}
-                    <div className="summary-card">
-                        <h2>📊 전체 현황 요약</h2>
+                    <div className={`summary-card ${isStatsUpdating ? 'updating' : ''}`}>
+                        <h2>
+                            📊 전체 현황 요약
+                            {isStatsUpdating && <span className="updating-indicator">🔄 업데이트 중...</span>}
+                        </h2>
                         <div className="complaint-bar-chart">
                             <div className="complaint-chart-header">
                                 <div className="total-label">전체 제보 : {summaryStats.total}건</div>
@@ -200,14 +265,11 @@ const ComplaintDetail = () => {
                                         <div 
                                             className="complaint-bar-fill completed"
                                             style={{ 
-                                                width: summaryStats.total > 0 ? `${(summaryStats.completed / summaryStats.total) * 100}%` : '0%'
+                                                width: summaryStats.total > 0 ? `${Math.max((summaryStats.completed / summaryStats.total) * 100, 5)}%` : '5%'
                                             }}
                                         >
                                             <span className="complaint-bar-value">{summaryStats.completed}건</span>
                                         </div>
-                                        <span className="complaint-bar-percentage">
-                                            {summaryStats.total > 0 ? `${((summaryStats.completed / summaryStats.total) * 100).toFixed(1)}%` : '0%'}
-                                        </span>
                                     </div>
                                 </div>
                                 
@@ -221,14 +283,11 @@ const ComplaintDetail = () => {
                                         <div 
                                             className="complaint-bar-fill in-progress"
                                             style={{ 
-                                                width: summaryStats.total > 0 ? `${(summaryStats.inProgress / summaryStats.total) * 100}%` : '0%'
+                                                width: summaryStats.total > 0 ? `${Math.max((summaryStats.inProgress / summaryStats.total) * 100, 5)}%` : '5%'
                                             }}
                                         >
                                             <span className="complaint-bar-value">{summaryStats.inProgress}건</span>
                                         </div>
-                                        <span className="complaint-bar-percentage">
-                                            {summaryStats.total > 0 ? `${((summaryStats.inProgress / summaryStats.total) * 100).toFixed(1)}%` : '0%'}
-                                        </span>
                                     </div>
                                 </div>
                                 
@@ -242,14 +301,11 @@ const ComplaintDetail = () => {
                                         <div 
                                             className="complaint-bar-fill received"
                                             style={{ 
-                                                width: summaryStats.total > 0 ? `${(summaryStats.received / summaryStats.total) * 100}%` : '0%'
+                                                width: summaryStats.total > 0 ? `${Math.max((summaryStats.received / summaryStats.total) * 100, 5)}%` : '5%'
                                             }}
                                         >
                                             <span className="complaint-bar-value">{summaryStats.received}건</span>
                                         </div>
-                                        <span className="complaint-bar-percentage">
-                                            {summaryStats.total > 0 ? `${((summaryStats.received / summaryStats.total) * 100).toFixed(1)}%` : '0%'}
-                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -327,6 +383,20 @@ const ComplaintDetail = () => {
                                                         {new Date(item.c_reported_at).toLocaleDateString()}
                                                     </span>
                                                 </div>
+                                                <button 
+                                                    className="edit-item-btn"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleEditComplaint(item);
+                                                    }}
+                                                    style={{ 
+                                                        marginLeft: '15px',
+                                                        marginRight: '15px',
+                                                        alignSelf: 'center'
+                                                    }}
+                                                >
+                                                    ✏️ 수정
+                                                </button>
                                                 <div className="risk-info">
                                                     <div className="location-name">{item.addr || '주소 정보 없음'}</div>
                                                     <div className="risk-description">
@@ -352,6 +422,15 @@ const ComplaintDetail = () => {
                     </div>
                 </div>
             </div>
+            
+            {/* 시민 제보 모달 */}
+            <Modals
+                isOpen={isModalOpen}
+                onClose={closeComplaintModal}
+                markerType="complaint"
+                markerData={modalData}
+                onUpdateComplete={handleModalUpdateComplete}
+            />
         </div>
     );
 };

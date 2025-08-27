@@ -1002,8 +1002,8 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                         anchorColor: "#fff",
                         pixelOffset: new window.naver.maps.Point(0, -9) // 마커 높이의 절반만큼 위로
                     });
-
-                                        // 새 InfoWindow 표시하고 마커와 전역 변수에 저장
+                    
+                    // 새 InfoWindow 표시하고 마커와 전역 변수에 저장
                     infoWindow.open(mapRef.current, marker);
                     marker.infoWindow = infoWindow; // 마커에 직접 InfoWindow 참조 저장
                     window.currentRiskInfoWindow = infoWindow;
@@ -1088,46 +1088,30 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                 // 마커에 시민 제보 데이터 저장
                 marker.complaintData = item;
                 
-                // 마커 클릭 시 시민 제보 정보 표시 (토글 기능)
+                // 마커 클릭 시 시민 제보 모달 표시
                 window.naver.maps.Event.addListener(marker, 'click', () => {
-                    // 현재 마커에 InfoWindow가 열려있는지 확인
-                    if (marker.infoWindow && marker.infoWindow.getMap()) {
-                        console.log('🔄 같은 시민 제보 마커 클릭 - InfoWindow 닫기');
-                        marker.infoWindow.close();
-                        marker.infoWindow = null;
-                        return;
+                    console.log('📝 시민 제보 마커 클릭:', item);
+                    
+                    // InfoContext의 lat, lon 값 업데이트
+                    setLat(lat);
+                    setLon(lon);
+                    
+                    // 모달 호출을 위한 데이터 준비
+                    const modalData = {
+                        marker_id: item.c_report_idx,
+                        type: 'complaint',
+                        lat: lat,
+                        lng: lon,
+                        c_report_idx: item.c_report_idx,
+                        icon: '📝'
+                    };
+                    
+                    // 전역 함수를 통해 모달 호출
+                    if (window.openComplaintModal) {
+                        window.openComplaintModal(modalData);
+                    } else {
+                        console.log('⚠️ openComplaintModal 함수가 아직 준비되지 않음');
                     }
-                    
-                    // 기존 InfoWindow가 있다면 닫기
-                    if (window.currentComplaintInfoWindow) {
-                        window.currentComplaintInfoWindow.close();
-                    }
-                    
-                    const infoWindow = new window.naver.maps.InfoWindow({
-                        content: `
-                            <div style="padding: 10px; min-width: 250px;">
-                                <h4 style="margin: 0 0 10px 0; color: #3498db;">📝 시민 제보</h4>
-                                <p style="margin: 5px 0;"><strong>제보 번호:</strong> #${item.c_report_idx}</p>
-                                <p style="margin: 5px 0;"><strong>처리 상태:</strong> ${getComplaintStatusText(item.c_report_status)}</p>
-                                <p style="margin: 5px 0;"><strong>제보 일시:</strong> ${new Date(item.c_reported_at).toLocaleString('ko-KR')}</p>
-                                <p style="margin: 5px 0;"><strong>위치:</strong> ${item.addr || '주소 정보 없음'}</p>
-                                <p style="margin: 5px 0;"><strong>상세 내용:</strong> ${item.c_report_detail || '상세 정보가 없습니다.'}</p>
-                                <p style="margin: 5px 0;"><strong>제보자:</strong> ${item.c_reporter_name}</p>
-                                <p style="margin: 5px 0;"><strong>연락처:</strong> ${item.c_reporter_phone}</p>
-                            </div>
-                        `,
-                        backgroundColor: "#fff",
-                        borderColor: "#3498db",
-                        borderWidth: 2,
-                        anchorSize: new window.naver.maps.Size(20, 20),
-                        anchorColor: "#fff",
-                        pixelOffset: new window.naver.maps.Point(0, -15)
-                    });
-                    
-                    // 새 InfoWindow 표시하고 마커와 전역 변수에 저장
-                    infoWindow.open(mapRef.current, marker);
-                    marker.infoWindow = infoWindow;
-                    window.currentComplaintInfoWindow = infoWindow;
                 });
 
                 newComplaintMarkers.push(marker);
