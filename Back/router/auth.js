@@ -123,6 +123,7 @@ router.post('/login', (req, res) => {
                     user: {
                         admin_id: user.admin_id,
                         admin_name: user.admin_name,
+                        admin_phone: user.admin_phone,
                         dept_name: user.dept_name,
                         dept_addr: user.dept_addr
                     }

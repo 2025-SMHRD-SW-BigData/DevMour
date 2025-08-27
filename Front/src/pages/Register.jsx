@@ -7,6 +7,7 @@ export default function Register() {
     admin_id: "",
     admin_pw: "",
     admin_name: "",
+    admin_phone: "",
     dept_name: "",
     dept_addr: ""
   });
@@ -39,6 +40,7 @@ export default function Register() {
           admin_id: "",
           admin_pw: "",
           admin_name: "",
+          admin_phone: "",
           dept_name: "",
           dept_addr: ""
         });
@@ -178,6 +180,36 @@ export default function Register() {
                 boxSizing: 'border-box'
               }}
               placeholder="이름을 입력하세요"
+            />
+          </div>
+
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              color: '#2f354f',
+              marginBottom: '0.5rem'
+            }}>
+              연락처 *
+            </label>
+            <input
+              type="tel"
+              name="admin_phone"
+              value={formData.admin_phone}
+              onChange={handleChange}
+              required
+              style={{
+                width: '100%',
+                padding: '0.875rem 1rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '0.5rem',
+                fontSize: '1rem',
+                color: '#2f354f',
+                backgroundColor: 'white',
+                boxSizing: 'border-box'
+              }}
+              placeholder="연락처를 입력하세요 (예: 010-1234-5678)"
             />
           </div>
 

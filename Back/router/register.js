@@ -16,10 +16,10 @@ let conn = mysql.createConnection({
 router.post('/register', async (req, res) => {
     console.log('✅ 사용자 등록 요청 수신:', req.body);
     
-    const { admin_id, admin_pw, admin_name, dept_name, dept_addr } = req.body;
+    const { admin_id, admin_pw, admin_name, admin_phone, dept_name, dept_addr } = req.body;
     
     // 필수 필드 검증
-    if (!admin_id || !admin_pw || !admin_name || !dept_name || !dept_addr) {
+    if (!admin_id || !admin_pw || !admin_name || !admin_phone || !dept_name || !dept_addr) {
         return res.status(400).json({
             success: false,
             message: '모든 필수 정보를 입력해주세요.'
@@ -56,10 +56,10 @@ router.post('/register', async (req, res) => {
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(admin_pw, saltRounds);
         
-        // 새 사용자 등록
+        // 새 사용자 등록 (연락처 포함)
         const [result] = await conn.promise().query(
-            'INSERT INTO t_admin (admin_id, admin_pw, admin_name, dept_name, dept_addr) VALUES (?, ?, ?, ?, ?)',
-            [admin_id, hashedPassword, admin_name, dept_name, dept_addr]
+            'INSERT INTO t_admin (admin_id, admin_pw, admin_name, admin_phone, dept_name, dept_addr) VALUES (?, ?, ?, ?, ?, ?)',
+            [admin_id, hashedPassword, admin_name, admin_phone, dept_name, dept_addr]
         );
         
         console.log('✅ 사용자 등록 성공:', admin_id);
@@ -70,6 +70,7 @@ router.post('/register', async (req, res) => {
             user: {
                 admin_id,
                 admin_name,
+                admin_phone,
                 dept_name,
                 dept_addr
             }
@@ -99,9 +100,9 @@ router.get('/users', async (req, res) => {
             });
         });
         
-        // 사용자 목록 조회 (비밀번호 제외)
+        // 사용자 목록 조회 (비밀번호 제외, 연락처 포함)
         const [users] = await conn.promise().query(
-            'SELECT admin_id, admin_name, dept_name, dept_addr FROM t_admin'
+            'SELECT admin_id, admin_name, admin_phone, dept_name, dept_addr FROM t_admin'
         );
         
         res.json({

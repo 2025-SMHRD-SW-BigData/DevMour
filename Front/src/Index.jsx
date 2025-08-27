@@ -783,7 +783,7 @@ export default function Index() {
               />
               로그인 상태 유지
             </label>
-            <button
+            {/* <button
               type="button"
               style={{
                 background: 'none',
@@ -796,7 +796,7 @@ export default function Index() {
               }}
             >
               비밀번호를 잊어버리셨나요?
-            </button>
+            </button> */}
           </div>
 
           {/* 로그인 버튼 */}
