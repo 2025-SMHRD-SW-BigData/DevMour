@@ -203,7 +203,7 @@ const ConstructionDetail = () => {
                 <div className="detail-header">
                     <h1>🚧 공사 통제 상세</h1>
                     <button className="back-btn" onClick={() => nav('/dashboard')}>
-                        ← 대시보드로 돌아가기
+                         대시보드로 돌아가기
                     </button>
                 </div>
                 <div className="loading-container">
@@ -220,7 +220,7 @@ const ConstructionDetail = () => {
                 <div className="detail-header">
                     <h1>🚧 공사 통제 상세</h1>
                     <button className="back-btn" onClick={() => nav('/dashboard')}>
-                        ← 대시보드로 돌아가기
+                         대시보드로 돌아가기
                     </button>
                 </div>
                 <div className="error-container">
@@ -238,7 +238,7 @@ const ConstructionDetail = () => {
             <div className="detail-header">
                 <h1>🚧 공사 통제 상세</h1>
                 <button className="back-btn" onClick={() => nav('/dashboard')}>
-                    ← 대시보드로 돌아가기
+                     대시보드로 돌아가기
                 </button>
             </div>
 

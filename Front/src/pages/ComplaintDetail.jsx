@@ -199,7 +199,7 @@ const ComplaintDetail = () => {
                 <div className="detail-header">
                     <h1>📋 시민 제보 상세</h1>
                     <button className="back-btn" onClick={() => nav('/dashboard')}>
-                        ← 대시보드로 돌아가기
+                         대시보드로 돌아가기
                     </button>
                 </div>
                 <div className="loading-container">
@@ -216,7 +216,7 @@ const ComplaintDetail = () => {
                 <div className="detail-header">
                     <h1>📋 시민 제보 상세</h1>
                     <button className="back-btn" onClick={() => nav('/dashboard')}>
-                        ← 대시보드로 돌아가기
+                         대시보드로 돌아가기
                     </button>
                 </div>
                 <div className="error-container">
@@ -234,7 +234,7 @@ const ComplaintDetail = () => {
             <div className="detail-header">
                 <h1>📋 시민 제보 상세</h1>
                 <button className="back-btn" onClick={() => nav('/dashboard')}>
-                    ← 대시보드로 돌아가기
+                     대시보드로 돌아가기
                 </button>
             </div>
 

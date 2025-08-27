@@ -122,7 +122,7 @@ const RiskRankingDetail = () => {
                 <div className="detail-header">
                     <h1>🚨 도로 위험도 랭킹 상세</h1>
                     <button className="back-btn" onClick={() => nav('/dashboard')}>
-                        ← 대시보드로 돌아가기
+                         대시보드로 돌아가기
                     </button>
                 </div>
                 <div className="loading-container">
@@ -139,7 +139,7 @@ const RiskRankingDetail = () => {
                 <div className="detail-header">
                     <h1>🚨 도로 위험도 랭킹 상세</h1>
                     <button className="back-btn" onClick={() => nav('/dashboard')}>
-                        ← 대시보드로 돌아가기
+                         대시보드로 돌아가기
                     </button>
                 </div>
                 <div className="error-container">
@@ -157,7 +157,7 @@ const RiskRankingDetail = () => {
             <div className="detail-header">
                 <h1>🚨 도로 위험도 랭킹 상세</h1>
                 <button className="back-btn" onClick={() => nav('/dashboard')}>
-                    ← 대시보드로 돌아가기
+                     대시보드로 돌아가기
                 </button>
             </div>
 

@@ -12,6 +12,7 @@ import RiskScoreDetail from "./pages/RiskScoreDetail";
 import ComparisonDetail from "./pages/ComparisonDetail";
 import AlertDetail from "./pages/AlertDetail";
 import CCTVAdd from "./pages/CCTVAdd";
+import Register from "./pages/Register";
 
 function App() {
     const [lat, setLat] = useState(35.159983);
@@ -27,6 +28,7 @@ function App() {
         <InfoContext.Provider value = {{lat, setLat, lon, setLon, updateLocation}}>
             <Routes>
                 <Route path = '/' element={<Index></Index>}></Route>
+                <Route path = '/register' element={<Register></Register>}></Route>
                 <Route path = '/dashboard' element={<Dashboard></Dashboard>}></Route>
                 <Route path = '/navermap' element = {<NaverMap></NaverMap>}></Route>
                 <Route path = '/weatherdisplay' element = {<WeatherDisplay></WeatherDisplay>}></Route>

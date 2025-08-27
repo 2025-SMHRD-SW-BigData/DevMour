@@ -27,6 +27,9 @@ app.use(express.urlencoded({ extended: true }));
 // 인증 관련 라우터 (로그인/로그아웃)
 app.use('/api/auth', require('./router/auth'));
 
+// 사용자 등록 라우터
+app.use('/api/register', require('./router/register'));
+
 // 마커 관련 라우터
 app.use('/api/marker', require('./router/marker'));
 

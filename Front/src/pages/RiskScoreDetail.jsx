@@ -46,7 +46,7 @@ const RiskScoreDetail = () => {
             <div className="detail-header">
                 <h1>📊 종합 위험도 점수 상세</h1>
                 <button className="back-btn" onClick={() => nav('/dashboard')}>
-                    ← 대시보드로 돌아가기
+                     대시보드로 돌아가기
                 </button>
             </div>
 
