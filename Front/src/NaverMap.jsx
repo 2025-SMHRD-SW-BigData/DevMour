@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { InfoContext } from "./context/InfoContext";
 import axios from 'axios';
+import SimpleMapSearch from './SimpleMapSearch';
 
 const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initialFilterType = 'all', hideFilterButtons = false, complaintData, showComplaintMarkers = false }) => {
     const mapRef = useRef(null);
@@ -1822,6 +1823,9 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                 id="naverMap"
                 style={{ width: "100%", height: "100%", borderRadius: "10px" }}
             ></div>
+
+            {/* 검색 컴포넌트 추가 */}
+            <SimpleMapSearch mapRef={mapRef} />
 
             {/* 편집 모드 버튼 - 항상 표시
             <button
