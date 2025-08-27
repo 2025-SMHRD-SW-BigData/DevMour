@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { saveToken, saveUser, isLoggedIn, isRememberMeEnabled, startTokenExpiryCheck, stopTokenExpiryCheck, saveUsernameToCookie, getUsernameFromCookie, removeUsernameFromCookie } from "./utils/auth";
+import { loginApi } from "./utils/api";
 
 const slideImages = [
   "https://cdn.builder.io/o/assets%2F608bbcadd79e43b89c275f9fa0935f53%2F81fbc5ee13bc4abda6b7dad5cb4a705c?alt=media&token=b0f0467e-5978-4dc6-b5da-1549bebd7326&apiKey=608bbcadd79e43b89c275f9fa0935f53",
@@ -16,6 +18,8 @@ export default function Index() {
   const [loginError, setLoginError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [saveUsername, setSaveUsername] = useState(false);
   
   const navigate = useNavigate();
 
@@ -28,6 +32,42 @@ export default function Index() {
     window.addEventListener('resize', checkMobile);
     
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // 페이지 로드 시 로그인 상태 확인 및 저장된 아이디 불러오기
+  useEffect(() => {
+    // 이전에 로그인 상태 유지를 체크했는지 확인
+    setRememberMe(isRememberMeEnabled());
+    
+    // 저장된 아이디 불러오기
+    const savedUsername = getUsernameFromCookie();
+    if (savedUsername) {
+      setUsername(savedUsername);
+      setSaveUsername(true);
+    }
+    
+    // 로그인 상태 확인
+    if (isLoggedIn()) {
+      console.log('이미 로그인된 상태 - 대시보드로 이동');
+      // 이미 로그인된 상태라면 대시보드로 이동
+      navigate("/dashboard");
+    } else {
+      console.log('로그인되지 않은 상태 - 홈 페이지 유지');
+    }
+  }, [navigate]);
+
+  // 로그인된 상태에서만 토큰 만료 체크 시작
+  useEffect(() => {
+    if (isLoggedIn()) {
+      console.log('토큰 만료 체크 시작');
+      startTokenExpiryCheck();
+      
+      // 컴포넌트 언마운트 시 토큰 만료 체크 중지
+      return () => {
+        console.log('토큰 만료 체크 중지');
+        stopTokenExpiryCheck();
+      };
+    }
   }, []);
 
   useEffect(() => {
@@ -45,27 +85,29 @@ export default function Index() {
 
     try {
       // 백엔드 API 호출
-      const response = await fetch('http://localhost:3001/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          admin_id: username,
-          admin_pw: password
-        })
+      const data = await loginApi({
+        admin_id: username,
+        admin_pw: password
       });
-
-      const data = await response.json();
 
       if (data.success) {
         console.log('✅ 로그인 성공:', data.user);
+        
+        // 아이디 저장 체크박스가 체크되어 있으면 쿠키에 아이디 저장
+        if (saveUsername) {
+          saveUsernameToCookie(username);
+        } else {
+          // 체크되지 않았으면 저장된 아이디 삭제
+          removeUsernameFromCookie();
+        }
+        
+        // JWT 토큰과 사용자 정보를 저장 (로그인 상태 유지 여부에 따라)
+        saveToken(data.token, rememberMe);
+        saveUser(data.user, rememberMe);
+        
         setIsLoginOpen(false);
         setUsername("");
         setPassword("");
-        
-        // 로그인 성공 시 사용자 정보를 localStorage에 저장 (선택사항)
-        localStorage.setItem('user', JSON.stringify(data.user));
         
         navigate("/dashboard");
       } else {
@@ -613,7 +655,7 @@ export default function Index() {
           maxWidth: '400px'
         }}>
           {/* 아이디 입력 필드 */}
-          <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ marginBottom: '1rem' }}>
             <label style={{
               display: 'block',
               fontSize: '0.875rem',
@@ -650,6 +692,29 @@ export default function Index() {
                 e.target.style.boxShadow = 'none';
               }}
             />
+            
+            {/* 아이디 저장 체크박스 */}
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              fontSize: '0.75rem',
+              color: '#6b7280',
+              cursor: 'pointer',
+              fontFamily: 'Noto Sans KR, sans-serif',
+              marginTop: '0.5rem'
+            }}>
+              <input
+                type="checkbox"
+                checked={saveUsername}
+                onChange={(e) => setSaveUsername(e.target.checked)}
+                style={{
+                  marginRight: '0.5rem',
+                  accentColor: '#2f354f',
+                  transform: 'scale(0.9)'
+                }}
+              />
+              아이디 저장
+            </label>
           </div>
 
           {/* 비밀번호 입력 필드 */}
@@ -709,6 +774,8 @@ export default function Index() {
             }}>
               <input
                 type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
                 style={{
                   marginRight: '0.5rem',
                   accentColor: '#2f354f'
@@ -767,6 +834,36 @@ export default function Index() {
           >
             {isLoading ? '로그인 중...' : '로그인'}
           </button>
+
+          {/* 사용자 등록 링크 */}
+          <div style={{
+            marginTop: '1rem',
+            textAlign: 'center'
+          }}>
+            <span style={{
+              fontSize: '0.875rem',
+              color: '#6b7280',
+              fontFamily: 'Noto Sans KR, sans-serif'
+            }}>
+              계정이 없으신가요?{' '}
+            </span>
+            <button
+              type="button"
+              onClick={() => navigate("/register")}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#2f354f',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                fontSize: '0.875rem',
+                fontFamily: 'Noto Sans KR, sans-serif',
+                fontWeight: '500'
+              }}
+            >
+              사용자 등록
+            </button>
+          </div>
 
           {/* 에러 메시지 */}
           {loginError && (

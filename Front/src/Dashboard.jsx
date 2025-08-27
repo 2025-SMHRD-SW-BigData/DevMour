@@ -1,6 +1,8 @@
 import React , {useState, useEffect, useContext} from "react";
 import { useNavigate } from "react-router-dom";
 import { InfoContext } from "./context/InfoContext.jsx";
+import { isLoggedIn, logout, startTokenExpiryCheck, stopTokenExpiryCheck } from "./utils/auth";
+import { apiGet } from "./utils/api";
 import "./Dashboard.css";
 import NaverMap from "./NaverMap";
 import Modals from "./Modals";
@@ -27,29 +29,45 @@ const Dashboard = () => {
   // ✅ InfoContext에서 lat, lon 값과 updateLocation 함수 가져오기
   const { lat, lon, updateLocation } = useContext(InfoContext);
 
-  // 실시간 알림 데이터 가져오기
+  // 페이지 로드 시 로그인 상태 확인
   useEffect(() => {
-    fetchRecentAlerts();
-    fetchRiskRankings();
-    fetchRiskDetailData();
-    fetchAverageRiskScore();
-    fetchCitizenReportStats();
-    fetchRoadConstructionStats();
-    fetchYearOverYearData();
-  }, []);
+    if (!isLoggedIn()) {
+      // 로그인되지 않은 상태라면 홈으로 이동
+      console.log('로그인되지 않은 상태 - 홈으로 이동');
+      nav('/');
+      return;
+    }
+    
+    // 토큰 만료 체크 시작
+    startTokenExpiryCheck();
+    
+    // 컴포넌트 언마운트 시 토큰 만료 체크 중지
+    return () => {
+      stopTokenExpiryCheck();
+    };
+  }, [nav]);
+
+  // 로그인 상태가 확인된 후에만 API 호출
+  useEffect(() => {
+    // 로그인 상태가 확인된 후에만 API 호출
+    if (isLoggedIn()) {
+      console.log('로그인 상태 확인됨 - API 데이터 로드 시작');
+      fetchRecentAlerts();
+      fetchRiskRankings();
+      fetchRiskDetailData();
+      fetchAverageRiskScore();
+      fetchCitizenReportStats();
+      fetchRoadConstructionStats();
+      fetchYearOverYearData();
+    }
+  }, []); // 의존성 배열을 비워서 한 번만 실행
 
   // 실시간 알림 데이터 가져오기
   const fetchRecentAlerts = async () => {
     try {
       setAlertsLoading(true);
-      const response = await fetch('http://localhost:3001/api/alert/recent');
-      if (response.ok) {
-        const data = await response.json();
-        setAlerts(data.alerts || []);
-      } else {
-        console.error('알림 데이터 조회 실패:', response.status);
-        setAlerts([]);
-      }
+      const data = await apiGet('/alert/recent');
+      setAlerts(data.alerts || []);
     } catch (error) {
       console.error('알림 데이터 조회 오류:', error);
       setAlerts([]);
@@ -62,14 +80,8 @@ const Dashboard = () => {
   const fetchRiskRankings = async () => {
     try {
       setRiskRankingsLoading(true);
-      const response = await fetch('http://localhost:3001/api/risk/ranking');
-      if (response.ok) {
-        const data = await response.json();
-        setRiskRankings(data.riskRankings || []);
-      } else {
-        console.error('위험도 랭킹 데이터 조회 실패:', response.status);
-        setRiskRankings([]);
-      }
+      const data = await apiGet('/risk/ranking');
+      setRiskRankings(data.riskRankings || []);
     } catch (error) {
       console.error('위험도 랭킹 데이터 조회 오류:', error);
       setRiskRankings([]);
@@ -85,16 +97,9 @@ const Dashboard = () => {
   const fetchRiskDetailData = async () => {
     try {
       setRiskDetailLoading(true);
-      const response = await fetch('http://localhost:3001/api/risk/ranking-detail');
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('🔍 Dashboard에서 받은 위험도 상세 데이터:', data);
-        setRiskDetailData(data.riskRankings || []);
-      } else {
-        console.error('위험도 상세 데이터 조회 실패:', response.status);
-        setRiskDetailData([]);
-      }
+      const data = await apiGet('/risk/ranking-detail');
+      console.log('🔍 Dashboard에서 받은 위험도 상세 데이터:', data);
+      setRiskDetailData(data.riskRankings || []);
     } catch (error) {
       console.error('위험도 상세 데이터 조회 오류:', error);
       setRiskDetailData([]);
@@ -109,14 +114,8 @@ const Dashboard = () => {
   const fetchAverageRiskScore = async () => {
     try {
       setAverageRiskLoading(true);
-      const response = await fetch('http://localhost:3001/api/risk/average');
-      if (response.ok) {
-        const data = await response.json();
-        setAverageRiskScore(data.averageScore || 0);
-      } else {
-        console.error('평균 위험도 점수 조회 실패:', response.status);
-        setAverageRiskScore(0);
-      }
+      const data = await apiGet('/risk/average');
+      setAverageRiskScore(data.averageScore || 0);
     } catch (error) {
       console.error('평균 위험도 점수 조회 오류:', error);
       setAverageRiskScore(0);
@@ -129,18 +128,12 @@ const Dashboard = () => {
   const fetchCitizenReportStats = async () => {
     try {
       setCitizenReportLoading(true);
-      const response = await fetch('http://localhost:3001/api/risk/citizen-report/stats');
-      if (response.ok) {
-        const data = await response.json();
-        setCitizenReportStats({
-          completedCount: data.completedCount || 0,
-          pendingCount: data.pendingCount || 0,
-          totalCount: data.totalCount || 0
-        });
-      } else {
-        console.error('민원 신고 통계 조회 실패:', response.status);
-        setCitizenReportStats({ completedCount: 0, pendingCount: 0, totalCount: 0 });
-      }
+      const data = await apiGet('/risk/citizen-report/stats');
+      setCitizenReportStats({
+        completedCount: data.completedCount || 0,
+        pendingCount: data.pendingCount || 0,
+        totalCount: data.totalCount || 0
+      });
     } catch (error) {
       console.error('민원 신고 통계 조회 오류:', error);
       setCitizenReportStats({ completedCount: 0, pendingCount: 0, totalCount: 0 });
@@ -153,18 +146,12 @@ const Dashboard = () => {
   const fetchRoadConstructionStats = async () => {
     try {
       setRoadConstructionLoading(true);
-      const response = await fetch('http://localhost:3001/api/risk/road-construction/stats');
-      if (response.ok) {
-        const data = await response.json();
-        setRoadConstructionStats({
-          completedCount: data.completedCount || 0,
-          inProgressCount: data.inProgressCount || 0,
-          totalCount: data.totalCount || 0
-        });
-      } else {
-        console.error('도로 보수공사 통계 조회 실패:', response.status);
-        setRoadConstructionStats({ completedCount: 0, inProgressCount: 0, totalCount: 0 });
-      }
+      const data = await apiGet('/risk/road-construction/stats');
+      setRoadConstructionStats({
+        completedCount: data.completedCount || 0,
+        inProgressCount: data.inProgressCount || 0,
+        totalCount: data.totalCount || 0
+      });
     } catch (error) {
       console.error('도로 보수공사 통계 조회 오류:', error);
       setRoadConstructionStats({ completedCount: 0, inProgressCount: 0, totalCount: 0 });
@@ -206,14 +193,8 @@ const Dashboard = () => {
   const fetchYearOverYearData = async () => {
     try {
       setYearOverYearLoading(true);
-      const response = await fetch('http://localhost:3001/api/comparison/year-over-year');
-      if (response.ok) {
-        const data = await response.json();
-        setYearOverYearData(data);
-      } else {
-        console.error('전년도 동기간 대비 데이터 조회 실패:', response.status);
-        setYearOverYearData(null);
-      }
+      const data = await apiGet('/comparison/year-over-year');
+      setYearOverYearData(data);
     } catch (error) {
       console.error('전년도 동기간 대비 데이터 조회 오류:', error);
       setYearOverYearData(null);
@@ -285,40 +266,34 @@ const Dashboard = () => {
   const handleAlertClick = async (alertId) => {
     try {
       console.log('🎯 알림 클릭:', alertId);
-      const response = await fetch(`http://localhost:3001/api/alert/location/${alertId}`);
+      const locationData = await apiGet(`/alert/location/${alertId}`);
+      console.log('📍 알림 위치 정보:', locationData);
       
-      if (response.ok) {
-        const locationData = await response.json();
-        console.log('📍 알림 위치 정보:', locationData);
-        
-        // InfoContext 업데이트
-        updateLocation(locationData.lat, locationData.lon);
-        console.log('✅ InfoContext 위치 업데이트 완료:', locationData.lat, locationData.lon);
-        
-        // 클릭된 알림의 메시지와 레벨 정보 찾기
-        const clickedAlert = alerts.find(alert => alert.id === alertId);
-        if (!clickedAlert) {
-          console.error('클릭된 알림 정보를 찾을 수 없습니다.');
-          return;
-        }
-        
-        // 지도 이동을 위한 이벤트 발생 (메시지와 레벨 정보 포함)
-        const moveEvent = new CustomEvent('moveToLocation', {
-          detail: {
-            lat: locationData.lat,
-            lon: locationData.lon,
-            message: clickedAlert.message,
-            level: clickedAlert.level
-          }
-        });
-        
-        console.log('🚀 지도 이동 이벤트 발생:', moveEvent.detail);
-        window.dispatchEvent(moveEvent);
-        
-        console.log('✅ 지도 이동 트리거 완료');
-      } else {
-        console.error('알림 위치 정보 조회 실패:', response.status);
+      // InfoContext 업데이트
+      updateLocation(locationData.lat, locationData.lon);
+      console.log('✅ InfoContext 위치 업데이트 완료:', locationData.lat, locationData.lon);
+      
+      // 클릭된 알림의 메시지와 레벨 정보 찾기
+      const clickedAlert = alerts.find(alert => alert.id === alertId);
+      if (!clickedAlert) {
+        console.error('클릭된 알림 정보를 찾을 수 없습니다.');
+        return;
       }
+      
+      // 지도 이동을 위한 이벤트 발생 (메시지와 레벨 정보 포함)
+      const moveEvent = new CustomEvent('moveToLocation', {
+        detail: {
+          lat: locationData.lat,
+          lon: locationData.lon,
+          message: clickedAlert.message,
+          level: clickedAlert.level
+        }
+      });
+      
+      console.log('🚀 지도 이동 이벤트 발생:', moveEvent.detail);
+      window.dispatchEvent(moveEvent);
+      
+      console.log('✅ 지도 이동 트리거 완료');
     } catch (error) {
       console.error('알림 위치 정보 조회 오류:', error);
     }
@@ -375,6 +350,27 @@ const Dashboard = () => {
             📍 현재 위치: {lat ? lat.toFixed(6) : 'N/A'}, {lon ? lon.toFixed(6) : 'N/A'}
           </span>
           <span>🔍</span>
+          <button 
+            onClick={logout}
+            style={{
+              backgroundColor: '#e74c3c',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '8px 16px',
+              fontSize: '12px',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#c0392b';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#e74c3c';
+            }}
+          >
+            로그아웃
+          </button>
         </div>
       </header>
 
