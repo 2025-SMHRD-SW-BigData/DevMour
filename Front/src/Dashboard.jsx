@@ -374,7 +374,7 @@ const [currentUser, setCurrentUser] = useState(null);
 
   {/* 🖼️ 로고 이미지 */}
    <img 
-      src="./public/도로시마크 (1).png" // public 폴더에 있는 이미지
+      src="./도로시마크 (1).png" // public 폴더에 있는 이미지
       alt="로고" 
       style={{
         width: '50px',
@@ -383,7 +383,7 @@ const [currentUser, setCurrentUser] = useState(null);
       }}
     />
     <img 
-      src="./public/Doro-see.png" // public 폴더에 있는 이미지
+      src="./Doro-see.png" // public 폴더에 있는 이미지
       alt="로고" 
       style={{
         width: '80px',

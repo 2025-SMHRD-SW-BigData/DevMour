@@ -161,13 +161,13 @@ if (weatherData) {
                         marginTop: '8px' }}>  
                       
             <div className="detail-item">
-              <img src="./public/온도.png" alt="온도계" width="20px" height="20px" />{weatherData.temperature.toFixed(1)}°C</div>
+              <img src="./온도.png" alt="온도계" width="20px" height="20px" />{weatherData.temperature.toFixed(1)}°C</div>
             <div className="detail-item">
-              <img src="./public/날씨묘사.png" alt="날씨" width="20px" height="20px" />{weatherData.description}</div>
+              <img src="./날씨묘사.png" alt="날씨" width="20px" height="20px" />{weatherData.description}</div>
             <div className="detail-item">
-             <img src="./public/강수량.png" alt="비" width="20px" height="20px" /> 강수량: {weatherData?.rain?.['1h'] ? `${weatherData.rain['1h']}mm/h` : '없음'}</div>
+             <img src="./강수량.png" alt="비" width="20px" height="20px" /> 강수량: {weatherData?.rain?.['1h'] ? `${weatherData.rain['1h']}mm/h` : '없음'}</div>
             <div className="detail-item">
-             <img src="./public/눈송이.png" alt="눈" width="20px" height="20px" /> 강설량: {weatherData?.snow?.['1h'] ? `${weatherData.snow['1h']}mm/h` : '없음'} </div>
+             <img src="./눈송이.png" alt="눈" width="20px" height="20px" /> 강설량: {weatherData?.snow?.['1h'] ? `${weatherData.snow['1h']}mm/h` : '없음'} </div>
 
             </div>
       
