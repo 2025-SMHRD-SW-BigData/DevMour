@@ -639,16 +639,16 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                     </div>
                                 </div>
                             ) : (
-                                <div className="construction-status">
-                                    <h4>🏗️ 공사 진행 상황</h4>
-                                    <p><strong>공사 종류:</strong> {controlData?.control_desc || '도로 포장 공사'}</p>
-                                    <p><strong>시작일:</strong> {controlData?.control_st_tm ? new Date(controlData.control_st_tm).toLocaleDateString('ko-KR') : '2024년 1월 15일'}</p>
-                                    <p><strong>예상 완료일:</strong> {controlData?.control_ed_tm ? new Date(controlData.control_ed_tm).toLocaleDateString('ko-KR') : '2024년 3월 20일'}</p>
-                                    <p><strong>현재 단계:</strong> 포장층 시공 중</p>
+                                <div className="construction-status" >
+                                    {/* <h4 style={{ whiteSpace: 'nowrap' }}>🏗️ 공사 진행 상황</h4><br></br> */}
+                                    <p><strong>공사 종류</strong><br></br> {controlData?.control_desc || '도로 포장 공사'}</p>
+                                    <p><strong>시작일</strong><br></br> {controlData?.control_st_tm ? new Date(controlData.control_st_tm).toLocaleDateString('ko-KR') : '2024년 1월 15일'}</p>
+                                    <p style={{ whiteSpace: 'nowrap' }}><strong>예상 완료일</strong><br></br> {controlData?.control_ed_tm ? new Date(controlData.control_ed_tm).toLocaleDateString('ko-KR') : '2024년 3월 20일'}</p>
+                                    <p><strong>현재 단계</strong> <br></br>포장층 시공 중</p>
                                     {controlData?.control_addr && (
-                                        <p><strong>통제 주소:</strong> {controlData.control_addr}</p>
+                                        <p><strong>통제 주소</strong><br></br> {controlData.control_addr}</p>
                                     )}
-                                    <p><strong>위치:</strong> {controlLat?.toFixed(6) || 'N/A'}, {controlLon?.toFixed(6) || 'N/A'}</p>
+                                    <p><strong>위치</strong><br></br> {controlLat?.toFixed(6) || 'N/A'}, {controlLon?.toFixed(6) || 'N/A'}</p>
                                 </div>
                             )}
 
