@@ -1,12 +1,14 @@
 import React , {useState, useEffect, useContext} from "react";
 import { useNavigate } from "react-router-dom";
 import { InfoContext } from "./context/InfoContext.jsx";
-import { isLoggedIn, logout, startTokenExpiryCheck, stopTokenExpiryCheck } from "./utils/auth";
+import { isLoggedIn, logout, startTokenExpiryCheck, stopTokenExpiryCheck, getUser } from "./utils/auth";
 import { apiGet } from "./utils/api";
 import "./Dashboard.css";
 import NaverMap from "./NaverMap";
 import Modals from "./Modals";
 import WeatherDisplay from "./WeatherDisplay";
+
+
 
 const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,7 +26,10 @@ const Dashboard = () => {
   const [roadConstructionLoading, setRoadConstructionLoading] = useState(true);
   const [yearOverYearData, setYearOverYearData] = useState(null);
   const [yearOverYearLoading, setYearOverYearLoading] = useState(true);
+  
   const nav = useNavigate();
+  
+const [currentUser, setCurrentUser] = useState(null);
   
   // ✅ InfoContext에서 lat, lon 값과 updateLocation 함수 가져오기
   const { lat, lon, updateLocation } = useContext(InfoContext);
@@ -38,14 +43,28 @@ const Dashboard = () => {
       return;
     }
     
-    // 토큰 만료 체크 시작
+  //   // 토큰 만료 체크 시작
+  //   startTokenExpiryCheck();
+    
+  //   // 컴포넌트 언마운트 시 토큰 만료 체크 중지
+  //   return () => {
+  //     stopTokenExpiryCheck();
+  //   };
+  // }, [nav]);
+
+ // 👇 기존 getUser 함수 사용
+    const user = getUser();
+    setCurrentUser(user);
+    console.log('현재 로그인한 사용자:', user);
+    
     startTokenExpiryCheck();
     
-    // 컴포넌트 언마운트 시 토큰 만료 체크 중지
     return () => {
       stopTokenExpiryCheck();
     };
   }, [nav]);
+
+
 
   // 로그인 상태가 확인된 후에만 API 호출
   useEffect(() => {
@@ -61,6 +80,7 @@ const Dashboard = () => {
       fetchYearOverYearData();
     }
   }, []); // 의존성 배열을 비워서 한 번만 실행
+
 
   // 실시간 알림 데이터 가져오기
   const fetchRecentAlerts = async () => {
@@ -344,12 +364,63 @@ const Dashboard = () => {
     <div className="container">
       {/* 헤더 */}
       <header className="header">
+{/* 왼쪽: 사용자 이름 */}
+<div style={{ 
+    display: 'flex', 
+    alignItems: 'center',
+    position: 'absolute',
+    left: '20px'
+  }}> 
+
+  {/* 🖼️ 로고 이미지 */}
+   <img 
+      src="./도로시마크 (1).png" // public 폴더에 있는 이미지
+      alt="로고" 
+      style={{
+        width: '50px',
+        height: '50px',
+        borderRadius: '8px'
+      }}
+    />
+    <img 
+      src="./Doro-see.png" // public 폴더에 있는 이미지
+      alt="로고" 
+      style={{
+        width: '80px',
+        height: '50px',
+        borderRadius: '8px'
+      }}
+    /></div>
+
         <div className="header-title">도로 안전 관리 시스템</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '15px',
+          position: 'absolute',
+          right: '20px'
+        }}>
+
+
+              
           <span style={{ fontSize: '12px', color: '#666' }}>
             📍 현재 위치: {lat ? lat.toFixed(6) : 'N/A'}, {lon ? lon.toFixed(6) : 'N/A'}
           </span>
-          <span>🔍</span>
+  {/* 👆 사용자 이름 표시 */}
+          {currentUser && (
+            <span style={{ 
+              fontSize: '14px', 
+              color: '#333',
+              fontWeight: 'bold',
+              backgroundColor: '#f8f9fa',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: '1px solid #e9ecef'
+              
+            }}>
+              👤 {currentUser.admin_name}님 안녕하세요
+              </span> )}
+  
           <button 
             onClick={logout}
             style={{
@@ -424,12 +495,12 @@ const Dashboard = () => {
           </div>
           {citizenReportLoading ? (
             <div style={{ textAlign: 'center', padding: '20px' }}>
-              <div style={{ fontSize: '24px', marginBottom: '10px' }}>⏳</div>
+              <div style={{ fontSize: '24px', marginBottom: '17px' }}>⏳</div>
               <p style={{ fontSize: '14px', margin: 0 }}>민원 통계 로딩 중...</p>
             </div>
           ) : (
-            <div style={{ textAlign: 'center', padding: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '20px' }}>
+            <div style={{ textAlign: 'center', padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '17px' }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ 
                     fontSize: '32px', 
@@ -546,7 +617,7 @@ const Dashboard = () => {
         />
         
         <div className="weather-card">
-          <h3>🌤️ 날씨 정보 및 예측</h3>
+          <h3>  날씨 정보 및 예측</h3>
           <WeatherDisplay/>
         </div>
       </main>

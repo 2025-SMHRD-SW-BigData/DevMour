@@ -151,18 +151,23 @@ if (weatherData) {
     ): weatherData ?(
       <div className="weather-info" style={{height:'80px', width:'1000px'}}>
           <div className="weather-main">
-            <h4 style={{ textAlign: 'center', margin: '0 0 8px 0' }}>📍 {addressData?.address?.full || weatherData.city}</h4>
+            <h4 style={{ textAlign: 'center', margin: '0 0 8px 0' }}>현재 위치 : {addressData?.address?.full || weatherData.city}</h4>
 
             <div style={{width : '1000px',
                         height : '50px',
                         display: 'flex', 
                         gap: '10px', 
                         justifyContent: 'space-between',
-                        marginTop: '8px' }}>            
-            <div className="detail-item">🌡{weatherData.temperature.toFixed(1)}°C</div>
-            <div className="detail-item">{weatherData.description}</div>
-            <div className="detail-item">💧 강수량: {weatherData?.rain?.['1h'] ? `${weatherData.rain['1h']}mm/h` : '없음'}</div>
-            <div className="detail-item">❄️ 강설량: {weatherData?.snow?.['1h'] ? `${weatherData.snow['1h']}mm/h` : '없음'} </div>
+                        marginTop: '8px' }}>  
+                      
+            <div className="detail-item">
+              <img src="./온도.png" alt="온도계" width="20px" height="20px" />{weatherData.temperature.toFixed(1)}°C</div>
+            <div className="detail-item">
+              <img src="./날씨묘사.png" alt="날씨" width="20px" height="20px" />{weatherData.description}</div>
+            <div className="detail-item">
+             <img src="./강수량.png" alt="비" width="20px" height="20px" /> 강수량: {weatherData?.rain?.['1h'] ? `${weatherData.rain['1h']}mm/h` : '없음'}</div>
+            <div className="detail-item">
+             <img src="./눈송이.png" alt="눈" width="20px" height="20px" /> 강설량: {weatherData?.snow?.['1h'] ? `${weatherData.snow['1h']}mm/h` : '없음'} </div>
 
             </div>
       

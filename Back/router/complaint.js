@@ -184,4 +184,93 @@ router.get('/:id', (req, res) => {
     });
 });
 
+// 시민 제보 정보 업데이트
+router.put('/update', (req, res) => {
+    const { c_report_idx, c_report_status, c_report_detail, addr } = req.body;
+    console.log('✏️ 시민 제보 업데이트 요청:', { c_report_idx, c_report_status, c_report_detail, addr });
+    
+    if (!c_report_idx) {
+        console.error('❌ 시민 제보 업데이트 실패: c_report_idx가 필요합니다.');
+        res.status(400).json({ 
+            error: '시민 제보 번호(c_report_idx)가 필요합니다.',
+            details: '업데이트할 시민 제보를 식별할 수 없습니다.'
+        });
+        return;
+    }
+    
+    // 업데이트할 필드들을 동적으로 구성
+    const updateFields = [];
+    const updateValues = [];
+    
+    if (c_report_status !== undefined) {
+        updateFields.push('c_report_status = ?');
+        updateValues.push(c_report_status);
+    }
+    
+    if (c_report_detail !== undefined) {
+        updateFields.push('c_report_detail = ?');
+        updateValues.push(c_report_detail);
+    }
+    
+    if (addr !== undefined) {
+        updateFields.push('addr = ?');
+        updateValues.push(addr);
+    }
+    
+    if (updateFields.length === 0) {
+        console.error('❌ 시민 제보 업데이트 실패: 업데이트할 필드가 없습니다.');
+        res.status(400).json({ 
+            error: '업데이트할 필드가 없습니다.',
+            details: '최소 하나의 필드를 업데이트해야 합니다.'
+        });
+        return;
+    }
+    
+    // c_report_idx를 WHERE 조건에 추가
+    updateValues.push(c_report_idx);
+    
+    const query = `
+        UPDATE t_citizen_report 
+        SET ${updateFields.join(', ')}
+        WHERE c_report_idx = ?
+    `;
+    
+    console.log('🔧 실행할 쿼리:', query);
+    console.log('📊 업데이트 값들:', updateValues);
+    
+    conn.query(query, updateValues, (err, results) => {
+        if (err) {
+            console.error('❌ 시민 제보 업데이트 오류:', err);
+            res.status(500).json({ 
+                error: '시민 제보 업데이트 중 오류가 발생했습니다.',
+                details: err.message 
+            });
+            return;
+        }
+        
+        if (results.affectedRows === 0) {
+            console.log('❌ 시민 제보 업데이트 실패: 해당 제보를 찾을 수 없음:', c_report_idx);
+            res.status(404).json({ 
+                error: '해당 시민 제보를 찾을 수 없습니다.',
+                reportId: c_report_idx
+            });
+            return;
+        }
+        
+        console.log('✅ 시민 제보 업데이트 성공:', { 
+            reportId: c_report_idx, 
+            affectedRows: results.affectedRows,
+            updatedFields: updateFields.map(field => field.split(' = ')[0])
+        });
+        
+        res.json({
+            success: true,
+            message: '시민 제보가 성공적으로 업데이트되었습니다.',
+            reportId: c_report_idx,
+            affectedRows: results.affectedRows,
+            updatedFields: updateFields.map(field => field.split(' = ')[0])
+        });
+    });
+});
+
 module.exports = router;

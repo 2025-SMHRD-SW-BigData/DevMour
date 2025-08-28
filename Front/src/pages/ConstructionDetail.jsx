@@ -203,7 +203,7 @@ const ConstructionDetail = () => {
                 <div className="detail-header">
                     <h1>🚧 공사 통제 상세</h1>
                     <button className="back-btn" onClick={() => nav('/dashboard')}>
-                        ← 대시보드로 돌아가기
+                         대시보드로 돌아가기
                     </button>
                 </div>
                 <div className="loading-container">
@@ -220,7 +220,7 @@ const ConstructionDetail = () => {
                 <div className="detail-header">
                     <h1>🚧 공사 통제 상세</h1>
                     <button className="back-btn" onClick={() => nav('/dashboard')}>
-                        ← 대시보드로 돌아가기
+                         대시보드로 돌아가기
                     </button>
                 </div>
                 <div className="error-container">
@@ -238,7 +238,7 @@ const ConstructionDetail = () => {
             <div className="detail-header">
                 <h1>🚧 공사 통제 상세</h1>
                 <button className="back-btn" onClick={() => nav('/dashboard')}>
-                    ← 대시보드로 돌아가기
+                     대시보드로 돌아가기
                 </button>
             </div>
 
@@ -266,14 +266,11 @@ const ConstructionDetail = () => {
                                         <div 
                                             className="complaint-bar-fill in-progress"
                                             style={{ 
-                                                width: summaryStats.total > 0 ? `${(summaryStats.ongoing / summaryStats.total) * 100}%` : '0%'
+                                                width: summaryStats.total > 0 ? `${Math.max((summaryStats.ongoing / summaryStats.total) * 100, 5)}%` : '5%'
                                             }}
                                         >
                                             <span className="complaint-bar-value">{summaryStats.ongoing}건</span>
                                         </div>
-                                        <span className="complaint-bar-percentage">
-                                            {summaryStats.total > 0 ? `${((summaryStats.ongoing / summaryStats.total) * 100).toFixed(1)}%` : '0%'}
-                                        </span>
                                     </div>
                                 </div>
                                 
@@ -287,14 +284,11 @@ const ConstructionDetail = () => {
                                         <div 
                                             className="complaint-bar-fill completed"
                                             style={{ 
-                                                width: summaryStats.total > 0 ? `${(summaryStats.completed / summaryStats.total) * 100}%` : '0%'
+                                                width: summaryStats.total > 0 ? `${Math.max((summaryStats.completed / summaryStats.total) * 100, 5)}%` : '5%'
                                             }}
                                         >
                                             <span className="complaint-bar-value">{summaryStats.completed}건</span>
                                         </div>
-                                        <span className="complaint-bar-percentage">
-                                            {summaryStats.total > 0 ? `${((summaryStats.completed / summaryStats.total) * 100).toFixed(1)}%` : '0%'}
-                                        </span>
                                     </div>
                                 </div>
                             </div>

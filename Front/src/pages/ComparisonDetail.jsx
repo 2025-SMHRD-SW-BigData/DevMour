@@ -187,7 +187,7 @@ const ComparisonDetail = () => {
                 <div className="detail-header">
                     <h1>📊 전년 대비 추이 분석</h1>
                     <button className="back-btn" onClick={() => nav('/dashboard')}>
-                        ← 대시보드로 돌아가기
+                         대시보드로 돌아가기
                     </button>
                 </div>
                 <div className="loading">데이터를 불러오는 중...</div>
@@ -201,7 +201,7 @@ const ComparisonDetail = () => {
                 <div className="detail-header">
                     <h1>📊 전년 대비 추이 분석</h1>
                     <button className="back-btn" onClick={() => nav('/dashboard')}>
-                        ← 대시보드로 돌아가기
+                         대시보드로 돌아가기
                     </button>
                 </div>
                 <div className="error">오류가 발생했습니다: {error}</div>
@@ -215,7 +215,7 @@ const ComparisonDetail = () => {
                 <div className="detail-header">
                     <h1>📊 전년 대비 추이 분석</h1>
                     <button className="back-btn" onClick={() => nav('/dashboard')}>
-                        ← 대시보드로 돌아가기
+                         대시보드로 돌아가기
                     </button>
                 </div>
                 <div className="error">데이터가 없습니다.</div>
@@ -233,7 +233,7 @@ const ComparisonDetail = () => {
                 <h1>📊 전년 대비 추이 분석</h1>
                 <p className="period-info">{currentMonth}월 기준 {lastYear}년 vs {currentYear}년 비교</p>
                 <button className="back-btn" onClick={() => nav('/dashboard')}>
-                    ← 대시보드로 돌아가기
+                     대시보드로 돌아가기
                 </button>
             </div>
 

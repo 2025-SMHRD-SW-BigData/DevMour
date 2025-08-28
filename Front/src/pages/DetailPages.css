@@ -76,6 +76,7 @@
     padding: 25px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
 }
 
 .summary-card h2, .main-score-card h2, .overview-section h2 {
@@ -84,6 +85,9 @@
     font-size: 1.5em;
     border-bottom: 2px solid #667eea;
     padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 /* 원 그래프 컨테이너 */
@@ -108,6 +112,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
+
 }
 
 .total-count {
@@ -286,7 +291,7 @@
     display: flex;
     flex-direction: column;
     gap: 1px;
-    width:70%;
+    width: 100%;
 }
 
 .complaint-bar-item {
@@ -331,20 +336,37 @@
     gap: 15px;
     position: relative;
     min-width: 0;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 2px;
+    border: 1px solid #e9ecef;
+    overflow: hidden;
 }
 
 .complaint-bar-fill {
     height: 40px;
-    border-radius: 8px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     padding-right: 15px;
-    min-width: 60px;
-    transition: all 0.3s ease;
+    min-width: 40px;
+    max-width: calc(100% - 30px);
+    transition: all 0.5s ease;
     position: relative;
     flex-shrink: 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    animation: barGrow 0.8s ease-out;
+}
+
+@keyframes barGrow {
+    from {
+        width: 0% !important;
+        opacity: 0.7;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .complaint-bar-fill.completed {
@@ -364,20 +386,28 @@
 
 .complaint-bar-value {
     font-weight: 600;
-    font-size: 1em;
+    font-size: 0.9em;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     white-space: nowrap;
+    min-width: 30px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .complaint-bar-percentage {
     color: #666;
     font-weight: 600;
-    font-size: 1em;
-    min-width: 60px;
-    max-width: 60px;
+    font-size: 0.9em;
+    min-width: 50px;
+    max-width: 50px;
     text-align: right;
     flex-shrink: 0;
     white-space: nowrap;
+    background: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
 }
 
 /* 범례 */
@@ -1246,7 +1276,6 @@
     align-items: flex-end;
     gap: 1px;
     min-width: 10px;
-    position: relative;
 }
 
 .risk-level {
@@ -1915,8 +1944,7 @@
     font-style: italic;
 }
 
-=======
->>>>>>> f213aac (첫페이지로그인)
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
     .detail-container {
@@ -1993,386 +2021,41 @@
     .map-container {
         height: 400px;
     }
-<<<<<<< HEAD
+}
 
-    .cctv-add-container {
-        padding: 15px;
+/* 통계 업데이트 시 시각적 피드백 */
+.summary-card.updating {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #3498db;
+    box-shadow: 0 4px 16px rgba(52, 152, 219, 0.2);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 4px 16px rgba(52, 152, 219, 0.2);
     }
-    
-    .page-header h1 {
-        font-size: 2rem;
+    50% {
+        box-shadow: 0 4px 20px rgba(52, 152, 219, 0.4);
     }
-    
-    .button-group {
-        flex-direction: column;
-    }
-    
-    .info-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .url-display,
-    .example-url code {
-        font-size: 0.8rem;
-        padding: 12px;
+    100% {
+        box-shadow: 0 4px 16px rgba(52, 152, 219, 0.2);
     }
 }
 
-/* AddMap 컴포넌트 스타일 */
-.add-map-container {
-    width: 100%;
-    margin: 0;
-}
-
-.map-instructions {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    border-left: 4px solid #4CAF50;
-}
-
-.map-instructions h4 {
-    margin: 0 0 8px 0;
-    color: #333;
-    font-size: 1.1em;
-    font-weight: 600;
-}
-
-.map-instructions p {
-    margin: 0;
-    color: #666;
-    font-size: 0.9em;
-    line-height: 1.4;
-}
-
-.naver-map {
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* 새로운 좌우 레이아웃 스타일 */
-.main-content-layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    align-items: start;
-}
-
-.left-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-}
-
-.right-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-}
-
-.map-section {
-    background: white;
-    border-radius: 12px;
-    padding: 25px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    height: fit-content;
-}
-
-.map-section h3 {
-    color: #333;
-    margin: 0 0 20px 0;
-    font-size: 1.3rem;
-    border-bottom: 2px solid #4CAF50;
-    padding-bottom: 10px;
-}
-
-/* 좌표 입력 섹션 스타일 */
-.coordinates-section {
-    margin-top: 20px;
-    padding: 20px;
-    background: white;
-    border-radius: 8px;
-    border: 1px solid #e1e5e9;
-}
-
-.coordinates-section h4 {
-    color: #333;
-    margin: 0 0 15px 0;
-    font-size: 1.1rem;
-    border-bottom: 1px solid #667eea;
-    padding-bottom: 8px;
-}
-
-.coordinates-inputs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 15px;
-}
-
-.coordinate-input {
-    width: 100%;
-    padding: 12px;
-    border: 2px solid #e1e5e9;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-}
-
-.coordinate-input:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
-}
-
-.selected-coordinates {
-    background: #e8f5e8;
-    border: 1px solid #4caf50;
-    border-radius: 6px;
-    padding: 10px;
-    text-align: center;
-    color: #2e7d32;
+.updating-indicator {
+    font-size: 14px;
+    color: #3498db;
     font-weight: 500;
+    margin-left: 10px;
+    animation: blink 1s ease-in-out infinite;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 1200px) {
-    .main-content-layout {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
-    
-    .right-panel {
-        order: -1; /* 모바일에서는 지도를 위에 표시 */
-    }
-    
-    .coordinates-inputs {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* CCTVAdd 컴포넌트 전용 스타일 */
-.url-input {
-    width: 100%;
-    padding: 15px;
-    border: 2px solid #e1e5e9;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    background: white;
-    color: #333;
-    transition: all 0.3s ease;
-    box-sizing: border-box;
-}
-
-.url-input:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-}
-
-.url-input::placeholder {
-    color: #666;
-    opacity: 0.7;
-}
-
-.button-group {
-    display: flex;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.btn {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    flex: 1;
-    text-align: center;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    color: white;
-    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
-}
-
-.btn-primary:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(79, 172, 254, 0.6);
-}
-
-.btn-primary:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.btn-secondary {
-    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-    color: #333;
-    box-shadow: 0 4px 15px rgba(168, 237, 234, 0.4);
-}
-
-.btn-secondary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(168, 237, 234, 0.6);
-}
-
-.btn-success {
-    background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-    color: white;
-    padding: 15px 30px;
-    font-size: 1rem;
-    box-shadow: 0 4px 15px rgba(86, 171, 47, 0.4);
-    width: 100%;
-}
-
-.btn-success:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(86, 171, 47, 0.6);
-}
-
-.btn-success:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.info-grid {
-    display: grid;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.info-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border: 1px solid #e1e5e9;
-}
-
-.info-item label {
-    font-weight: 500;
-    color: #333;
-}
-
-.info-item span {
-    font-weight: 600;
-    color: #667eea;
-}
-
-.status-active {
-    background: rgba(76, 175, 80, 0.8);
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-}
-
-.url-preview {
-    margin-bottom: 20px;
-}
-
-.url-preview label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-    color: #333;
-}
-
-.url-display {
-    background: #f8f9fa;
-    padding: 12px 15px;
-    border-radius: 8px;
-    font-family: 'Courier New', monospace;
-    font-size: 0.8rem;
-    word-break: break-all;
-    border: 1px solid #e1e5e9;
-    color: #333;
-}
-
-.map-container {
-    height: 500px;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.success-message,
-.error-message {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 20px 25px;
-    border-radius: 12px;
-    color: white;
-    font-weight: 600;
-    z-index: 1000;
-    animation: slideIn 0.3s ease-out;
-    max-width: 400px;
-}
-
-.success-message {
-    background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-    box-shadow: 0 4px 20px rgba(86, 171, 47, 0.4);
-}
-
-.error-message {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-    box-shadow: 0 4px 20px rgba(255, 107, 107, 0.4);
-}
-
-.success-icon,
-.error-icon {
-    font-size: 1.5rem;
-    margin-right: 10px;
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
+@keyframes blink {
+    0%, 50% {
         opacity: 1;
     }
-}
-
-.usage-example {
-    background: white;
-    border-radius: 12px;
-    padding: 25px;
-    margin-top: 25px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.usage-example h3 {
-    margin: 0 0 20px 0;
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: #333;
-    text-align: center;
-}
-
-.usage-example ol {
-    margin: 0;
-    padding-left: 20px;
-    color: #555;
-    line-height: 1.8;
-}
-
-.usage-example li {
-    margin-bottom: 10px;
-    font-size: 0.95rem;
-=======
->>>>>>> f213aac (첫페이지로그인)
+    51%, 100% {
+        opacity: 0.5;
+    }
 }

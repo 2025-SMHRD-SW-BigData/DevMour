@@ -52,19 +52,18 @@ const SimpleMapSearch = ({ mapRef }) => {
     return (
         <div style={{
             position: 'absolute',
-            bottom: '20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
+            top: '10px',
+            right: '120px',
             zIndex: 1000,
             backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            padding: '15px 20px',
-            borderRadius: '25px',
+            padding: '10px 15px',
+            borderRadius: '20px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
             border: '1px solid rgba(0, 0, 0, 0.1)',
-            minWidth: '300px',
+            minWidth: '280px',
             display: 'flex',
             alignItems: 'center',
-            gap: '10px'
+            gap: '8px'
         }}>
             <div style={{ flex: 1 }}>
                 <input
