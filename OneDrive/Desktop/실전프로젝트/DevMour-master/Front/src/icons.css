@@ -1,0 +1,76 @@
+/* Custom CCTV Markers */
+.cctv-marker {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 3px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease;
+}
+
+.cctv-marker:hover {
+    transform: scale(1.2);
+}
+
+.cctv-marker.danger {
+    background: #F44336;
+}
+
+.cctv-marker.warning {
+    background: #FFC107;
+}
+
+.cctv-marker.safe {
+    background: #4CAF50;
+}
+
+/* 공사중 마커 스타일 */
+.construction-marker {
+  background: #FF9800; /* 주황색 계열 */
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 3px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.construction-marker:hover {
+  transform: scale(1.2);
+}
+
+/* 침수 발생 마커 스타일 */
+.flood-marker {
+  background: #2196F3; /* 파란색 계열 */
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 3px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.flood-marker:hover {
+  transform: scale(1.2);
+}
