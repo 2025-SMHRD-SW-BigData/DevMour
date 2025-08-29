@@ -18,6 +18,9 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
     // CCTV 보고서 생성 함수
     const generateCCTVReport = async (markerData) => {
         try {
+            console.log('🔍 generateCCTVReport 함수 실행됨');
+            console.log('🔍 markerData:', markerData);
+            
             // 보고서 데이터 준비
             const reportData = {
                 cctvId: markerData?.cctv_idx || 'CCTV-001',
@@ -40,9 +43,15 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                 riskScore: Math.floor(Math.random() * 50) + 50 // 50-100 사이 랜덤 점수
             };
 
+            console.log('🔍 준비된 reportData:', reportData);
+            console.log('🔍 showReportPreview 상태 변경 전:', showReportPreview);
+
             // 미리보기 창 표시
             setReportData(reportData);
             setShowReportPreview(true);
+            
+            console.log('🔍 showReportPreview 상태 변경 후:', true);
+            console.log('🔍 reportData 상태 변경 후:', reportData);
             
         } catch (error) {
             console.error('보고서 생성 오류:', error);
