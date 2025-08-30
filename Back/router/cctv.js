@@ -203,4 +203,192 @@ router.post('/add', (req, res) => {
     });
 });
 
+// CCTV 위험도 데이터 조회 (최신 데이터)
+router.get('/risk/:cctvIdx', (req, res) => {
+    console.log('✅ CCTV 위험도 데이터 조회 요청 수신:', req.params.cctvIdx);
+
+    const cctvIdx = req.params.cctvIdx;
+
+    conn.connect(err => {
+        if (err) {
+            console.error('❌ 데이터베이스 연결 실패:', err);
+            return res.status(500).json({ error: '데이터베이스 연결 실패' });
+        }
+
+        // 특정 cctv_idx를 기준으로 가장 최근(detected_at이 가장 최근인) 레코드만 조회
+        const sql = `
+            SELECT
+                total_idx,
+                cctv_idx,
+                lat,
+                lon,
+                road_score,
+                weather_score,
+                total_score,
+                detected_at,
+                crack_cnt,
+                break_cnt,
+                ali_crack_cnt,
+                precipitation,
+                temp,
+                wh_type,
+                snowfall
+            FROM
+                (
+                    SELECT
+                        *,
+                        ROW_NUMBER() OVER(PARTITION BY cctv_idx ORDER BY detected_at DESC) AS rn
+                    FROM
+                        t_total
+                ) AS T
+            WHERE
+                T.rn = 1
+                AND T.cctv_idx = ?
+        `;
+        
+        conn.query(sql, [cctvIdx], (err, rows) => {
+            if (err) {
+                console.error('❌ CCTV 위험도 데이터 조회 실패:', err);
+                return res.status(500).json({ error: 'CCTV 위험도 데이터 조회 실패' });
+            }
+
+            if (rows.length === 0) {
+                console.log('⚠️ 해당 CCTV의 위험도 데이터가 없습니다:', cctvIdx);
+                return res.status(404).json({ 
+                    error: '해당 CCTV의 위험도 데이터를 찾을 수 없습니다.',
+                    cctv_idx: cctvIdx
+                });
+            }
+
+            console.log('✅ CCTV 위험도 데이터 조회 성공:', rows[0]);
+            res.json(rows[0]);
+        });
+    });
+});
+
+// CCTV 위험도 데이터 목록 조회 (최신 데이터만)
+router.get('/risk-list', (req, res) => {
+    console.log('✅ CCTV 위험도 데이터 목록 조회 요청 수신');
+
+    conn.connect(err => {
+        if (err) {
+            console.error('❌ 데이터베이스 연결 실패:', err);
+            return res.status(500).json({ error: '데이터베이스 연결 실패' });
+        }
+
+        // 각 cctv_idx별로 가장 최근 데이터만 조회
+        const sql = `
+            SELECT
+                total_idx,
+                cctv_idx,
+                lat,
+                lon,
+                road_score,
+                weather_score,
+                total_score,
+                detected_at,
+                crack_cnt,
+                break_cnt,
+                ali_crack_cnt,
+                precipitation,
+                temp,
+                wh_type,
+                snowfall
+            FROM
+                (
+                    SELECT
+                        *,
+                        ROW_NUMBER() OVER(PARTITION BY cctv_idx ORDER BY detected_at DESC) AS rn
+                    FROM
+                        t_total
+                ) AS T
+            WHERE
+                T.rn = 1
+            ORDER BY
+                T.total_score DESC
+        `;
+        
+        conn.query(sql, (err, rows) => {
+            if (err) {
+                console.error('❌ CCTV 위험도 데이터 목록 조회 실패:', err);
+                return res.status(500).json({ error: 'CCTV 위험도 데이터 목록 조회 실패' });
+            }
+
+            console.log('✅ CCTV 위험도 데이터 목록 조회 성공:', rows.length, '개');
+            res.json(rows);
+        });
+    });
+});
+
+// CCTV 위험도 통계 조회
+router.get('/risk-stats', (req, res) => {
+    console.log('✅ CCTV 위험도 통계 조회 요청 수신');
+
+    conn.connect(err => {
+        if (err) {
+            console.error('❌ 데이터베이스 연결 실패:', err);
+            return res.status(500).json({ error: '데이터베이스 연결 실패' });
+        }
+
+        // 각 cctv_idx별로 가장 최근 데이터의 통계 조회
+        const sql = `
+            SELECT
+                COUNT(*) as total_cctv,
+                AVG(total_score) as avg_total_score,
+                AVG(road_score) as avg_road_score,
+                AVG(weather_score) as avg_weather_score,
+                SUM(crack_cnt) as total_crack_cnt,
+                SUM(break_cnt) as total_break_cnt,
+                SUM(ali_crack_cnt) as total_ali_crack_cnt,
+                AVG(precipitation) as avg_precipitation,
+                AVG(temp) as avg_temp
+            FROM
+                (
+                    SELECT
+                        *,
+                        ROW_NUMBER() OVER(PARTITION BY cctv_idx ORDER BY detected_at DESC) AS rn
+                    FROM
+                        t_total
+                ) AS T
+            WHERE
+                T.rn = 1
+        `;
+        
+        conn.query(sql, (err, rows) => {
+            if (err) {
+                console.error('❌ CCTV 위험도 통계 조회 실패:', err);
+                return res.status(500).json({ error: 'CCTV 위험도 통계 조회 실패' });
+            }
+
+            if (rows.length === 0) {
+                return res.status(404).json({ error: '위험도 통계 데이터가 없습니다.' });
+            }
+
+            const stats = rows[0];
+            console.log('✅ CCTV 위험도 통계 조회 성공:', stats);
+            
+            res.json({
+                success: true,
+                data: {
+                    total_cctv: stats.total_cctv,
+                    average_scores: {
+                        total: parseFloat(stats.avg_total_score || 0).toFixed(2),
+                        road: parseFloat(stats.avg_road_score || 0).toFixed(2),
+                        weather: parseFloat(stats.avg_weather_score || 0).toFixed(2)
+                    },
+                    total_defects: {
+                        crack: stats.total_crack_cnt || 0,
+                        break: stats.total_break_cnt || 0,
+                        ali_crack: stats.total_ali_crack_cnt || 0
+                    },
+                    weather_info: {
+                        precipitation: parseFloat(stats.avg_precipitation || 0).toFixed(2),
+                        temperature: parseFloat(stats.avg_temp || 0).toFixed(2)
+                    }
+                }
+            });
+        });
+    });
+});
+
 module.exports = router;

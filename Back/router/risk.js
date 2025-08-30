@@ -14,7 +14,7 @@ let conn = mysql.createConnection({
 // 위험도 랭킹 TOP 3 조회 (대시보드용)
 router.get('/ranking', (req, res) => {
     console.log('✅ 위험도 랭킹 조회 요청 수신');
-    
+
     conn.connect(err => {
         if (err) {
             console.error('❌ 데이터베이스 연결 실패:', err);
@@ -25,9 +25,9 @@ router.get('/ranking', (req, res) => {
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
         const currentMonth = currentDate.getMonth() + 1; // 1-12월
-        
+
         console.log(`📊 위험도 랭킹 조회: ${currentYear}년 ${currentMonth}월`);
-        
+
         // total_risk_score가 높은 순서로 3개 조회 (현재 년도/월 기준)
         const sql = `
             SELECT 
@@ -50,7 +50,7 @@ router.get('/ranking', (req, res) => {
             }
 
             console.log('✅ 위험도 랭킹 조회 성공:', results.length, '건');
-            
+
             // 응답 데이터 포맷팅
             const riskRankings = results.map((item, index) => ({
                 rank: index + 1,
@@ -72,7 +72,7 @@ router.get('/ranking', (req, res) => {
 // 위험도 랭킹 상세 조회 (현재 년도/월의 모든 데이터)
 router.get('/ranking-detail', (req, res) => {
     console.log('✅ 위험도 랭킹 상세 조회 요청 수신');
-    
+
     conn.connect(err => {
         if (err) {
             console.error('❌ 데이터베이스 연결 실패:', err);
@@ -83,9 +83,9 @@ router.get('/ranking-detail', (req, res) => {
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
         const currentMonth = currentDate.getMonth() + 1; // 1-12월
-        
+
         console.log(`📊 위험도 랭킹 상세 조회: ${currentYear}년 ${currentMonth}월`);
-        
+
         // 현재 년도/월의 모든 위험도 데이터 조회 (위험도 높은 순)
         const sql = `
             SELECT 
@@ -107,7 +107,7 @@ router.get('/ranking-detail', (req, res) => {
             }
 
             console.log('✅ 위험도 랭킹 상세 조회 성공:', results.length, '건');
-            
+
             // 응답 데이터 포맷팅
             const riskRankings = results.map((item, index) => ({
                 rank: index + 1,
@@ -128,7 +128,7 @@ router.get('/ranking-detail', (req, res) => {
 
 // 전체 위험도 점수 평균 조회
 router.get('/average', (req, res) => {
-    console.log('✅ 전체 위험도 점수 평균 조회 요청 수신');
+    console.log('✅ 도로 위험도 점수 상위 10개 평균 조회 요청 수신');
 
     conn.connect(err => {
         if (err) {
@@ -140,27 +140,46 @@ router.get('/average', (req, res) => {
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
         const currentMonth = currentDate.getMonth() + 1; // 1-12월
-        
+
         console.log(`📊 전체 위험도 점수 평균 조회: ${currentYear}년 ${currentMonth}월`);
-        
+
         const sql = `
-            SELECT AVG(total_risk_score) as average_score
-            FROM t_risk_prediction
-            WHERE YEAR(pred_date) = ? AND MONTH(pred_date) = ?
+            SELECT
+  avg(total_score) AS '도로 평균 종합점수'
+FROM
+  (
+    SELECT
+      total_score
+    FROM
+      (
+        SELECT
+          *,
+          ROW_NUMBER() OVER(PARTITION BY cctv_idx ORDER BY detected_at DESC) AS rn
+        FROM
+          t_total
+      ) AS T
+    WHERE
+      T.rn = 1
+      AND T.total_score > 0
+    ORDER BY
+      T.total_score DESC
+    LIMIT 10
+  ) AS T2
         `;
 
-        conn.query(sql, [currentYear, currentMonth], (err, results) => {
+        conn.query(sql, (err, results) => {
             if (err) {
-                console.error('위험도 점수 평균 조회 오류:', err);
-                return res.status(500).json({ error: '위험도 점수 평균 조회 실패' });
+                console.error('도로 위험도 점수 평균 조회 오류:', err);
+                return res.status(500).json({ error: '도로 위험도 점수 평균 조회 실패' });
             }
+            console.log(results[0]['도로 평균 종합점수'] );
 
-            const averageScore = results[0].average_score || 0;
-            console.log('✅ 전체 위험도 점수 평균 조회 성공:', averageScore);
+            const averageScore = results[0]['도로 평균 종합점수'] || 0;
+            console.log('✅ 도로 위험도 상위10개 점수 평균 조회 성공:', averageScore);
 
-            res.json({ 
+            res.json({
                 averageScore: parseFloat(averageScore),
-                maxScore: 20.0
+                maxScore: 10.0
             });
         });
     });
@@ -180,9 +199,9 @@ router.get('/citizen-report/stats', (req, res) => {
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
         const currentMonth = currentDate.getMonth() + 1; // 1-12월
-        
+
         console.log(`📊 민원 신고 통계 조회: ${currentYear}년 ${currentMonth}월`);
-        
+
         const sql = `
             SELECT 
                 c_report_status,
@@ -211,7 +230,7 @@ router.get('/citizen-report/stats', (req, res) => {
 
             console.log('✅ 민원 신고 통계 조회 성공:', { completedCount, pendingCount });
 
-            res.json({ 
+            res.json({
                 completedCount,
                 pendingCount,
                 totalCount: completedCount + pendingCount
@@ -258,7 +277,7 @@ router.get('/road-construction/stats', (req, res) => {
 
             console.log('✅ 도로 보수공사 통계 조회 성공:', { completedCount, inProgressCount });
 
-            res.json({ 
+            res.json({
                 completedCount,
                 inProgressCount,
                 totalCount: completedCount + inProgressCount

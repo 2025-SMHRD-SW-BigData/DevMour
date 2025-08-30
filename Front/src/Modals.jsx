@@ -29,8 +29,45 @@ const generateCCTVReport = async (markerData) => {
         }
     } catch (error) {
         console.error('보고서 생성 오류:', error);
-            alert('보고서 생성 중 오류가 발생했습니다.');
+        alert('보고서 생성 중 오류가 발생했습니다.');
+    }
+};
+
+// CCTV AI 분석 함수
+const performCCTVAnalysis = async (cctvData) => {
+    try {
+        console.log('🔍 CCTV AI 분석 시작:', cctvData);
+
+        // CCTV 정보를 Python AI 서버로 전송
+        const response = await fetch('http://localhost:8000/api/analyze-cctv', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                cctv_idx: cctvData.cctv_idx || cctvData.control_idx, // cctv_idx 또는 control_idx 사용
+                cctv_url: cctvData.cctv_url,
+                cctv_name: cctvData.cctv_name,
+                lat: cctvData.lat,
+                lon: cctvData.lon || cctvData.lng,
+                analysis_type: 'cctv_realtime'
+            }),
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log('✅ AI 분석 완료:', result);
+
+            // 분석 결과를 상태에 저장하여 UI에 표시
+            return result;
+        } else {
+            console.error('AI 분석 실패:', response.status);
+            throw new Error(`AI 분석 실패: ${response.status}`);
         }
+    } catch (error) {
+        console.error('AI 분석 오류:', error);
+        throw error;
+    }
 };
 
 const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEditMode = false, onUpdateComplete }) => {
@@ -41,6 +78,129 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
     const [isEditMode, setIsEditMode] = useState(initialEditMode);
     const [editFormData, setEditFormData] = useState({});
     const [updateLoading, setUpdateLoading] = useState(false);
+    const [aiAnalysisResult, setAiAnalysisResult] = useState(null);
+    const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
+    const [cctvRiskData, setCctvRiskData] = useState(null);
+    const [cctvRiskLoading, setCctvRiskLoading] = useState(false);
+
+        // 종합점수와 도로점수용 색상 반환 함수 (10점 만점)
+    const getTotalRoadScoreColor = (score) => {
+        // console.log(`🚀 getTotalRoadScoreColor 함수 호출됨! 입력값: ${score}, 타입: ${typeof score}`);
+        
+        if (typeof score !== 'number' || isNaN(score)) {
+            // console.log(`❌ 숫자가 아님: ${score} (${typeof score})`);
+            return '#ccc';
+         }
+        
+        // console.log(`🔍 종합/도로 점수 색상 계산: 점수=${score}`);
+        
+        if (score >= 0 && score < 2) {
+            // console.log(`✅ 초록색 적용: ${score} >= 0 && ${score} < 2`);
+            return '#4CAF50'; // 초록색
+        }
+        if (score >= 2 && score < 5) {
+            // console.log(`✅ 노란색 적용: ${score} >= 2 && ${score} < 5`);
+            return '#FFC107'; // 노란색
+        }
+        if (score >= 5 && score < 8) {
+            // console.log(`✅ 주황색 적용: ${score} >= 5 && ${score} < 8`);
+            return '#FF9800'; // 주황색
+        }
+        if (score >= 8) {
+            // console.log(`✅ 빨간색 적용: ${score} >= 8`);
+            return '#F44336'; // 빨간색
+        }
+        
+        // console.log(`❌ 기본색 적용: ${score}는 어떤 범위에도 속하지 않음`);
+        return '#ccc'; // 기본색
+    };
+
+    // 기상점수용 색상 반환 함수 (5점 만점, 2배로 계산)
+    const getWeatherScoreColor = (score) => {
+        if (typeof score !== 'number' || isNaN(score)) return '#ccc';
+        
+        // 기상 점수는 2배로 계산 (5점 → 10점으로 변환)
+        const normalizedScore = score * 2;
+        
+        // console.log(`🔍 기상 점수 색상 계산: 원본 점수=${score}, 정규화된 점수=${normalizedScore}`);
+        
+        if (normalizedScore >= 0 && normalizedScore < 2) {
+            // console.log(`✅ 초록색 적용: ${normalizedScore} >= 0 && ${normalizedScore} < 2`);
+            return '#4CAF50'; // 초록색
+        }
+        if (normalizedScore >= 2 && normalizedScore < 5) {
+            // console.log(`✅ 노란색 적용: ${normalizedScore} >= 2 && ${normalizedScore} < 5`);
+            return '#FFC107'; // 노란색
+        }
+        if (normalizedScore >= 5 && normalizedScore < 8) {
+            // console.log(`✅ 주황색 적용: ${normalizedScore} >= 5 && ${normalizedScore} < 8`);
+            return '#FF9800'; // 주황색
+        }
+        if (normalizedScore >= 8) {
+            // console.log(`✅ 빨간색 적용: ${normalizedScore} >= 8`);
+            return '#F44336'; // 빨간색
+        }
+        
+        // console.log(`❌ 기본색 적용: ${normalizedScore}는 어떤 범위에도 속하지 않음`);
+        return '#ccc'; // 기본색
+    };
+
+    // CCTV 위험도 데이터 가져오기
+    const fetchCCTVRiskData = async (cctvIdx) => {
+        if (!cctvIdx) return;
+        
+        setCctvRiskLoading(true);
+        try {
+            console.log('🚀 CCTV 위험도 데이터 요청 시작:', cctvIdx);
+            const response = await fetch(`http://localhost:3001/api/cctv/risk/${cctvIdx}`);
+            console.log('📡 API 응답 상태:', response.status, response.ok);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('🔍 CCTV 위험도 데이터 수신:', data);
+                console.log('📊 데이터 타입 확인:', {
+                    total_score: typeof data.total_score,
+                    road_score: typeof data.road_score,
+                    weather_score: typeof data.weather_score,
+                    total_score_value: data.total_score,
+                    road_score_value: data.road_score,
+                    weather_score_value: data.weather_score
+                });
+                
+                // 점수 데이터를 숫자로 변환
+                const processedData = {
+                    ...data,
+                    total_score: parseFloat(data.total_score) || 0,
+                    road_score: parseFloat(data.road_score) || 0,
+                    weather_score: parseFloat(data.weather_score) || 0
+                };
+                
+                console.log('🔄 변환된 데이터:', {
+                    total_score: typeof processedData.total_score,
+                    road_score: typeof processedData.road_score,
+                    weather_score: typeof processedData.weather_score,
+                    total_score_value: processedData.total_score,
+                    road_score_value: processedData.road_score,
+                    weather_score_value: processedData.weather_score
+                });
+                
+                // 데이터 유효성 검사
+                if (processedData.total_score === 0 && processedData.road_score === 0 && processedData.weather_score === 0) {
+                    console.warn('⚠️ 모든 점수가 0입니다. 데이터베이스에 데이터가 없을 수 있습니다.');
+                }
+                
+                setCctvRiskData(processedData);
+            } else {
+                console.error('❌ CCTV 위험도 데이터 조회 실패:', response.status);
+                const errorText = await response.text();
+                console.error('❌ 에러 상세:', errorText);
+            }
+        } catch (error) {
+            console.error('❌ CCTV 위험도 데이터 조회 오류:', error);
+        } finally {
+            setCctvRiskLoading(false);
+        }
+    };
 
     // 마커 상세 정보 가져오기
     useEffect(() => {
@@ -48,10 +208,18 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
         if (!isOpen) {
             return;
         }
-        
+
         console.log('🔍 Modals useEffect 실행:', { isOpen, markerData, isEditMode });
-        
+
+        // 모달이 열릴 때마다 AI 분석 결과 초기화
+        setAiAnalysisResult(null);
+
         if (markerData) {
+            // CCTV 모달인 경우 위험도 데이터 가져오기
+            if (markerType === 'cctv' && markerData.cctv_idx) {
+                fetchCCTVRiskData(markerData.cctv_idx);
+            }
+
             // ✅ 수정 모드인 경우: API 호출 없이 직접 데이터 사용
             if (isEditMode && markerData.control_idx) {
                 console.log('✅ 수정 모드: 직접 데이터 사용');
@@ -65,7 +233,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                     },
                     detail: markerData
                 });
-                
+
                 // ✅ 수정 모드에서 editFormData도 함께 설정
                 setEditFormData({
                     control_desc: markerData.control_desc || '',
@@ -74,13 +242,13 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                     control_addr: markerData.control_addr || '',
                     control_type: markerData.control_type || 'construction'
                 });
-                
+
                 setLoading(false);
             } else if (markerData.marker_id) {
                 // ✅ 일반 모드: API 호출하여 상세 정보 가져오기
                 console.log('✅ 일반 모드: API 호출하여 상세 정보 요청:', markerData.marker_id);
                 fetchMarkerDetail(markerData.marker_id, markerData.type || markerType);
-                
+
                 // CCTV 마커인 경우 iframe 로딩 상태 초기화
                 if (markerData.type === 'cctv' || markerType === 'cctv') {
                     setVideoLoading(true);
@@ -92,9 +260,9 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                 setLoading(false);
             }
         } else {
-            console.log('❌ 마커 상세 정보 요청 조건 불충족:', { 
-                isOpen, 
-                hasMarkerData: !!markerData, 
+            console.log('❌ 마커 상세 정보 요청 조건 불충족:', {
+                isOpen,
+                hasMarkerData: !!markerData,
                 markerId: markerData?.marker_id,
                 isEditMode
             });
@@ -109,10 +277,10 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
     const fetchMarkerDetail = async (markerId, markerType) => {
         console.log('🚀 fetchMarkerDetail 시작:', { markerId, markerType });
         setLoading(true);
-        
+
         try {
             let apiUrl;
-            
+
             // ✅ 마커 타입에 따라 다른 API 엔드포인트 사용
             if (markerType === 'construction' || markerType === 'flood') {
                 // 도로 통제 마커: road-control API 사용
@@ -127,14 +295,14 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                 apiUrl = `http://localhost:3001/api/marker/detail/${markerId}`;
                 console.log('📹 CCTV API 호출:', apiUrl);
             }
-            
+
             const response = await fetch(apiUrl);
             console.log('📡 API 응답:', response.status, response.ok);
-            
+
             if (response.ok) {
                 const data = await response.json();
                 console.log('📊 받은 데이터:', data);
-                
+
                 // 시민 제보 데이터 구조 맞추기
                 if (markerType === 'complaint') {
                     setDetailData({
@@ -209,7 +377,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                 handleEditMode();
             }
         };
-        
+
         return () => {
             window.openComplaintModalInEditMode = null;
         };
@@ -234,14 +402,14 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
         setUpdateLoading(true);
         try {
             let response;
-            
+
             if (markerType === 'complaint') {
                 // 시민 제보 업데이트
-                const reportIdx = detailData?.detail?.c_report_idx || 
-                                 markerData?.c_report_idx || 
-                                 detailData?.detail?.marker_id || 
-                                 markerData?.marker_id;
-                
+                const reportIdx = detailData?.detail?.c_report_idx ||
+                    markerData?.c_report_idx ||
+                    detailData?.detail?.marker_id ||
+                    markerData?.marker_id;
+
                 if (!reportIdx) {
                     alert('업데이트할 시민 제보를 찾을 수 없습니다. c_report_idx가 필요합니다.');
                     return;
@@ -259,11 +427,11 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                 });
             } else {
                 // 기존 도로 통제 업데이트
-                const controlIdx = detailData?.detail?.control_idx || 
-                                  markerData?.control_idx || 
-                                  detailData?.detail?.marker_id || 
-                                  markerData?.marker_id;
-                
+                const controlIdx = detailData?.detail?.control_idx ||
+                    markerData?.control_idx ||
+                    detailData?.detail?.marker_id ||
+                    markerData?.marker_id;
+
                 if (!controlIdx) {
                     alert('업데이트할 데이터를 찾을 수 없습니다. control_idx가 필요합니다.');
                     return;
@@ -286,13 +454,13 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                 alert('성공적으로 업데이트되었습니다.');
                 setIsEditMode(false);
                 setEditFormData({});
-                
+
                 // 시민 제보 업데이트 완료 시 부모 컴포넌트에 알림
                 if (markerType === 'complaint' && onUpdateComplete) {
                     console.log('✅ 시민 제보 업데이트 완료 - 부모 컴포넌트에 알림');
                     onUpdateComplete();
                 }
-                
+
                 // 데이터 새로고침
                 if (markerType === 'complaint') {
                     fetchMarkerDetail(markerData?.c_report_idx || markerData?.marker_id);
@@ -315,17 +483,17 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
 
     const renderCCTVModal = () => {
         const cctvData = detailData?.detail;
-        
+
         // 안전한 좌표 변환 함수
         const safeCoordinate = (value, fallback) => {
             if (value === null || value === undefined) return fallback;
             const num = parseFloat(value);
             return isNaN(num) ? fallback : num;
         };
-        
+
         const cctvLat = safeCoordinate(cctvData?.lat, markerData?.lat);
         const cctvLon = safeCoordinate(cctvData?.lon, markerData?.lng);
-        
+
         return (
             <>
                 <div className="modal-header cctv">
@@ -340,155 +508,249 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                         </div>
                     ) : (
                         <>
-                            <div className="cctv-feed" style={{ 
-                            width: '100%', 
-                            height: '470px',
-                            position: 'relative',
-                            marginBottom: '20px'
-                        }}>
-                            <div className="feed-overlay" style={{
-                                position: 'absolute',
-                                top: '10px',
-                                left: '10px',
-                                background: 'rgba(0,0,0,0.7)',
-                                color: 'white',
-                                padding: '5px 10px',
-                                borderRadius: '4px',
-                                fontSize: '14px',
-                                zIndex: 5
-                            }}>실시간 스트리밍</div>
-                            {cctvData?.cctv_url ? (
-                                <div className="video-player-container" style={{ 
-                                    position: 'relative',
-                                    width: '100%',
-                                    height: '100%'
-                                }}>
-                                    {/* iframe으로 CCTV 페이지 임베드 */}
-                                    <iframe
-                                        src={cctvData.cctv_url}
-                                        style={{
-                                            width: '100%',
-                                            height: '100%',
-                                            border: 'none',
-                                            borderRadius: '8px',
-                                            backgroundColor: '#000',
-                                            transform: 'scale(2.0)',
-                                            transformOrigin: 'center center',
-                                            marginTop: '140px'
-                                        }}
-                                        title="CCTV 스트리밍"
-                                        allowFullScreen
-                                        sandbox="allow-scripts allow-same-origin allow-forms"
-                                        onLoad={() => {
-                                            console.log('✅ CCTV iframe 로딩 완료');
-                                            setVideoLoading(false);
-                                            setVideoError(false);
-                                        }}
-                                        onError={() => {
-                                            console.error('❌ CCTV iframe 로딩 실패');
-                                            setVideoLoading(false);
-                                            setVideoError(true);
-                                        }}
-                                    />
-                                    {videoLoading && (
-                                        <div className="video-loading" style={{
-                                            position: 'absolute',
-                                            top: '50%',
-                                            left: '50%',
-                                            transform: 'translate(-50%, -50%)',
-                                            zIndex: 10
-                                        }}>
-                                            <div className="spinner"></div>
-                                            <span>스트리밍 연결 중...</span>
-                                        </div>
-                                    )}
-                                    {videoError && (
-                                        <div className="video-loading" style={{
-                                            position: 'absolute',
-                                            top: '50%',
-                                            left: '50%',
-                                            transform: 'translate(-50%, -50%)',
-                                            zIndex: 10,
-                                            backgroundColor: 'rgba(0,0,0,0.8)',
-                                            padding: '20px',
-                                            borderRadius: '8px'
-                                        }}>
-                                            <div style={{ fontSize: '48px', marginBottom: '10px' }}>❌</div>
-                                            <span>스트리밍 연결 실패</span>
-                                            <p style={{ fontSize: '14px', marginTop: '10px', opacity: 0.8 }}>
-                                                새 창에서 열어보세요
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div style={{ textAlign: 'center' }}>
-                                    <div style={{ fontSize: '48px', marginBottom: '10px' }}>📹</div>
-                                    <p>CCTV 피드 연결 중...</p>
-                                    <small>위치: {cctvLat?.toFixed(6) || 'N/A'}, {cctvLon?.toFixed(6) || 'N/A'}</small>
-                                    <p style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
-                                        스트리밍 URL이 설정되지 않았습니다.
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                            {cctvData?.cctv_url && (
+                            <div className="cctv-feed" style={{
+                                width: '100%',
+                                height: '470px',
+                                position: 'relative',
+                                marginBottom: '20px'
+                            }}>
+                                <div className="feed-overlay" style={{
+                                    position: 'absolute',
+                                    top: '10px',
+                                    left: '10px',
+                                    background: 'rgba(0,0,0,0.7)',
+                                    color: 'white',
+                                    padding: '5px 10px',
+                                    borderRadius: '4px',
+                                    fontSize: '14px',
+                                    zIndex: 5
+                                }}>실시간 스트리밍</div>
+                                {cctvData?.cctv_url ? (
+                                    <div className="video-player-container" style={{
+                                        position: 'relative',
+                                        width: '100%',
+                                        height: '100%'
+                                    }}>
+                                        {/* iframe으로 CCTV 페이지 임베드 */}
+                                        <iframe
+                                            src={cctvData.cctv_url}
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                border: 'none',
+                                                borderRadius: '8px',
+                                                backgroundColor: '#000',
+                                                transform: 'scale(2.0)',
+                                                transformOrigin: 'center center',
+                                                marginTop: '140px'
+                                            }}
+                                            title="CCTV 스트리밍"
+                                            allowFullScreen
+                                            sandbox="allow-scripts allow-same-origin allow-forms"
+                                            onLoad={() => {
+                                                console.log('✅ CCTV iframe 로딩 완료');
+                                                setVideoLoading(false);
+                                                setVideoError(false);
+                                            }}
+                                            onError={() => {
+                                                console.error('❌ CCTV iframe 로딩 실패');
+                                                setVideoLoading(false);
+                                                setVideoError(true);
+                                            }}
+                                        />
+                                        {videoLoading && (
+                                            <div className="video-loading" style={{
+                                                position: 'absolute',
+                                                top: '50%',
+                                                left: '50%',
+                                                transform: 'translate(-50%, -50%)',
+                                                zIndex: 10
+                                            }}>
+                                                <div className="spinner"></div>
+                                                <span>스트리밍 연결 중...</span>
+                                            </div>
+                                        )}
+                                        {videoError && (
+                                            <div className="video-loading" style={{
+                                                position: 'absolute',
+                                                top: '50%',
+                                                left: '50%',
+                                                transform: 'translate(-50%, -50%)',
+                                                zIndex: 10,
+                                                backgroundColor: 'rgba(0,0,0,0.8)',
+                                                padding: '20px',
+                                                borderRadius: '8px'
+                                            }}>
+                                                <div style={{ fontSize: '48px', marginBottom: '10px' }}>❌</div>
+                                                <span>스트리밍 연결 실패</span>
+                                                <p style={{ fontSize: '14px', marginTop: '10px', opacity: 0.8 }}>
+                                                    새 창에서 열어보세요
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div style={{ textAlign: 'center' }}>
+                                        <div style={{ fontSize: '48px', marginBottom: '10px' }}>📹</div>
+                                        <p>CCTV 피드 연결 중...</p>
+                                        <small>위치: {cctvLat?.toFixed(6) || 'N/A'}, {cctvLon?.toFixed(6) || 'N/A'}</small>
+                                        <p style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
+                                            스트리밍 URL이 설정되지 않았습니다.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                            {/* {cctvData?.cctv_url && (
                                 <div className="streaming-link-container">
-                                    <a 
-                                        href={cctvData.cctv_url} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer" 
+                                    <a
+                                        href={cctvData.cctv_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         className="streaming-link"
                                     >
                                         📺 새 창에서 스트리밍 보기
                                     </a>
                                 </div>
-                            )}
+                            )} */}
+
+                            <div className="risk-score">
+
+                                {cctvRiskLoading ? (
+                                    <div style={{ textAlign: 'center', padding: '20px' }}>
+                                        <div style={{ fontSize: '24px', marginBottom: '10px' }}>⏳</div>
+                                        <p>점수를 불러오는 중...</p>
+                                    </div>
+                                ) : cctvRiskData ? (
+                                    <>
+                                        {/* <div className="risk-gauge">
+                                            <div className="risk-value">
+                                                {typeof cctvRiskData.total_score === 'number'
+                                                    ? cctvRiskData.total_score.toFixed(1)
+                                                    : cctvRiskData.total_score || 'N/A'}
+                                            </div>
+                                        </div> */}
+                                        <p>종합 위험도 점수 </p><p>탐지 일시 : {cctvRiskData.detected_at ? new Date(cctvRiskData.detected_at).toLocaleString('ko-KR', {
+                                            year: 'numeric',
+                                            month: '2-digit',
+                                            day: '2-digit',
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                            second: '2-digit',
+                                            hour12: false
+                                        }) : 'N/A'}</p>
+                                                                                   <div className="score-circles">
+                                              <div className="score-circle-container">
+                                                  <div className="score-circle total-score" 
+                                                       style={{
+                                                           backgroundColor: getTotalRoadScoreColor(cctvRiskData.total_score),
+                                                           '--dynamic-bg': getTotalRoadScoreColor(cctvRiskData.total_score)
+                                                       }}>
+                                                     <span className="score-number">
+                                                         {typeof cctvRiskData.total_score === 'number'
+                                                             ? cctvRiskData.total_score.toFixed(1)
+                                                             : cctvRiskData.total_score || 'N/A'}
+                                                     </span>
+                                                  </div>
+                                                  <span className="score-label">종합 점수</span>
+                                              </div>
+                                              <div className="score-circle-container">
+                                                  <div className="score-circle road-score"
+                                                       style={{
+                                                           backgroundColor: getTotalRoadScoreColor(cctvRiskData.road_score),
+                                                           '--dynamic-bg': getTotalRoadScoreColor(cctvRiskData.road_score)
+                                                       }}>
+                                                     <span className="score-number">
+                                                         {typeof cctvRiskData.road_score === 'number'
+                                                             ? cctvRiskData.road_score.toFixed(1)
+                                                             : cctvRiskData.road_score || 'N/A'}
+                                                     </span>
+                                                  </div>
+                                                  <span className="score-label">도로 점수</span>
+                                              </div>
+                                              <div className="score-circle-container">
+                                                  <div className="score-circle weather-score"
+                                                       style={{
+                                                           backgroundColor: getWeatherScoreColor(cctvRiskData.weather_score),
+                                                           '--dynamic-bg': getWeatherScoreColor(cctvRiskData.weather_score)
+                                                       }}>
+                                                     <span className="score-number">
+                                                         {typeof cctvRiskData.weather_score === 'number'
+                                                             ? cctvRiskData.weather_score.toFixed(1)
+                                                             : cctvRiskData.weather_score || 'N/A'}
+                                                     </span>
+                                                  </div>
+                                                  <span className="score-label">기상 점수</span>
+                                              </div>
+                                          </div>
+                                
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="risk-gauge">
+                                            <div className="risk-value">-</div>
+                                        </div>
+                                        <p>데이터 없음</p>
+                                    </>
+                                )}
+                            </div>
 
                             <div className="analysis-results">
                                 <div className="analysis-card">
                                     <h4>🚨 위험 감지 현황</h4>
-                                    <div className="detections">
-                                        <div className="detection-item">
-                                            <span>차량 정지</span>
-                                            <span className="marker-type-cctv">3건</span>
+                                    {cctvRiskLoading ? (
+                                        <div style={{ textAlign: 'center', padding: '20px' }}>
+                                            <div style={{ fontSize: '24px', marginBottom: '10px' }}>⏳</div>
+                                            <p>위험도 데이터를 불러오는 중...</p>
                                         </div>
-                                        <div className="detection-item">
-                                            <span>보행자 횡단</span>
-                                            <span className="marker-type-cctv">12건</span>
+                                    ) : cctvRiskData ? (
+                                        <div className="detections">
+                                            <div className="detection-item">
+                                                <span>균열 개수</span>
+                                                <span className="marker-type-cctv">{cctvRiskData.crack_cnt || 0}건</span>
+                                            </div>
+                                            <div className="detection-item">
+                                                <span>포트홀 개수</span>
+                                                <span className="marker-type-cctv">{cctvRiskData.break_cnt || 0}건</span>
+                                            </div>
+                                            <div className="detection-item">
+                                                <span>거북등 균열 개수</span>
+                                                <span className="marker-type-cctv">{cctvRiskData.ali_crack_cnt || 0}건</span>
+                                            </div>
                                         </div>
-                                        <div className="detection-item">
-                                            <span>교통 위반</span>
-                                            <span className="marker-type-cctv">5건</span>
+                                    ) : (
+                                        <div className="detections">
+                                            <div className="detection-item">
+                                                <span>균열 개수</span>
+                                                <span className="marker-type-cctv">-</span>
+                                            </div>
+                                            <div className="detection-item">
+                                                <span>포트홀 개수</span>
+                                                <span className="marker-type-cctv">-</span>
+                                            </div>
+                                            <div className="detection-item">
+                                                <span>거북등 균열 개수</span>
+                                                <span className="marker-type-cctv">-</span>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
-                                <div className="analysis-card">
-                                    <h4>📊 교통량 분석</h4>
-                                    <p>시간대별 교통량: 1,234대/시간</p>
-                                    <p>평균 속도: 45km/h</p>
-                                    <p>혼잡도: 보통</p>
+                                <div className="recommendations-card">
+                                    <h4>💡 권장사항</h4>
+                                    <ul>
+                                        <li>교통 신호 개선 필요</li>
+                                        <li>보행자 횡단보도 안전장치 설치 검토</li>
+                                        <li>정기적인 CCTV 점검 및 유지보수</li>
+                                    </ul>
                                 </div>
                             </div>
 
-                            <div className="risk-score">
-                                <h4>위험도 점수</h4>
-                                <div className="risk-gauge">
-                                    <div className="risk-value">7.2</div>
-                                </div>
-                                <p>주의 단계 (10점 만점)</p>
-                            </div>
 
-                            <div className="recommendations-card">
-                                <h4>💡 권장사항</h4>
-                                <ul>
-                                    <li>교통 신호 개선 필요</li>
-                                    <li>보행자 횡단보도 안전장치 설치 검토</li>
-                                    <li>정기적인 CCTV 점검 및 유지보수</li>
-                                </ul>
-                            </div>
 
-                            
+
+
+
+
+
                         </>
                     )}
                 </div>
@@ -498,25 +760,25 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
 
     const renderConstructionModal = () => {
         const controlData = detailData?.detail;
-        
+
         // 안전한 좌표 변환 함수
         const safeCoordinate = (value, fallback) => {
             if (value === null || value === undefined) return fallback;
             const num = parseFloat(value);
             return isNaN(num) ? fallback : num;
         };
-        
+
         const controlLat = safeCoordinate(controlData?.lat, markerData?.lat);
         const controlLon = safeCoordinate(controlData?.lon, markerData?.lng);
-        
+
         return (
             <>
                 <div className="modal-header construction">
                     <h2>{markerData?.icon || '🚧'} 공사 현황 - {controlData?.control_type === 'construction' ? '공사중' : '통제중'}</h2>
                     <div className="header-actions">
                         {!isEditMode && controlData && (
-                            <button 
-                                className="edit-btn" 
+                            <button
+                                className="edit-btn"
                                 onClick={handleEditMode}
                                 style={{
                                     background: '#4CAF50',
@@ -604,8 +866,8 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                         </select>
                                     </div>
                                     <div className="form-actions">
-                                        <button 
-                                            className="cancel-btn" 
+                                        <button
+                                            className="cancel-btn"
                                             onClick={handleCancelEdit}
                                             style={{
                                                 background: '#f44336',
@@ -620,8 +882,8 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                         >
                                             ❌ 취소
                                         </button>
-                                        <button 
-                                            className="update-btn" 
+                                        <button
+                                            className="update-btn"
                                             onClick={handleUpdate}
                                             disabled={updateLoading}
                                             style={{
@@ -708,25 +970,25 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
 
     const renderFloodModal = () => {
         const controlData = detailData?.detail;
-        
+
         // 안전한 좌표 변환 함수
         const safeCoordinate = (value, fallback) => {
             if (value === null || value === undefined) return fallback;
             const num = parseFloat(value);
             return isNaN(num) ? fallback : num;
         };
-        
+
         const controlLat = safeCoordinate(controlData?.lat, markerData?.lat);
         const controlLon = safeCoordinate(controlData?.lon, markerData?.lng);
-        
+
         return (
             <>
                 <div className="modal-header flood">
                     <h2>{markerData?.icon || '🌊'} 침수 현황 - {controlData?.control_type === 'flood' ? '침수' : '통제중'}</h2>
                     <div className="header-actions">
                         {!isEditMode && controlData && (
-                            <button 
-                                className="edit-btn" 
+                            <button
+                                className="edit-btn"
                                 onClick={handleEditMode}
                                 style={{
                                     background: '#2196F3',
@@ -814,8 +1076,8 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                         </select>
                                     </div>
                                     <div className="form-actions">
-                                        <button 
-                                            className="cancel-btn" 
+                                        <button
+                                            className="cancel-btn"
                                             onClick={handleCancelEdit}
                                             style={{
                                                 background: '#f44336',
@@ -830,8 +1092,8 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                         >
                                             ❌ 취소
                                         </button>
-                                        <button 
-                                            className="update-btn" 
+                                        <button
+                                            className="update-btn"
                                             onClick={handleUpdate}
                                             disabled={updateLoading}
                                             style={{
@@ -918,25 +1180,25 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
 
     const renderComplaintModal = () => {
         const complaintData = detailData?.detail;
-        
+
         // 안전한 좌표 변환 함수
         const safeCoordinate = (value, fallback) => {
             if (value === null || value === undefined) return fallback;
             const num = parseFloat(value);
             return isNaN(num) ? fallback : num;
         };
-        
+
         const complaintLat = safeCoordinate(complaintData?.lat, markerData?.lat);
         const complaintLon = safeCoordinate(complaintData?.lon, markerData?.lon);
-        
+
         return (
             <>
                 <div className="modal-header complaint">
                     <h2>{markerData?.icon || '📝'} 시민 제보 상세</h2>
                     <div className="header-actions">
                         {!isEditMode && complaintData && (
-                            <button 
-                                className="edit-btn" 
+                            <button
+                                className="edit-btn"
                                 onClick={handleEditMode}
                                 style={{
                                     background: '#3498db',
@@ -1013,8 +1275,8 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                         />
                                     </div>
                                     <div className="form-actions">
-                                        <button 
-                                            className="cancel-btn" 
+                                        <button
+                                            className="cancel-btn"
                                             onClick={handleCancelEdit}
                                             style={{
                                                 background: '#f44336',
@@ -1029,8 +1291,8 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                         >
                                             ❌ 취소
                                         </button>
-                                        <button 
-                                            className="update-btn" 
+                                        <button
+                                            className="update-btn"
                                             onClick={handleUpdate}
                                             disabled={updateLoading}
                                             style={{
@@ -1058,7 +1320,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                     <p><strong>제보자:</strong> {complaintData?.c_reporter_name}</p>
                                     <p><strong>연락처:</strong> {complaintData?.c_reporter_phone}</p>
                                     <p><strong>좌표:</strong> {complaintLat?.toFixed(6) || 'N/A'}, {complaintLon?.toFixed(6) || 'N/A'}</p>
-                                    
+
                                     {/* 첨부 파일 정보 */}
                                     {(complaintData?.c_report_file1 || complaintData?.c_report_file2 || complaintData?.c_report_file3) && (
                                         <div className="attachment-info">
@@ -1097,8 +1359,8 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                             <div className="detection-item">
                                                 <span>우선순위</span>
                                                 <span className="marker-type-complaint">
-                                                    {complaintData?.c_report_status === 'C' ? '완료' : 
-                                                     complaintData?.c_report_status === 'P' ? '높음' : '보통'}
+                                                    {complaintData?.c_report_status === 'C' ? '완료' :
+                                                        complaintData?.c_report_status === 'P' ? '높음' : '보통'}
                                                 </span>
                                             </div>
                                         </div>
@@ -1127,6 +1389,39 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                 </div>
             </>
         );
+    };
+
+    // CCTV AI 분석 핸들러
+    const handleCCTVAnalysis = async () => {
+        if (!detailData?.detail) {
+            alert('CCTV 정보를 불러올 수 없습니다.');
+            return;
+        }
+
+        try {
+            setAiAnalysisLoading(true);
+            setAiAnalysisResult(null);
+
+            console.log('🚀 CCTV AI 분석 시작');
+            const result = await performCCTVAnalysis(detailData.detail);
+
+            // AI 분석 완료 후 모달 새로고침
+            alert('AI 분석이 완료되었습니다!');
+            
+            // CCTV 위험도 데이터 다시 가져오기
+            if (markerData?.cctv_idx) {
+                await fetchCCTVRiskData(markerData.cctv_idx);
+            }
+            
+            // AI 분석 결과 설정
+            setAiAnalysisResult(result);
+
+        } catch (error) {
+            console.error('CCTV AI 분석 실패:', error);
+            alert(`AI 분석 실패: ${error.message}`);
+        } finally {
+            setAiAnalysisLoading(false);
+        }
     };
 
     // 시민 제보 상태 텍스트 반환 함수
@@ -1163,15 +1458,19 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                         확인
                     </button>
                     {markerType === 'cctv' && (
-                        <button 
-                            className="btn btn-success" 
+                        <button
+                            className="btn btn-success"
                             onClick={() => generateCCTVReport(markerData)}
                         >
                             📄 보고서 생성
                         </button>
                     )}
-                    <button className="btn btn-warning">
-                        {markerType === 'cctv' && '상세 분석'}
+                    <button
+                        className="btn btn-warning"
+                        onClick={markerType === 'cctv' ? () => handleCCTVAnalysis() : undefined}
+                        disabled={markerType === 'cctv' && aiAnalysisLoading}
+                    >
+                        {markerType === 'cctv' && (aiAnalysisLoading ? '분석 중...' : '상세 분석')}
                         {markerType === 'construction' && '공사 일정'}
                         {markerType === 'flood' && '긴급 신고'}
                         {markerType === 'complaint' && '긴급 출동'}

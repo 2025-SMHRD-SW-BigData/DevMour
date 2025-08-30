@@ -789,6 +789,213 @@
     }
 }
 
+/* 점수 세부 분석 스타일 */
+.score-breakdown {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.score-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.score-item:last-child {
+    border-bottom: none;
+}
+
+.score-item span:first-child {
+    font-weight: 500;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.score-value {
+    font-weight: 600;
+    color: #667eea;
+    font-size: 1.1em;
+    background: white;
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    min-width: 50px;
+    text-align: center;
+}
+
+/* 위험도 점수 게이지 개선 */
+.risk-gauge {
+    text-align: center;
+    margin: 20px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+}
+
+.risk-value {
+    font-size: 3em;
+    font-weight: bold;
+    color: #667eea;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 위험 감지 현황 개선 */
+.detections {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.detection-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.detection-item:hover {
+    background: #f8f9fa;
+    border-color: #667eea;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.detection-item span:first-child {
+    font-weight: 500;
+    color: #333;
+}
+
+.marker-type-cctv {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: 600;
+    min-width: 60px;
+    text-align: center;
+}
+
+/* 원형 점수 표시 스타일 */
+.score-circles {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 20px 0;
+    gap: 20px;
+}
+
+.score-circle-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.score-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border: 3px solid white;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.score-circle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.score-number {
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.score-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    text-align: center;
+    max-width: 80px;
+}
+
+/* 점수별 기본 색상 제거 - 인라인 스타일이 우선 적용되도록 함 */
+.total-score {
+    /* 기본 색상 제거 */
+}
+
+.road-score {
+    /* 기본 색상 제거 */
+}
+
+.weather-score {
+    /* 기본 색상 제거 */
+}
+
+/* 점수 범위별 색상 오버라이드 - 강제 적용 */
+.score-circle[style*="background-color: #4CAF50"] {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%) !important;
+    background-color: #4CAF50 !important;
+}
+
+.score-circle[style*="background-color: #FFC107"] {
+    background: linear-gradient(135deg, #FFC107 0%, #FFB300 100%) !important;
+    background-color: #FFC107 !important;
+}
+
+.score-circle[style*="background-color: #FF9800"] {
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%) !important;
+    background-color: #FF9800 !important;
+}
+
+.score-circle[style*="background-color: #F44336"] {
+    background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%) !important;
+    background-color: #F44336 !important;
+}
+
+/* 기본 색상이 설정된 경우에도 인라인 스타일 우선 */
+.score-circle[style*="background"] {
+    background: var(--dynamic-bg) !important;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .score-circles {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .score-circle {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .score-number {
+        font-size: 16px;
+    }
+    
+    .score-label {
+        font-size: 12px;
+    }
+}
+
 
 
 

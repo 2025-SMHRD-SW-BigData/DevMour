@@ -275,10 +275,10 @@ const [currentUser, setCurrentUser] = useState(null);
 
   // 위험도 점수에 따른 색상 반환 (20.0 기준)
   const getRiskScoreColor = (score) => {
-    if (score >= 15.0) return '#ff0000'; // 빨간색
-    if (score >= 11.0) return '#ff8800'; // 주황색
-    if (score >= 8.0) return '#ffcc00';  // 노란색
-    if (score >= 5.0) return '#00cc00';  // 초록색
+    if (score >= 8.0) return '#ff0000'; // 빨간색
+    if (score >= 6.0) return '#ff8800'; // 주황색
+    if (score >= 4.0) return '#ffcc00';  // 노란색
+    if (score >= 0.0) return '#00cc00';  // 초록색
     return '#008800'; // 진한 초록색
   };
 
@@ -449,7 +449,7 @@ const [currentUser, setCurrentUser] = useState(null);
       <aside className="left-panel">
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1px' }}>
-            <h3>&nbsp;도로 위험도 랭킹</h3>
+            <h3>&nbsp;위험도 랭킹</h3>
             <button className="detail-btn" onClick={() => nav('/risk-ranking')}>
               상세보기
             </button>
@@ -628,7 +628,7 @@ const [currentUser, setCurrentUser] = useState(null);
           
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1px' }}>
-         <h3>&nbsp;종합 위험도 점수</h3>
+         <h3>&nbsp;도로 종합점수</h3>
             <button className="detail-btn" onClick={() => nav('/risk-score')}>
               상세보기
             </button>
@@ -660,7 +660,7 @@ const [currentUser, setCurrentUser] = useState(null);
                 {averageRiskScore.toFixed(1)}
               </div>
               <div style={{ fontSize: '14px', color: '#666', marginBottom: '1px' }}>
-                전체 평균 위험도
+                상위10개 평균 종합점수
               </div>
             </div>
           )}

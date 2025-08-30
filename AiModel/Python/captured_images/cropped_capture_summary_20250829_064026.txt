@@ -1,0 +1,14 @@
+CCTV 페이지 자동 크롭 캡처 요약
+========================================
+고정 크롭 좌표: (473, 57) ~ (793, 272)
+크롭 영역: 640 x 429 픽셀
+Chrome 해상도: 2560x1440 (2K)
+DPI 스케일링: 2배
+고해상도 지원: 활성화
+캡처 시간: 2025-08-29 06:40:31
+URL: https://www.utic.go.kr/jsp/map/cctvStream.jsp?cctvid=E914476&cctvname=%255B%25ED%2598%25B8%25EB%2582%25A8%25EC%2584%25A0%255D%25EC%259E%25A5%25EC%259A%25B4&kind=Z3&cctvip=undefined&cctvch=undefined&id=3483/HwJT8TvgrVYITz5A1cbzY6MDbFAUIJh2QqZoJGdUbaTxkHuPCsNjxgHx6qPQrq1iqeFlwyLWQ9mx/I%2BkCqw7s9ovrevZCQCEROR9m6uSLaU=&cctvpasswd=undefined&cctvport=undefined&minX=126.88709218164998&minY=35.167430266688534&maxX=126.98410785047353&maxY=35.228745539250674
+원본 이미지 크기: (2586, 5088, 3)
+최종 이미지 크기: (429, 640, 3)
+저장된 파일들:
+  1. 전체 페이지: 01_full_page_20250829_064026.png
+  2. 크롭된 결과: 04_cropped_result_20250829_064026.jpg

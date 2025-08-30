@@ -1,0 +1,16 @@
+CCTV 페이지 자동 크롭 캡처 요약 (시도 3)
+==================================================
+시도 번호: 3
+고정 크롭 좌표: (473, 57) ~ (793, 272)
+크롭 영역: 640 x 429 픽셀
+Chrome 해상도: 2560x1440 (2K)
+DPI 스케일링: 2배
+고해상도 지원: 활성화
+페이지 로딩 대기 시간: 7초
+캡처 시간: 2025-08-30 06:51:32
+URL: https://www.utic.go.kr/jsp/map/cctvStream.jsp?cctvid=E914430&cctvname=%255B%25ED%2598%25B8%25EB%2582%25A8%25EC%2584%25A0%255D%25EB%258F%2599%25EB%25A6%25BC&kind=Z3&cctvip=undefined&cctvch=undefined&id=2721/D9UcTHhYuDTAzfQJjhm5br40cMmm0uokKDk3bIWU7ggS1i63PkfrmoKkW3e72Nm0VszB6Ucb10ts66OSzlPb5s0wlb7HmCU/kK6ng/HYFhY=&cctvpasswd=undefined&cctvport=undefined&minX=126.83112206874833&minY=35.17657933501448&maxX=126.89558282612089&maxY=35.21425825705123
+원본 이미지 크기: (2586, 5088, 3)
+최종 이미지 크기: (429, 640, 3)
+저장된 파일들:
+  1. 전체 페이지: 01_full_page_20250830_065123_attempt3.png
+  2. 크롭된 결과: 04_cropped_result_20250830_065123_attempt3.jpg

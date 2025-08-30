@@ -49,6 +49,272 @@
     gap: 5px;
 }
 
+/* 3칸 레이아웃 스타일 */
+.three-column-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+}
+
+.left-column,
+.center-column,
+.right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1200px) {
+    .three-column-layout {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+    }
+    
+    .left-column {
+        grid-column: 1;
+        grid-row: 1;
+    }
+    
+    .center-column {
+        grid-column: 2;
+        grid-row: 1;
+    }
+    
+    .right-column {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+}
+
+@media (max-width: 768px) {
+    .three-column-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+    }
+    
+    .left-column,
+    .center-column,
+    .right-column {
+        grid-column: 1;
+    }
+    
+    .left-column {
+        grid-row: 1;
+    }
+    
+    .center-column {
+        grid-row: 2;
+    }
+    
+    .right-column {
+        grid-row: 3;
+    }
+}
+
+/* 상위 10개 점수 목록 스타일 */
+.top10-list {
+    margin-top: 25px;
+}
+
+.top10-list h3 {
+    margin: 0 0 20px 0;
+    color: #333;
+    font-size: 1.3em;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 10px;
+}
+
+.score-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 650px;
+    overflow-y: auto;
+}
+
+.score-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.score-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.score-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.score-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.score-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    gap: 15px;
+    transition: all 0.3s ease;
+}
+
+.score-item.clickable {
+    cursor: pointer;
+}
+
+.score-item.clickable:hover {
+    background: #e3f2fd;
+    border-color: #2196f3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+}
+
+.rank {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #667eea;
+    min-width: 30px;
+    text-align: center;
+}
+
+.cctv-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cctv-name {
+    font-weight: 600;
+    color: #333;
+    font-size: 1em;
+}
+
+.location {
+    color: #666;
+    font-size: 0.8em;
+    font-family: 'Courier New', monospace;
+}
+
+.score-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    min-width: 120px;
+}
+
+.score {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.score-details {
+    display: flex;
+    gap: 10px;
+    font-size: 0.8em;
+    color: #666;
+}
+
+.score-details span {
+    background: #e9ecef;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.detection-time {
+    color: #666;
+    font-size: 0.9em;
+    min-width: 60px;
+    text-align: center;
+}
+
+/* 날씨 정보 섹션 스타일 */
+.weather-section {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.weather-section h2 {
+    margin: 0 0 20px 0;
+    color: #333;
+    font-size: 1.5em;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 10px;
+}
+
+.weather-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.weather-item {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.weather-item:hover {
+    background: #e3f2fd;
+    border-color: #2196f3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+}
+
+.weather-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.cctv-label {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9em;
+}
+
+.weather-type {
+    background: #667eea;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 500;
+}
+
+.weather-details {
+    margin-bottom: 10px;
+}
+
+.weather-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 0.85em;
+    color: #555;
+}
+
+.snowfall {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 500;
+    text-align: center;
+}
+
 /* 새로운 좌우 패널 레이아웃 */
 .detail-main-content {
     display: grid;
@@ -73,7 +339,7 @@
 /* 요약 카드 스타일 */
 .summary-card, .main-score-card, .overview-section {
     background: white;
-    padding: 25px;
+    padding: 15px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
@@ -545,7 +811,10 @@
 
 /* 메인 점수 표시 */
 .score-display {
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     padding: 30px;
     border: 3px solid;
     border-radius: 15px;
@@ -562,6 +831,8 @@
     font-size: 1.5em;
     margin-bottom: 10px;
     font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
 }
 
 .score-description {
@@ -891,6 +1162,24 @@
     color: #e74c3c;
 }
 
+.error button {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+}
+
+.error button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+}
+
 /* 요인 분석 */
 .factors-section {
     background: white;
@@ -1016,7 +1305,7 @@
 /* 액션 카드 */
 .action-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: 1fr 1fr;
     gap: 20px;
 }
 
@@ -2058,4 +2347,124 @@
     51%, 100% {
         opacity: 0.5;
     }
+}
+
+/* CCTV 모달 스타일 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 900px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.4em;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.modal-body {
+    padding: 30px;
+}
+
+.cctv-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.detail-item label {
+    font-weight: 600;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.detail-item span {
+    color: #333;
+    font-size: 1em;
+    font-weight: 500;
+}
+
+.modal-footer {
+    padding: 20px 25px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
