@@ -184,8 +184,8 @@ export default function Index() {
             gap: '1rem'
           }}>
             <img
-              src="https://cdn.builder.io/api/v1/image/assets%2F608bbcadd79e43b89c275f9fa0935f53%2F28f59979d59c40a58a983dc19762b1a7?format=webp&width=800"
-              alt="Logo"
+              src="/road-logo.png"
+              alt="도로시 로고"
               style={{
                 width: '4rem',
                 height: '4rem',

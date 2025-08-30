@@ -49,6 +49,8 @@ app.use('/api/risk', require('./router/risk.cjs'));
 // 기상 관련 라우터
 app.use('/api/weather', require('./router/weather.cjs'));
 
+// t_total 테이블 관련 라우터
+app.use('/api/total', require('./router/total.cjs'));
 
 // 보고서 생성 라우터 연결
 const reportRouter = require('./router/report.cjs');

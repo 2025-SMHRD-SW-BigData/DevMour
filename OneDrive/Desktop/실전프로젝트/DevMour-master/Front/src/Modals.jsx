@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReportPreview from './components/ReportPreview';
+import { getUser } from './utils/auth';
 import './Modal.css';
 
 
@@ -21,10 +22,57 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
             console.log('🔍 generateCCTVReport 함수 실행됨');
             console.log('🔍 markerData:', markerData);
             
+            // 현재 로그인한 사용자 정보 가져오기
+            const currentUser = getUser();
+            console.log('🔍 현재 로그인한 사용자:', currentUser);
+            
+            // 손상 데이터 가져오기 (t_total 테이블에서)
+            let damageData = { breakCnt: 0, aliCrackCnt: 0, weatherScore: 0, roadScore: 0, totalScore: 0 };
+            try {
+                console.log('🔍 CCTV 위치 정보:', { lat: markerData?.lat, lng: markerData?.lng });
+                
+                // CCTV 위치 근처의 손상 데이터 조회
+                const response = await fetch('http://localhost:3001/api/total/nearby', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        lat: markerData?.lat,
+                        lon: markerData?.lng,
+                        radius: 1000 // 1km 반경 내
+                    })
+                });
+                
+                console.log('🔍 API 응답 상태:', response.status);
+                
+                if (response.ok) {
+                    const totalData = await response.json();
+                    console.log('🔍 서버에서 받은 데이터:', totalData);
+                    
+                    damageData = {
+                        breakCnt: totalData?.break_cnt || 0,
+                        aliCrackCnt: totalData?.ali_crack_cnt || 0,
+                        weatherScore: totalData?.weather_score || 0,
+                        roadScore: totalData?.road_score || 0,
+                        totalScore: totalData?.total_score || 0
+                    };
+                    
+                    console.log('🔍 파싱된 손상 데이터:', damageData);
+                } else {
+                    console.log('❌ API 응답 실패:', response.status, response.statusText);
+                    const errorText = await response.text();
+                    console.log('❌ 에러 내용:', errorText);
+                }
+            } catch (error) {
+                console.log('❌ 손상 데이터 조회 실패, 기본값 사용:', error);
+                console.log('❌ 에러 상세:', error.message);
+            }
+            
             // 보고서 데이터 준비
             const reportData = {
                 cctvId: markerData?.cctv_idx || 'CCTV-001',
-                location: markerData?.cctv_name || '광주공항사거리',
+                location: markerData?.name || '광주공항사거리',
                 riskLevel: '위험',
                 agency: '경찰청',
                 date: new Date().toLocaleDateString('ko-KR', { 
@@ -36,11 +84,17 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                     hour: '2-digit', 
                     minute: '2-digit' 
                 }),
-                department: '도로관리과',
-                author: '관리자',
+                department: currentUser?.dept_addr || '도로관리과',
+                author: currentUser?.admin_name || '관리자',
+                phone: currentUser?.admin_phone || '010-1234-5678',
                 position: '대리',
-                description: `${markerData?.cctv_name || 'CCTV'}에서 도로상태 이상이 감지되었습니다. 즉시 현장 확인 및 조치가 필요합니다.`,
-                riskScore: Math.floor(Math.random() * 50) + 50 // 50-100 사이 랜덤 점수
+                description: `${markerData?.name || 'CCTV'}에서 도로상태 이상이 감지되었습니다. 즉시 현장 확인 및 조치가 필요합니다.`,
+                totalScore: damageData.totalScore,
+                breakCnt: damageData.breakCnt,
+                aliCrackCnt: damageData.aliCrackCnt,
+                weatherScore: damageData.weatherScore,
+                roadScore: damageData.roadScore,
+                cctv_name: markerData?.name || 'CCTV' // CCTV 이름 추가
             };
 
             console.log('🔍 준비된 reportData:', reportData);

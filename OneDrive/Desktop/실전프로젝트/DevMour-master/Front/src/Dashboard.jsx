@@ -374,19 +374,10 @@ const [currentUser, setCurrentUser] = useState(null);
 
   {/* 🖼️ 로고 이미지 */}
    <img 
-      src="./도로시마크 (1).png" // public 폴더에 있는 이미지
-      alt="로고" 
+      src="/road-logo.png" // 새로운 도로시 로고
+      alt="도로시 로고" 
       style={{
         width: '50px',
-        height: '50px',
-        borderRadius: '8px'
-      }}
-    />
-    <img 
-      src="./Doro-see.png" // public 폴더에 있는 이미지
-      alt="로고" 
-      style={{
-        width: '80px',
         height: '50px',
         borderRadius: '8px'
       }}

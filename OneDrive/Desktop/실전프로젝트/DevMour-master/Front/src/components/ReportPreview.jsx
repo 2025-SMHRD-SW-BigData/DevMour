@@ -7,23 +7,68 @@ const ReportPreview = ({ isOpen, onClose, reportData }) => {
   console.log('🔍 isOpen:', isOpen);
   console.log('🔍 reportData:', reportData);
   
-  // 기본 데이터 (실제 데이터가 없을 때 사용)
-  const defaultData = {
-    cctvId: 'CCTV-001',
-    location: '광주광역시 서구 무등로 123',
-    riskLevel: '위험',
-    agency: '경찰청',
-    date: '2025년 8월 26일',
-    time: '오후 06:13',
-    department: '도로관리과',
-    author: '홍길동',
-    position: '대리',
-    description: '무등로 123번지 좌측 차선에 포트홀이 확인되었습니다. 구멍의 크기는 직경 약 45cm, 깊이 7cm 정도입니다. CCTV로 감지된 포트홀로 인한 교통 정체 우려가 있습니다.',
-    riskScore: 85
-  };
+     // 기본 데이터 (실제 데이터가 없을 때 사용)
+   const defaultData = {
+     cctvId: 'CCTV-001',
+     location: '광주광역시 서구 무등로 123',
+     riskLevel: '위험',
+     agency: '경찰청',
+     date: new Date().toLocaleDateString('ko-KR', { 
+       year: 'numeric', 
+       month: 'long', 
+       day: 'numeric' 
+     }),
+     time: new Date().toLocaleTimeString('ko-KR', { 
+       hour: '2-digit', 
+       minute: '2-digit' 
+     }),
+     department: '도로관리과',
+     author: '홍길동',
+     phone: '010-1234-5678',
+     position: '대리',
+     description: '무등로 123번지 좌측 차선에 포트홀이 확인되었습니다. 구멍의 크기는 직경 약 45cm, 깊이 7cm 정도입니다. CCTV로 감지된 포트홀로 인한 교통 정체 우려가 있습니다.',
+     totalScore: 85,
+     breakCnt: 2,
+     aliCrackCnt: 1,
+     weatherScore: 75,
+     roadScore: 82
+   };
 
   const data = reportData || defaultData;
-  console.log('🔍 최종 사용할 data:', data);
+  
+  // 도로 이름 추출 함수 - 상단 제목에서 CCTV 위치명 추출
+  const getRoadName = () => {
+    // reportData에서 CCTV 위치명을 가져오거나, 기본값 사용
+    let title = "CCTV 모니터링 - 평동산단4번로사거리"; // 기본값
+    
+    // reportData에 cctvLocation이나 title 필드가 있다면 사용
+    if (data.cctvLocation) {
+      title = data.cctvLocation;
+    } else if (data.title) {
+      title = data.title;
+    } else if (data.location && data.location.includes('CCTV 모니터링 - ')) {
+      // location 필드에 CCTV 모니터링 정보가 있다면 사용
+      title = data.location;
+    } else if (data.cctvName) {
+      // cctvName 필드가 있다면 사용
+      title = `CCTV 모니터링 - ${data.cctvName}`;
+    } else if (data.cctv_name) {
+      // cctv_name 필드가 있다면 사용 (Modals.jsx와 일치)
+      title = `CCTV 모니터링 - ${data.cctv_name}`;
+    }
+    
+    if (title.includes('CCTV 모니터링 - ')) {
+      return title.replace('CCTV 모니터링 - ', '');
+    }
+    return '도로';
+  };
+  
+  const roadName = getRoadName();
+  
+  console.log('🔍 ReportPreview 데이터 확인:');
+  console.log('🔍 reportData:', reportData);
+  console.log('🔍 defaultData:', defaultData);
+  console.log('🔍 최종 사용 데이터:', data);
 
   // PDF 다운로드 함수
   const downloadPDF = () => {
@@ -51,7 +96,7 @@ const ReportPreview = ({ isOpen, onClose, reportData }) => {
           </div>
           <div style="display: flex; justify-content: space-between;">
             <span style="font-weight: 600; color: #374151; font-size: 12px;">전화번호:</span>
-            <span style="color: #1f2937; font-size: 12px;">010-1234-5678</span>
+            <span style="color: #1f2937; font-size: 12px;">${data.phone}</span>
           </div>
         </div>
         
@@ -114,31 +159,26 @@ const ReportPreview = ({ isOpen, onClose, reportData }) => {
                     <span style="color: #1f2937; font-size: 14px;">${data.department}</span>
                   </div>
                 </td>
-                <td style="padding: 10px 14px; border-right: 1px solid #d1d5db; width: 25%;">
-                  <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 600; color: #374151; font-size: 12px;">작성일:</span>
-                    <span style="color: #1f2937; font-size: 14px;">08.20</span>
-                  </div>
-                </td>
+                                 <td style="padding: 10px 14px; border-right: 1px solid #d1d5db; width: 25%;">
+                   <div style="display: flex; justify-content: space-between; align-items: center;">
+                     <span style="font-weight: 600; color: #374151; font-size: 12px;">작성일:</span>
+                     <span style="color: #1f2937; font-size: 14px;">${data.date}</span>
+                   </div>
+                 </td>
                 <td style="padding: 10px 14px; border-right: 1px solid #d1d5db; width: 25%;">
                   <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="font-weight: 600; color: #374151; font-size: 12px;">작성자:</span>
                     <span style="color: #1f2937; font-size: 14px;">${data.author}</span>
                   </div>
                 </td>
-                <td style="padding: 10px 14px; width: 25%;">
-                  <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 600; color: #374151; font-size: 12px;">직급:</span>
-                    <span style="color: #1f2937; font-size: 14px;">${data.position}</span>
-                  </div>
-                </td>
+                
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- 구분선 -->
-        <hr style="border: none; height: 2px; background: #d1d5db; margin: 15px 0;" />
+                                   <!-- 구분선 -->
+          <hr style="border: none; height: 2px; background: #d1d5db; margin: 25px 0 15px 0;" />
 
         <!-- 도로상태 내용 -->
         <div style="margin-bottom: 12px;">
@@ -161,15 +201,14 @@ const ReportPreview = ({ isOpen, onClose, reportData }) => {
           <h3 style="color: #059669; margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">
             위험도 분석
           </h3>
-          <ul style="line-height: 1.3; padding-left: 16px; margin: 0; color: #1f2937; font-size: 12px;">
-            <li style="margin-bottom: 4px;">종합 위험도: <strong style="color: #dc2626;">${data.riskScore}점</strong> (<strong style="color: #dc2626;">${data.riskLevel}</strong>)</li>
-            <li style="margin-bottom: 4px;">감지된 손상: 포트홀 2개, 악어등 균열 1개</li>
-            <li style="margin-bottom: 4px;">야간 가시성 저하로 사고 가능성 증가</li>
-            <li style="margin-bottom: 4px;">AI 신뢰도: <strong style="color: #059669;">94.2%</strong></li>
-            <li style="margin-bottom: 4px;">기상 조건으로는 우천 시 배수로 기능 저하가 우려됩니다</li>
-            <li style="margin-bottom: 4px;">주변 환경으로는 가로등 3개 중 1개가 불량하여 야간 가시성이 저하됩니다</li>
-            <li>교통 안전 측면에서는 급커브 구간으로 인한 추가 위협 요소가 있습니다</li>
-          </ul>
+                     <ul style="line-height: 1.3; padding-left: 16px; margin: 0; color: #1f2937; font-size: 12px;">
+                           <li style="margin-bottom: 4px;">종합 점수: <strong style="color: #dc2626;">${data.totalScore}점</strong></li>
+             <li style="margin-bottom: 4px;">감지된 손상: 포트홀 ${data.breakCnt}개, 거북등 균열 ${data.aliCrackCnt}개</li>
+             <li style="margin-bottom: 4px;">날씨점수: <strong style="color: #059669;">${data.weatherScore}점</strong></li>
+             <li style="margin-bottom: 4px;">도로점수: <strong style="color: #059669;">${data.roadScore}점</strong></li>
+                           <li style="margin-bottom: 4px;">기상 조건으로는 우천 시 배수로 기능 저하가 우려됩니다</li>
+              <li>교통 안전 측면에서는 급커브 구간으로 인한 추가 위협 요소가 있습니다</li>
+           </ul>
         </div>
 
         <!-- 구분선 -->
@@ -180,36 +219,24 @@ const ReportPreview = ({ isOpen, onClose, reportData }) => {
           <h3 style="color: #7c3aed; margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">
             권장 조치사항
           </h3>
-          <ul style="line-height: 1.3; padding-left: 16px; margin: 0; color: #1f2937; font-size: 12px;">
-            <li style="margin-bottom: 4px;">우선순위: <strong style="color: #dc2626;">1순위</strong></li>
-            <li style="margin-bottom: 4px;">즉시 보수 필요 (24시간 내)</li>
-            <li style="margin-bottom: 4px;">관할 유지보수팀 현장 출동 요청</li>
+                                <ul style="line-height: 1.3; padding-left: 16px; margin: 0; color: #1f2937; font-size: 12px;">
+             <li style="margin-bottom: 4px;">관할 유지보수팀 현장 출동 요청</li>
             <li style="margin-bottom: 4px;">임시 안전 표지판 및 차량 감속 유도 조치 필요</li>
-            <li style="margin-bottom: 4px;">보수 완료 후 48시간 이내 재점검 실시</li>
-            <li style="margin-bottom: 4px;">가로등 수리 및 야간 조명 강화 필요</li>
-            <li>도로 표면 전면 재포장 검토 및 계획 수립 필요</li>
+                         <li style="margin-bottom: 4px;">보수 완료 후 48시간 이내 재점검 실시</li>
+             <li>도로 표면 전면 재포장 검토 및 계획 수립 필요</li>
           </ul>
         </div>
 
-        <!-- 구분선 -->
+                 <!-- 구분선 -->
         <hr style="border: none; height: 2px; background: #d1d5db; margin: 12px 0;" />
 
-        <!-- 첨부파일 -->
-        <div style="margin-bottom: 12px;">
-          <h4 style="margin: 0 0 5px 0; color: #374151; font-size: 12px;">첨부파일</h4>
-          <p style="margin: 0; color: #1f2937; font-size: 12px;">cctv 이미지 영상.jpg</p>
-        </div>
-
-        <!-- 구분선 -->
-        <hr style="border: none; height: 2px; background: #d1d5db; margin: 12px 0;" />
-
-        <!-- 하단 정보 -->
-        <div style="margin-top: 8px;">
-          <p style="margin-bottom: 5px; color: #1f2937; font-size: 12px;">위와 같이 도로상태에 대한 결과를 보고합니다.</p>
-          <p style="margin-bottom: 6px; color: #1f2937; font-size: 12px;">2025년 8월 20일</p>
-          <p style="margin-bottom: 6px; color: #1f2937; font-size: 12px;"><strong>작성자: ${data.author}_(인)</strong></p>
-          <p style="color: #1e40af; font-size: 14px; font-weight: 600; text-align: right;">광주시 도로관리과</p>
-        </div>
+                                                                       <!-- 하단 정보 -->
+                     <div style="margin-top: 30px;">
+                                     <p style="margin-bottom: 40px; color: #1f2937; font-size: 14px;">위와 같이 <span style="color: #1e40af; font-weight: 600;">${roadName}</span> 도로상태에 대한 결과를 보고합니다.</p>
+             <p style="margin-bottom: 15px; color: #1f2937; font-size: 16px;">${data.date}</p>
+                          <p style="margin-bottom: 15px; color: #1f2937; font-size: 16px;"><strong>작성자: ${data.author}_(인)</strong></p>
+                         <p style="color: #1e40af; font-size: 18px; font-weight: 600; text-align: right;">광주시 도로관리과</p>
+          </div>
       </div>
     `;
     
@@ -279,7 +306,7 @@ const ReportPreview = ({ isOpen, onClose, reportData }) => {
                       <strong>이메일:</strong> hong@gwangju.go.kr
                     </div>
                     <div className="contact-item">
-                      <strong>전화번호:</strong> 010-1234-5678
+                      <strong>전화번호:</strong> {data?.phone}
                     </div>
                   </div>
                 </div>
@@ -345,38 +372,32 @@ const ReportPreview = ({ isOpen, onClose, reportData }) => {
                             <span style={{ color: '#1f2937', fontSize: '14px' }}>{data?.department}</span>
                           </div>
                         </td>
-                        <td style={{ padding: '10px 14px', borderRight: '1px solid #d1d5db', borderBottom: '1px solid #d1d5db', width: '25%', background: 'white' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontWeight: '600', color: '#374151', fontSize: '12px' }}>작성일:</span>
-                            <span style={{ color: '#1f2937', fontSize: '14px' }}>08.20</span>
-                          </div>
-                        </td>
+                                         <td style={{ padding: '10px 14px', borderRight: '1px solid #d1d5db', borderBottom: '1px solid #d1d5db', width: '25%', background: 'white' }}>
+                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                             <span style={{ fontWeight: '600', color: '#374151', fontSize: '12px' }}>작성일:</span>
+                             <span style={{ color: '#1f2937', fontSize: '14px' }}>{data?.date}</span>
+                           </div>
+                         </td>
                         <td style={{ padding: '10px 14px', borderRight: '1px solid #d1d5db', borderBottom: '1px solid #d1d5db', width: '25%', background: 'white' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontWeight: '600', color: '#374151', fontSize: '12px' }}>작성자:</span>
                             <span style={{ color: '#1f2937', fontSize: '14px' }}>{data?.author}</span>
                           </div>
                         </td>
-                        <td style={{ padding: '10px 14px', borderBottom: '1px solid #d1d5db', width: '25%', background: 'white' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontWeight: '600', color: '#374151', fontSize: '12px' }}>직급:</span>
-                            <span style={{ color: '#1f2937', fontSize: '14px' }}>{data?.position}</span>
-                          </div>
-                        </td>
+                        
                       </tr>
                     </tbody>
                   </table>
                 </div>
 
-                {/* 구분선 */}
-                <hr style={{ border: 'none', height: '2px', background: '#d1d5db', margin: '15px 0' }} />
+                                 {/* 구분선 */}
+                 <hr style={{ border: 'none', height: '2px', background: '#d1d5db', margin: '50px 0 15px 0' }} />
 
                 {/* 도로상태 내용 */}
                 <div className="road-condition">
                   <h3 style={{ color: '#dc2626', margin: '0 0 8px 0', fontSize: '16px', fontWeight: '600' }}>도로상태 내용</h3>
-                  <ul style={{ lineHeight: '1.3', paddingLeft: '16px', margin: 0, color: '#1f2937', fontSize: '12px' }}>
-                    <li style={{ marginBottom: '4px' }}>CCTV에서 도로상태 이상이 감지되었습니다. 즉시 현장 확인 및 조치가 필요합니다.</li>
-                    <li style={{ marginBottom: '4px' }}>추가 관찰 결과, 주변 도로 상태는 양호하며 배수로도 정상 작동합니다.</li>
+                                     <ul style={{ lineHeight: '1.3', paddingLeft: '16px', margin: 0, color: '#1f2937', fontSize: '12px' }}>
+                     <li style={{ marginBottom: '4px' }}>추가 관찰 결과, 주변 도로 상태는 양호하며 배수로도 정상 작동합니다.</li>
                     <li style={{ marginBottom: '4px' }}>교통량 분석 결과, 평균 시간당 120대, 피크 시간 180대의 통행량을 보입니다.</li>
                     <li>도로 표면은 아스팔트 노후화가 진행 중이며 균열이 발생했습니다.</li>
                   </ul>
@@ -388,15 +409,14 @@ const ReportPreview = ({ isOpen, onClose, reportData }) => {
                 {/* 위험도 분석 */}
                 <div className="risk-analysis">
                   <h3 style={{ color: '#059669', margin: '0 0 8px 0', fontSize: '16px', fontWeight: '600' }}>위험도 분석</h3>
-                  <ul style={{ lineHeight: '1.3', paddingLeft: '16px', margin: 0, color: '#1f2937', fontSize: '12px' }}>
-                    <li style={{ marginBottom: '4px' }}>종합 위험도: <strong style={{ color: '#dc2626' }}>{data?.riskScore}점</strong> (<strong style={{ color: '#dc2626' }}>{data?.riskLevel}</strong>)</li>
-                    <li style={{ marginBottom: '4px' }}>감지된 손상: 포트홀 2개, 악어등 균열 1개</li>
-                    <li style={{ marginBottom: '4px' }}>야간 가시성 저하로 사고 가능성 증가</li>
-                    <li style={{ marginBottom: '4px' }}>AI 신뢰도: <strong style={{ color: '#059669' }}>94.2%</strong></li>
-                    <li style={{ marginBottom: '4px' }}>기상 조건으로는 우천 시 배수로 기능 저하가 우려됩니다</li>
-                    <li style={{ marginBottom: '4px' }}>주변 환경으로는 가로등 3개 중 1개가 불량하여 야간 가시성이 저하됩니다</li>
-                    <li>교통 안전 측면에서는 급커브 구간으로 인한 추가 위협 요소가 있습니다</li>
-                  </ul>
+                                     <ul style={{ lineHeight: '1.3', paddingLeft: '16px', margin: 0, color: '#1f2937', fontSize: '12px' }}>
+                     <li style={{ marginBottom: '4px' }}>종합 점수: <strong style={{ color: '#dc2626' }}>{data?.totalScore}점</strong></li>
+                     <li style={{ marginBottom: '4px' }}>감지된 손상: 포트홀 {data?.breakCnt}개, 거북등 균열 {data?.aliCrackCnt}개</li>
+                     <li style={{ marginBottom: '4px' }}>날씨점수: <strong style={{ color: '#059669' }}>{data?.weatherScore}점</strong></li>
+                     <li style={{ marginBottom: '4px' }}>도로점수: <strong style={{ color: '#059669' }}>{data?.roadScore}점</strong></li>
+                                           <li style={{ marginBottom: '4px' }}>기상 조건으로는 우천 시 배수로 기능 저하가 우려됩니다</li>
+                      <li>교통 안전 측면에서는 급커브 구간으로 인한 추가 위협 요소가 있습니다</li>
+                   </ul>
                 </div>
 
                 {/* 구분선 */}
@@ -405,36 +425,24 @@ const ReportPreview = ({ isOpen, onClose, reportData }) => {
                 {/* 권장 조치사항 */}
                 <div className="recommended-actions">
                   <h3 style={{ color: '#7c3aed', margin: '0 0 8px 0', fontSize: '16px', fontWeight: '600' }}>권장 조치사항</h3>
-                  <ul style={{ lineHeight: '1.3', paddingLeft: '16px', margin: 0, color: '#1f2937', fontSize: '12px' }}>
-                    <li style={{ marginBottom: '4px' }}>우선순위: <strong style={{ color: '#dc2626' }}>1순위</strong></li>
-                    <li style={{ marginBottom: '4px' }}>즉시 보수 필요 (24시간 내)</li>
-                    <li style={{ marginBottom: '4px' }}>관할 유지보수팀 현장 출동 요청</li>
+                                                        <ul style={{ lineHeight: '1.3', paddingLeft: '16px', margin: 0, color: '#1f2937', fontSize: '12px' }}>
+                     <li style={{ marginBottom: '4px' }}>관할 유지보수팀 현장 출동 요청</li>
                     <li style={{ marginBottom: '4px' }}>임시 안전 표지판 및 차량 감속 유도 조치 필요</li>
-                    <li style={{ marginBottom: '4px' }}>보수 완료 후 48시간 이내 재점검 실시</li>
-                    <li style={{ marginBottom: '4px' }}>가로등 수리 및 야간 조명 강화 필요</li>
-                    <li>도로 표면 전면 재포장 검토 및 계획 수립 필요</li>
+                                         <li style={{ marginBottom: '4px' }}>보수 완료 후 48시간 이내 재점검 실시</li>
+                     <li>도로 표면 전면 재포장 검토 및 계획 수립 필요</li>
                   </ul>
                 </div>
 
-                {/* 구분선 */}
+                                 {/* 구분선 */}
                 <hr style={{ border: 'none', height: '2px', background: '#d1d5db', margin: '12px 0' }} />
 
-                {/* 첨부파일 */}
-                <div className="attachments">
-                  <h4 style={{ margin: '0 0 5px 0', color: '#374151', fontSize: '12px' }}>첨부파일</h4>
-                  <p style={{ margin: 0, color: '#1f2937', fontSize: '12px' }}>cctv 이미지 영상.jpg</p>
-                </div>
-
-                {/* 구분선 */}
-                <hr style={{ border: 'none', height: '2px', background: '#d1d5db', margin: '12px 0' }} />
-
-                {/* 하단 정보 */}
-                <div className="report-footer">
-                  <p style={{ marginBottom: '5px', color: '#1f2937', fontSize: '12px' }}>위와 같이 도로상태에 대한 결과를 보고합니다.</p>
-                  <p style={{ marginBottom: '6px', color: '#1f2937', fontSize: '12px' }}>2025년 8월 20일</p>
-                  <p style={{ marginBottom: '6px', color: '#1f2937', fontSize: '12px' }}><strong>작성자: {data?.author}_(인)</strong></p>
-                  <p style={{ color: '#1e40af', fontSize: '14px', fontWeight: '600', textAlign: 'right' }}>광주시 도로관리과</p>
-                </div>
+                                 {/* 하단 정보 */}
+                                   <div className="report-footer" style={{ marginTop: '50px' }}>
+                                                           <p style={{ marginBottom: '80px', color: '#1f2937', fontSize: '16px' }}>위와 같이 <span style={{ color: '#1e40af', fontWeight: '600' }}>{roadName}</span> 도로상태에 대한 결과를 보고합니다.</p>
+                     <p style={{ marginBottom: '6px', color: '#1f2937', fontSize: '16px' }}>2025년 8월 20일</p>
+                    <p style={{ marginBottom: '6px', color: '#1f2937', fontSize: '16px' }}><strong>작성자: {data?.author}_(인)</strong></p>
+                    <p style={{ color: '#1e40af', fontSize: '18px', fontWeight: '600', textAlign: 'right' }}>광주시 도로관리과</p>
+                 </div>
                 {console.log('🔍 보고서 내용 렌더링 완료')}
               </div>
 
