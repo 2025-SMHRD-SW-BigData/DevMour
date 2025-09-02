@@ -144,7 +144,7 @@ const ComparisonDetail = () => {
         const fetchComparisonData = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:3001/api/yearlycomparison/summary');
+                const response = await fetch('http://175.45.194.114:3001/api/yearlycomparison/summary');
                 if (!response.ok) {
                     throw new Error('데이터를 가져오는데 실패했습니다.');
                 }

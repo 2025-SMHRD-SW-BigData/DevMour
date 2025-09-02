@@ -30,7 +30,7 @@ const ConstructionDetail = () => {
     const fetchConstructionData = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://localhost:3001/api/construction/detail');
+            const response = await fetch('http://175.45.194.114:3001/api/construction/detail');
             
             if (response.ok) {
                 const data = await response.json();

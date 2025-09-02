@@ -29,7 +29,7 @@ const AlertDetail = () => {
         try {
             setLoading(true);
             // 새로운 monthly API를 사용하여 현재 월의 알림 데이터 가져오기
-            const response = await fetch('http://localhost:3001/api/alert/monthly');
+            const response = await fetch('http://175.45.194.114:3001/api/alert/monthly');
             
             if (response.ok) {
                 const data = await response.json();

@@ -12,9 +12,9 @@ let conn = mysql.createConnection({
 });
 
 // 시민 제보 상세 데이터 조회
-router.get('/list', (req, res) => {
+router.get('/detail', (req, res) => {
     console.log('🔍 시민 제보 상세 데이터 조회 요청');
-    
+
     const query = `
         SELECT 
             c_report_idx,
@@ -30,22 +30,22 @@ router.get('/list', (req, res) => {
             c_report_status,
             admin_id,
             addr
-        FROM t_citizen_report 
+        FROM t_citizen_report
         ORDER BY c_reported_at DESC
     `;
-    
+
     conn.query(query, (err, results) => {
         if (err) {
             console.error('❌ 시민 제보 데이터 조회 오류:', err);
-            res.status(500).json({ 
+            res.status(500).json({
                 error: '시민 제보 데이터 조회 중 오류가 발생했습니다.',
-                details: err.message 
+                details: err.message
             });
             return;
         }
-        
+
         console.log('✅ 시민 제보 데이터 조회 성공:', results.length, '건');
-        
+
         // 데이터 가공
         const complaints = results.map(item => ({
             ...item,
@@ -183,6 +183,69 @@ router.get('/detail/:id', (req, res) => {
         });
     });
 });
+
+// 특정 시민 제보 상세 정보 조회 (:id)
+router.get('/:id', (req, res) => {
+    const reportId = req.params.id;
+    console.log('🔍 시민 제보 상세 정보 조회 요청:', reportId);
+    
+    const query = `
+        SELECT 
+            c_report_idx,
+            c_reported_at,
+            lat,
+            lon,
+            c_report_detail,
+            c_report_file1,
+            c_report_file2,
+            c_report_file3,
+            c_reporter_name,
+            c_reporter_phone,
+            c_report_status,
+            admin_id,
+            addr
+        FROM t_citizen_report 
+        WHERE c_report_idx = ?
+    `;
+    
+    conn.query(query, [reportId], (err, results) => {
+        if (err) {
+            console.error('❌ 시민 제보 상세 정보 조회 오류:', err);
+            res.status(500).json({ 
+                error: '시민 제보 상세 정보 조회 중 오류가 발생했습니다.',
+                details: err.message 
+            });
+            return;
+        }
+        
+        if (results.length === 0) {
+            console.log('❌ 시민 제보 정보를 찾을 수 없음:', reportId);
+            res.status(404).json({ 
+                error: '해당 시민 제보 정보를 찾을 수 없습니다.',
+                reportId: reportId
+            });
+            return;
+        }
+        
+        console.log('✅ 시민 제보 상세 정보 조회 성공');
+        
+        const complaint = results[0];
+        // 데이터 가공
+        const processedComplaint = {
+            ...complaint,
+            c_reported_at: complaint.c_reported_at ? new Date(complaint.c_reported_at).toISOString() : null,
+            lat: parseFloat(complaint.lat),
+            lon: parseFloat(complaint.lon)
+        };
+        
+        res.json({
+            success: true,
+            message: '시민 제보 상세 정보 조회 성공',
+            complaint: processedComplaint
+        });
+    });
+});
+
 
 // 시민 제보 정보 업데이트
 router.put('/update', (req, res) => {

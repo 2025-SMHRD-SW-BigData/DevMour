@@ -384,12 +384,12 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
         setLoading(true);
 
         try {
+            const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://0.0.0.0:3001/api';
             let apiUrl;
 
             // ✅ 마커 타입에 따라 다른 API 엔드포인트 사용
             if (markerType === 'construction' || markerType === 'flood') {
                 // 도로 통제 마커: road-control API 사용
-                const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://0.0.0.0:3001/api';
             apiUrl = `${apiBaseUrl}/road-control/detail/${markerId}`;
                 console.log('🚧 도로 통제 API 호출:', apiUrl);
             } else if (markerType === 'complaint') {

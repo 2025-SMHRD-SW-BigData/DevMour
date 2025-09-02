@@ -14,8 +14,8 @@ const WeatherDisplay = ({}) => {
     const defaultLon = 126.8513092;
     
     // 🔥 디버깅 로그 추가
-    console.log('🔍 Context에서 받은 값:', { lat, lon });
-    console.log('🔍 기본값:', { defaultLat, defaultLon });
+   // console.log('🔍 Context에서 받은 값:', { lat, lon });
+   // console.log('🔍 기본값:', { defaultLat, defaultLon });
     
 
     // Context에서 받은 좌표가 없으면 기본값 사용
@@ -23,7 +23,7 @@ const WeatherDisplay = ({}) => {
     const currentLon = lon || defaultLon;
 
     // API 기본 URL 설정
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://175.45.194.114:3001/api';
 
 
 // DB 저장 함수를 먼저 정의
@@ -49,9 +49,9 @@ const WeatherDisplay = ({}) => {
         const result = await response.json();
             
           if (result.success) {
-            console.log('✅ DB 저장 성공:', result);
+          //console.log('✅ DB 저장 성공:', result);
           } else {
-            console.log('ℹ️ DB 저장 결과:', result.message);
+           // console.log('ℹ️ DB 저장 결과:', result.message);
           }
         } catch (error) {
             console.error('❌ DB 저장 실패:', error);
@@ -66,11 +66,11 @@ const fetchAddressData = async (lat, lon) => {
             const response = await fetch(`${apiBaseUrl}/weather/reverse?lat=${lat}&lon=${lon}`);
     const result = await response.json();
             
-    console.log('🔍 API 전체 응답:', result);
+   //console.log('🔍 API 전체 응답:', result);
 
       if (result.success) {
-        console.log('주소 데이터:', result.data);
-        console.log('🔍 받은 주소:', result.data.address.full);
+       // console.log('주소 데이터:', result.data);
+        //console.log('🔍 받은 주소:', result.data.address.full);
 
         setAddressData(result.data);
       } else {

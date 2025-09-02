@@ -29,7 +29,7 @@ const ComplaintDetail = () => {
     const fetchComplaintData = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://localhost:3001/api/complaint/detail');
+            const response = await fetch('http://175.45.194.114:3001/api/complaint/detail');
             
             if (response.ok) {
                 const data = await response.json();

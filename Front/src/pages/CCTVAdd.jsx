@@ -69,7 +69,7 @@ const CCTVAdd = () => {
             
             // CCTV 이름 중복 확인
             try {
-                const duplicateCheckResponse = await fetch(`http://localhost:3001/api/cctv/check-duplicate/${encodeURIComponent(data.cctv_name)}`);
+                const duplicateCheckResponse = await fetch(`http://175.45.194.114:3001/api/cctv/check-duplicate/${encodeURIComponent(data.cctv_name)}`);
                 
                 if (duplicateCheckResponse.ok) {
                     const duplicateResult = await duplicateCheckResponse.json();

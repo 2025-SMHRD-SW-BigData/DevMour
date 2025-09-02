@@ -5,7 +5,7 @@ import SimpleMapSearch from './SimpleMapSearch';
 
 const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initialFilterType = 'all', hideFilterButtons = false, complaintData, showComplaintMarkers = false }) => {
     // API 기본 URL 설정
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://175.45.194.114:3001/api';
     
     const mapRef = useRef(null);
     const [isEditing, setIsEditing] = useState(false);
@@ -54,7 +54,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
         const riskDataLength = riskData?.length;
         console.log('🔄 위험도 데이터/모드 변경 감지:', { showRiskMarkers, riskDataLength });
         if (showRiskMarkers && riskData && riskData.length > 0) {
-            console.log('✅ 위험도 마커 추가 실행');
+           // console.log('✅ 위험도 마커 추가 실행');
             // 지도가 준비되었는지 확인하고 마커 추가
             if (mapRef.current) {
                 addRiskMarkers(riskData);
@@ -68,7 +68,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                 }, 1000);
             }
         } else {
-            console.log('❌ 위험도 마커 숨김 또는 데이터 없음');
+           // console.log('❌ 위험도 마커 숨김 또는 데이터 없음');
             // Hide risk markers if not showing or no data
             if (riskMarkers.length > 0) {
                 riskMarkers.forEach(marker => {
@@ -95,15 +95,15 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                 if (marker && marker.setMap) {
                     // showRiskMarkers가 true이고, filterType이 'all' 또는 'risk'일 때만 표시
                     if (showRiskMarkers && (filterType === 'all' || filterType === 'risk')) {
-                        console.log(`✅ 위험도 마커 ${index + 1} 표시 (showRiskMarkers: ${showRiskMarkers}, filterType: ${filterType})`);
+                       // console.log(`✅ 위험도 마커 ${index + 1} 표시 (showRiskMarkers: ${showRiskMarkers}, filterType: ${filterType})`);
                         marker.setMap(mapRef.current);
                     } else {
-                        console.log(`❌ 위험도 마커 ${index + 1} 숨김 (showRiskMarkers: ${showRiskMarkers}, filterType: ${filterType})`);
+                       // console.log(`❌ 위험도 마커 ${index + 1} 숨김 (showRiskMarkers: ${showRiskMarkers}, filterType: ${filterType})`);
                         marker.setMap(null);
                         // 숨김 후 상태 확인
                         setTimeout(() => {
                             const currentMap = marker.getMap();
-                            console.log(`🔍 마커 ${index + 1} 숨김 후 상태 확인: map=${currentMap ? '표시됨' : '숨겨짐'}`);
+                          //  console.log(`🔍 마커 ${index + 1} 숨김 후 상태 확인: map=${currentMap ? '표시됨' : '숨겨짐'}`);
                         }, 100);
                     }
                 }
@@ -116,7 +116,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
         const complaintDataLength = complaintData?.length;
         console.log('🔄 시민 제보 데이터/모드 변경 감지:', { showComplaintMarkers, complaintDataLength });
         if (showComplaintMarkers && complaintData && complaintData.length > 0) {
-            console.log('✅ 시민 제보 마커 추가 실행');
+           // console.log('✅ 시민 제보 마커 추가 실행');
             // 지도가 준비되었는지 확인하고 마커 추가
             if (mapRef.current) {
                 addComplaintMarkers(complaintData);
@@ -130,7 +130,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                 }, 1000);
             }
         } else {
-            console.log('❌ 시민 제보 마커 숨김 또는 데이터 없음');
+           // console.log('❌ 시민 제보 마커 숨김 또는 데이터 없음');
             // Hide complaint markers if not showing or no data
             if (complaintMarkers.length > 0) {
                 complaintMarkers.forEach(marker => {

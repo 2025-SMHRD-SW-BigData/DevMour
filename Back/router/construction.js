@@ -12,7 +12,7 @@ const dbConfig = {
 };
 
 // 공사 통제 데이터 조회
-router.get('/list', async (req, res) => {
+router.get('/detail', async (req, res) => {
     try {
         const connection = await mysql.createConnection(dbConfig);
         

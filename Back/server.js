@@ -105,8 +105,7 @@ app.get('*', (req, res) => {
 });
 
 // 서버 시작
-const host = process.env.HOST || '0.0.0.0';
+const host = '0.0.0.0';
 app.listen(PORT, host, () => {
   console.log(`Server running at http://${host}:${PORT}`);
 });
-

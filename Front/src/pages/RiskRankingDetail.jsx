@@ -25,7 +25,7 @@ const RiskRankingDetail = () => {
     const fetchRiskData = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://localhost:3001/api/risk/ranking-detail');
+            const response = await fetch('http://175.45.194.114:3001/api/risk/ranking-detail');
             
             if (response.ok) {
                 const data = await response.json();
