@@ -24,7 +24,7 @@ let conn = mysql.createConnection({
 // CORS 설정 - 프론트엔드 개발 서버 허용
 const allowedOrigins = process.env.ALLOWED_ORIGINS ? 
     process.env.ALLOWED_ORIGINS.split(',') : 
-    ['http://0.0.0.0:5173', 'http://0.0.0.0:3000', 'http://0.0.0.0:3001'];
+    ['http://0.0.0.0:5173', 'http://0.0.0.0:3000', 'http://0.0.0.0:3001', 'http://dorosee.xyz', 'http://www.dorosee.xyz','http://175.45.194.114:3001'];
 
 app.use(cors({
     origin: allowedOrigins,
