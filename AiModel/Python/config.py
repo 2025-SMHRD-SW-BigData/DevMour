@@ -66,3 +66,10 @@ DB_CONFIG = {
     'road_score_url': os.getenv('ROAD_SCORE_URL', 'http://localhost:3000/api/save-road-score'),
     'timeout': 10
 }
+
+# 날씨 API 설정
+WEATHER_CONFIG = {
+    'api_key': os.getenv('c1c00ab7cd918d1121e2b38128a14709', 'c1c00ab7cd918d1121e2b38128a14709'),
+    'base_url': 'http://api.openweathermap.org/data/2.5/weather',
+    'timeout': 10
+}

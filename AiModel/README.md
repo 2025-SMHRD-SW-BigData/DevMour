@@ -2,6 +2,10 @@
 
 YOLO 앙상블 모델을 사용한 도로 손상 탐지 및 위험도 분석 시스템입니다.
 
+## 🌊 침수 모니터링 시스템
+
+1시간 단위로 CCTV 정보를 모니터링하여 실시간 날씨를 조회하고, 강수량이 20mm를 넘으면 자동으로 침수 감지 분석을 실행하는 시스템입니다.
+
 ## 🏗️ 시스템 구조
 
 ```
@@ -12,6 +16,10 @@ AiModel/
 │   ├── cctv_processor.py  # CCTV 처리 클래스
 │   ├── ai_server.py       # FastAPI AI 서버
 │   ├── main.py            # 메인 실행 파일
+│   ├── monitoring_flood.py # 침수 모니터링 시스템
+│   ├── flood_detected_all.py # 침수 감지 분석
+│   ├── start_monitoring_flood.bat # Windows 실행 스크립트
+│   ├── start_monitoring_flood.sh # Linux/Mac 실행 스크립트
 │   └── requirements.txt   # Python 의존성
 ├── AiServer/              # Node.js AI 서버
 │   ├── server.js          # Express 서버
@@ -71,6 +79,30 @@ npm run dev
 ```
 
 Node.js 서버는 `http://localhost:3000`에서 실행됩니다.
+
+### 4. 침수 모니터링 시스템 실행
+
+```bash
+cd AiModel/Python
+
+# 의존성 설치 (schedule 라이브러리 추가)
+pip install -r requirements.txt
+
+# OpenWeatherMap API 키 설정
+# monitoring_flood.py 파일에서 self.weather_api_key 값을 설정
+
+# 모니터링 시스템 실행
+python monitoring_flood.py
+
+# 또는 Windows에서
+start_monitoring_flood.bat
+
+# 또는 Linux/Mac에서
+chmod +x start_monitoring_flood.sh
+./start_monitoring_flood.sh
+```
+
+침수 모니터링 시스템은 1시간마다 자동으로 실행되며, 강수량이 20mm를 넘으면 자동으로 침수 감지 분석을 실행합니다.
 
 ## 📊 API 엔드포인트
 

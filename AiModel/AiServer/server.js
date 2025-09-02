@@ -484,30 +484,6 @@ app.post('/api/weather/save_weather', async (req, res) => {
     // 날씨 점수 기본값 설정
     const final_weather_score = weather_score || 0;
     
-    // 중복 데이터 체크 (같은 위치, 같은 시간)
-    const checkSQL = `
-      SELECT * FROM t_weather 
-      WHERE lat = ? AND lon = ? 
-      AND DATE_FORMAT(wh_date, '%Y-%m-%d %H:%i') = DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i')
-    `;
-    
-    try {
-      const existingWeather = await db.query(checkSQL, [lat, lon]);
-      console.log('🔍 중복 데이터 체크 결과:', existingWeather);
-      
-      // existingWeather가 배열이고 길이가 0보다 큰지 안전하게 확인
-      if (existingWeather && Array.isArray(existingWeather) && existingWeather.length > 0) {
-        console.log('⚠️ 중복 날씨 데이터 발견:', existingWeather[0]);
-        return res.status(200).json({
-          success: false,
-          message: '같은 위치, 같은 시간의 날씨 데이터가 이미 존재합니다.',
-          existing_data: existingWeather[0]
-        });
-      }
-    } catch (checkError) {
-      console.log('⚠️ 중복 데이터 체크 중 오류 발생 (무시하고 진행):', checkError.message);
-      // 중복 체크 실패 시에도 저장을 진행
-    }
     
     // 날씨 정보 저장
     const insertSQL = `

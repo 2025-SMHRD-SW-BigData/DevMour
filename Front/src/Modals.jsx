@@ -1,37 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import ReportPreview from './components/ReportPreview';
 import './Modal.css';
+import { getUser } from './utils/auth';
 
-// CCTV 보고서 생성 함수
-const generateCCTVReport = async (markerData) => {
-    try {
-        const response = await fetch('http://localhost:3001/api/report/generate-cctv-report', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ markerData }),
-        });
-
-        if (response.ok) {
-            // PDF 파일 다운로드
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `cctv-report-${Date.now()}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        } else {
-            console.error('보고서 생성 실패');
-            alert('보고서 생성에 실패했습니다.');
-        }
-    } catch (error) {
-        console.error('보고서 생성 오류:', error);
-        alert('보고서 생성 중 오류가 발생했습니다.');
-    }
-};
 
 // CCTV AI 분석 함수
 const performCCTVAnalysis = async (cctvData) => {
@@ -70,6 +41,39 @@ const performCCTVAnalysis = async (cctvData) => {
     }
 };
 
+// 침수 분석 함수
+const performFloodAnalysis = async (cctvData) => {
+    try {
+        console.log('🌊 침수 분석 시작:', cctvData);
+
+        // CCTV 정보를 침수 분석 서버로 전송
+        const response = await fetch('http://localhost:8002/api/analyze-flood', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                cctv_idx: cctvData.cctv_idx || cctvData.control_idx,
+                cctv_url: cctvData.cctv_url,
+                lat: cctvData.lat,
+                lon: cctvData.lon || cctvData.lng
+            }),
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log('✅ 침수 분석 완료:', result);
+            return result;
+        } else {
+            console.error('침수 분석 실패:', response.status);
+            throw new Error(`침수 분석 실패: ${response.status}`);
+        }
+    } catch (error) {
+        console.error('침수 분석 오류:', error);
+        throw error;
+    }
+};
+
 const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEditMode = false, onUpdateComplete }) => {
     const [detailData, setDetailData] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -82,6 +86,108 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
     const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
     const [cctvRiskData, setCctvRiskData] = useState(null);
     const [cctvRiskLoading, setCctvRiskLoading] = useState(false);
+    const [showReportPreview, setShowReportPreview] = useState(false);
+    const [reportData, setReportData] = useState(null);
+    const [floodAnalysisResult, setFloodAnalysisResult] = useState(null);
+    const [floodAnalysisLoading, setFloodAnalysisLoading] = useState(false);
+
+    // CCTV 보고서 생성 함수
+    const generateCCTVReport = async (markerData) => {
+        try {
+            console.log('🔍 generateCCTVReport 함수 실행됨');
+            console.log('🔍 markerData:', markerData);
+            
+            // 현재 로그인한 사용자 정보 가져오기
+            const currentUser = getUser();
+            console.log('🔍 현재 로그인한 사용자:', currentUser);
+            
+            // 손상 데이터 가져오기 (t_total 테이블에서)
+            let damageData = { breakCnt: 0, aliCrackCnt: 0, weatherScore: 0, roadScore: 0, totalScore: 0 };
+            try {
+                console.log('🔍 CCTV 위치 정보:', { lat: markerData?.lat, lng: markerData?.lng });
+                
+                // CCTV 위치 근처의 손상 데이터 조회
+                const response = await fetch('http://localhost:3001/api/total/nearby', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        lat: markerData?.lat,
+                        lon: markerData?.lng,
+                        radius: 1000 // 1km 반경 내
+                    })
+                });
+                
+                console.log('🔍 API 응답 상태:', response.status);
+                
+                if (response.ok) {
+                    const totalData = await response.json();
+                    console.log('🔍 서버에서 받은 데이터:', totalData);
+                    
+                    damageData = {
+                        breakCnt: totalData?.break_cnt || 0,
+                        aliCrackCnt: totalData?.ali_crack_cnt || 0,
+                        weatherScore: totalData?.weather_score || 0,
+                        roadScore: totalData?.road_score || 0,
+                        totalScore: totalData?.total_score || 0
+                    };
+                    
+                    console.log('🔍 파싱된 손상 데이터:', damageData);
+                } else {
+                    console.log('❌ API 응답 실패:', response.status, response.statusText);
+                    const errorText = await response.text();
+                    console.log('❌ 에러 내용:', errorText);
+                }
+            } catch (error) {
+                console.log('❌ 손상 데이터 조회 실패, 기본값 사용:', error);
+                console.log('❌ 에러 상세:', error.message);
+            }
+            
+            // 보고서 데이터 준비
+            const reportData = {
+                cctvId: markerData?.cctv_idx || 'CCTV-001',
+                location: markerData?.name || '광주공항사거리',
+                riskLevel: '위험',
+                agency: '경찰청',
+                date: new Date().toLocaleDateString('ko-KR', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                }),
+                time: new Date().toLocaleTimeString('ko-KR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                }),
+                department: currentUser?.dept_addr || '도로관리과',
+                author: currentUser?.admin_name || '관리자',
+                phone: currentUser?.admin_phone || '010-1234-5678',
+                position: '대리',
+                description: `${markerData?.name || 'CCTV'}에서 도로상태 이상이 감지되었습니다. 즉시 현장 확인 및 조치가 필요합니다.`,
+                totalScore: damageData.totalScore,
+                breakCnt: damageData.breakCnt,
+                aliCrackCnt: damageData.aliCrackCnt,
+                weatherScore: damageData.weatherScore,
+                roadScore: damageData.roadScore,
+                cctv_name: markerData?.name || 'CCTV' // CCTV 이름 추가
+            };
+
+            console.log('🔍 준비된 reportData:', reportData);
+            console.log('🔍 showReportPreview 상태 변경 전:', showReportPreview);
+
+            // 미리보기 창 표시
+            setReportData(reportData);
+            setShowReportPreview(true);
+            
+            console.log('🔍 showReportPreview 상태 변경 후:', true);
+            console.log('🔍 reportData 상태 변경 후:', reportData);
+            
+        } catch (error) {
+            console.error('보고서 생성 오류:', error);
+            alert('보고서 생성 중 오류가 발생했습니다.');
+        }
+    };
+
 
         // 종합점수와 도로점수용 색상 반환 함수 (10점 만점)
     const getTotalRoadScoreColor = (score) => {
@@ -703,44 +809,91 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                             <p>위험도 데이터를 불러오는 중...</p>
                                         </div>
                                     ) : cctvRiskData ? (
-                                        <div className="detections">
-                                            <div className="detection-item">
+                                    <div className="detections">
+                                        <div className="detection-item">
                                                 <span>균열 개수</span>
                                                 <span className="marker-type-cctv">{cctvRiskData.crack_cnt || 0}건</span>
-                                            </div>
-                                            <div className="detection-item">
+                                        </div>
+                                        <div className="detection-item">
                                                 <span>포트홀 개수</span>
                                                 <span className="marker-type-cctv">{cctvRiskData.break_cnt || 0}건</span>
-                                            </div>
-                                            <div className="detection-item">
+                                        </div>
+                                        <div className="detection-item">
                                                 <span>거북등 균열 개수</span>
                                                 <span className="marker-type-cctv">{cctvRiskData.ali_crack_cnt || 0}건</span>
-                                            </div>
                                         </div>
+                                    </div>
                                     ) : (
                                         <div className="detections">
                                             <div className="detection-item">
                                                 <span>균열 개수</span>
                                                 <span className="marker-type-cctv">-</span>
-                                            </div>
+                                </div>
                                             <div className="detection-item">
                                                 <span>포트홀 개수</span>
                                                 <span className="marker-type-cctv">-</span>
-                                            </div>
+                                </div>
                                             <div className="detection-item">
                                                 <span>거북등 균열 개수</span>
                                                 <span className="marker-type-cctv">-</span>
+                            </div>
+                                </div>
+                                    )}
+                            </div>
+
+                                {/* 침수 분석 결과 */}
+                                    <div className="analysis-card">
+                                    <h4>🌊 침수 분석 결과</h4>
+                                    {floodAnalysisLoading ? (
+                                        <div style={{ textAlign: 'center', padding: '20px' }}>
+                                            <div style={{ fontSize: '24px', marginBottom: '10px' }}>⏳</div>
+                                            <p>침수 분석 중...</p>
+                                        </div>
+                                    ) : floodAnalysisResult ? (
+                                        <div className="detections">
+                                            <div className="detection-item">
+                                                <span>침수 여부</span>
+                                                <span className={`marker-type-${floodAnalysisResult.flood_result === 'Y' ? 'flood' : 'cctv'}`}>
+                                                    {floodAnalysisResult.flood_result === 'Y' ? '침수 감지' : '침수 없음'}
+                                                </span>
                                             </div>
+                                            <div className="detection-item">
+                                                <span>신뢰도</span>
+                                                        <span className="marker-type-cctv">
+                                                    {(floodAnalysisResult.confidence * 100).toFixed(1)}%
+                                                        </span>
+                                                    </div>
+                                            {floodAnalysisResult.image_path && (
+                                                <div className="detection-item">
+                                                    <span>분석 이미지</span>
+                                                    <span className="marker-type-cctv">
+                                                        <a href={floodAnalysisResult.image_path} target="_blank" rel="noopener noreferrer">
+                                                            이미지 보기
+                                                        </a>
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="detections">
+                                            <div className="detection-item">
+                                                <span>침수 여부</span>
+                                                <span className="marker-type-cctv">-</span>
+                                    </div>
+                                            <div className="detection-item">
+                                                <span>신뢰도</span>
+                                                <span className="marker-type-cctv">-</span>
+                                                </div>
                                         </div>
                                     )}
-                                </div>
-                                <div className="recommendations-card">
-                                    <h4>💡 권장사항</h4>
-                                    <ul>
-                                        <li>교통 신호 개선 필요</li>
-                                        <li>보행자 횡단보도 안전장치 설치 검토</li>
-                                        <li>정기적인 CCTV 점검 및 유지보수</li>
-                                    </ul>
+                                    </div>
+                            <div className="recommendations-card">
+                                <h4>💡 권장사항</h4>
+                                <ul>
+                                    <li>교통 신호 개선 필요</li>
+                                    <li>보행자 횡단보도 안전장치 설치 검토</li>
+                                    <li>정기적인 CCTV 점검 및 유지보수</li>
+                                </ul>
                                 </div>
                             </div>
 
@@ -1424,6 +1577,35 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
         }
     };
 
+    // 침수 분석 핸들러
+    const handleFloodAnalysis = async () => {
+        if (!detailData?.detail) {
+            alert('CCTV 정보를 불러올 수 없습니다.');
+            return;
+        }
+
+        try {
+            setFloodAnalysisLoading(true);
+            setFloodAnalysisResult(null);
+
+            console.log('🌊 침수 분석 시작');
+            const result = await performFloodAnalysis(detailData.detail);
+
+            // 침수 분석 완료 후 알림
+            const resultText = result.flood_result === 'Y' ? '침수 감지' : '침수 없음';
+            alert(`침수 분석이 완료되었습니다! 결과: ${resultText}`);
+            
+            // 침수 분석 결과 설정
+            setFloodAnalysisResult(result);
+
+        } catch (error) {
+            console.error('침수 분석 실패:', error);
+            alert(`침수 분석 실패: ${error.message}`);
+        } finally {
+            setFloodAnalysisLoading(false);
+        }
+    };
+
     // 시민 제보 상태 텍스트 반환 함수
     const getComplaintStatusText = (status) => {
         switch (status) {
@@ -1450,34 +1632,51 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
     };
 
     return (
-        <div className="modal" onClick={onClose}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                {renderModalContent()}
-                <div className="modal-footer">
-                    <button className="btn btn-primary" onClick={onClose}>
-                        확인
-                    </button>
-                    {markerType === 'cctv' && (
-                        <button
-                            className="btn btn-success"
-                            onClick={() => generateCCTVReport(markerData)}
-                        >
-                            📄 보고서 생성
+        <>
+            <div className="modal" onClick={onClose}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                    {renderModalContent()}
+                    <div className="modal-footer">
+                        <button className="btn btn-primary" onClick={onClose}>
+                            확인
                         </button>
-                    )}
-                    <button
-                        className="btn btn-warning"
-                        onClick={markerType === 'cctv' ? () => handleCCTVAnalysis() : undefined}
-                        disabled={markerType === 'cctv' && aiAnalysisLoading}
-                    >
-                        {markerType === 'cctv' && (aiAnalysisLoading ? '분석 중...' : '상세 분석')}
-                        {markerType === 'construction' && '공사 일정'}
-                        {markerType === 'flood' && '긴급 신고'}
-                        {markerType === 'complaint' && '긴급 출동'}
-                    </button>
+                        {markerType === 'cctv' && (
+                            <button
+                                className="btn btn-success"
+                                onClick={() => generateCCTVReport(markerData)}
+                            >
+                                📄 보고서 생성
+                            </button>
+                        )}
+                        <button
+                            className="btn btn-warning"
+                            onClick={markerType === 'cctv' ? () => handleCCTVAnalysis() : undefined}
+                            disabled={markerType === 'cctv' && aiAnalysisLoading}
+                        >
+                            {markerType === 'cctv' && (aiAnalysisLoading ? '분석 중...' : '상세 분석')}
+                            {markerType === 'construction' && '공사 일정'}
+                            {markerType === 'flood' && '긴급 신고'}
+                            {markerType === 'complaint' && '긴급 출동'}
+                        </button>
+                        {markerType === 'cctv' && (
+                            <button
+                                className="btn btn-info"
+                                onClick={() => handleFloodAnalysis()}
+                                disabled={floodAnalysisLoading}
+                            >
+                                {floodAnalysisLoading ? '침수 분석 중...' : '침수 분석'}
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
+            
+            <ReportPreview
+                isOpen={showReportPreview}
+                onClose={() => setShowReportPreview(false)}
+                reportData={reportData}
+            />
+        </>
     );
 };
 

@@ -842,7 +842,7 @@ const [currentUser, setCurrentUser] = useState(null);
         </div>
 
         {/* CCTV 추가 카드 */}
-        <div className="card">
+        {/* <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
             <h3>&nbsp;📹 CCTV 관리</h3>
             <button className="detail-btn" onClick={() => nav('/cctv-add')}>
@@ -869,7 +869,7 @@ const [currentUser, setCurrentUser] = useState(null);
               📹 CCTV 추가하기
             </button>
           </div>
-        </div>
+        </div> */}
       </aside>
 
     </div>

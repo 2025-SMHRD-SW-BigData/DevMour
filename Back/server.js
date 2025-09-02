@@ -55,6 +55,8 @@ app.use('/api/total', require('./router/total'));
 const reportRouter = require('./router/report');
 app.use('/api/report', reportRouter);
 
+
+
 // 전년도 동기간 대비 라우터 연결
 app.use('/api/comparison', require('./router/comparison'));
 
@@ -70,6 +72,9 @@ app.use('/api/construction', require('./router/construction'));
 // 업데이트 관련 라우터 연결
 app.use('/api/update', require('./router/update'));
 
+// AI 침수 분석 라우터 연결
+app.use('/api', require('./router/floodai'));
+
 
 // 기본 라우트 추가 (선택사항)
 app.get('/', (req, res) => {
@@ -83,4 +88,14 @@ app.get('/', (req, res) => {
 // 서버 시작
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
+});
+
+const path = require('path');
+// __dirname은 C:\Users\smhrd\Desktop\DevMour\Back
+// '../'를 사용해 C:\Users\smhrd\Desktop\DevMour로 이동
+// 'Front/build'를 사용해 C:\Users\smhrd\Desktop\DevMour\Front\build로 이동
+app.use(express.static(path.join(__dirname, '../Front/build')));
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../Front/build', 'index.html'));
 });

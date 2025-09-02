@@ -6,8 +6,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
-node_modules
+# 노드 모듈 제외
+/node_modules
 dist
 dist-ssr
 *.local
@@ -24,4 +24,5 @@ dist-ssr
 *.sw?
 
 .config/
-!.env
+# 환경변수 파일 제외
+.env
