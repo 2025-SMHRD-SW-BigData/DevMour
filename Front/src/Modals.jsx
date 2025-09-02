@@ -10,7 +10,8 @@ const performCCTVAnalysis = async (cctvData) => {
         console.log('🔍 CCTV AI 분석 시작:', cctvData);
 
         // CCTV 정보를 Python AI 서버로 전송
-        const response = await fetch('http://localhost:8000/api/analyze-cctv', {
+        const aiServerUrl = import.meta.env.VITE_AI_SERVER_URL || 'http://0.0.0.0:8000';
+        const response = await fetch(`${aiServerUrl}/api/analyze-cctv`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -47,7 +48,8 @@ const performFloodAnalysis = async (cctvData) => {
         console.log('🌊 침수 분석 시작:', cctvData);
 
         // CCTV 정보를 침수 분석 서버로 전송
-        const response = await fetch('http://localhost:8002/api/analyze-flood', {
+        const floodServerUrl = import.meta.env.VITE_FLOOD_SERVER_URL || 'http://0.0.0.0:8002';
+        const response = await fetch(`${floodServerUrl}/api/analyze-flood`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -107,7 +109,8 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                 console.log('🔍 CCTV 정보:', { cctv_idx: markerData?.cctv_idx });
                 
                 // CCTV idx를 기준으로 가장 최근 데이터 조회
-                const response = await fetch(`http://localhost:3001/api/cctv/risk/${markerData?.cctv_idx}`, {
+                const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://0.0.0.0:3001/api';
+        const response = await fetch(`${apiBaseUrl}/cctv/risk/${markerData?.cctv_idx}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -253,7 +256,8 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
         setCctvRiskLoading(true);
         try {
             console.log('🚀 CCTV 위험도 데이터 요청 시작:', cctvIdx);
-            const response = await fetch(`http://localhost:3001/api/cctv/risk/${cctvIdx}`);
+            const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://0.0.0.0:3001/api';
+        const response = await fetch(`${apiBaseUrl}/cctv/risk/${cctvIdx}`);
             console.log('📡 API 응답 상태:', response.status, response.ok);
             
             if (response.ok) {
@@ -385,15 +389,16 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
             // ✅ 마커 타입에 따라 다른 API 엔드포인트 사용
             if (markerType === 'construction' || markerType === 'flood') {
                 // 도로 통제 마커: road-control API 사용
-                apiUrl = `http://localhost:3001/api/road-control/detail/${markerId}`;
+                const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://0.0.0.0:3001/api';
+            apiUrl = `${apiBaseUrl}/road-control/detail/${markerId}`;
                 console.log('🚧 도로 통제 API 호출:', apiUrl);
             } else if (markerType === 'complaint') {
                 // 시민 제보 마커: complaint API 사용
-                apiUrl = `http://localhost:3001/api/complaint/${markerId}`;
+                apiUrl = `${apiBaseUrl}/complaint/${markerId}`;
                 console.log('📝 시민 제보 API 호출:', apiUrl);
             } else {
                 // CCTV 마커: marker API 사용 (기존 방식)
-                apiUrl = `http://localhost:3001/api/marker/detail/${markerId}`;
+                apiUrl = `${apiBaseUrl}/marker/detail/${markerId}`;
                 console.log('📹 CCTV API 호출:', apiUrl);
             }
 
@@ -516,7 +521,8 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                     return;
                 }
 
-                response = await fetch('http://localhost:3001/api/complaint/update', {
+                const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://0.0.0.0:3001/api';
+            response = await fetch(`${apiBaseUrl}/complaint/update`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -538,7 +544,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                     return;
                 }
 
-                response = await fetch('http://localhost:3001/api/update/road-control', {
+                response = await fetch(`${apiBaseUrl}/update/road-control`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',

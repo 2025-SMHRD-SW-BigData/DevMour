@@ -682,6 +682,7 @@ app.use((error, req, res, next) => {
 // =========================
 
 const PORT = process.env.SERVER_PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 async function startServer() {
   try {
@@ -696,8 +697,8 @@ async function startServer() {
       console.log('⚠️ AI 서버 연결 실패:', aiStatus.error);
     }
     
-    app.listen(PORT, () => {
-      console.log(`🚀 AI 서버가 포트 ${PORT}에서 실행 중입니다.`);
+    app.listen(PORT, HOST, () => {
+      console.log(`🚀 AI 서버가 ${HOST}:${PORT}에서 실행 중입니다.`);
       console.log(`📊 데이터베이스: 연결됨`);
       console.log(`🤖 AI 모델: ${aiStatus.connected ? '연결됨' : '연결 안됨'}`);
     });

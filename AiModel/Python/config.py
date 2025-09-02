@@ -62,8 +62,8 @@ CCTV_CONFIG = {
 
 # 데이터베이스 설정
 DB_CONFIG = {
-    'url': os.getenv('DB_URL', 'http://localhost:3000/api/save-risk'),
-    'road_score_url': os.getenv('ROAD_SCORE_URL', 'http://localhost:3000/api/save-road-score'),
+    'url': os.getenv('DB_URL', 'http://0.0.0.0:3000/api/save-risk'),
+    'road_score_url': os.getenv('ROAD_SCORE_URL', 'http://0.0.0.0:3000/api/save-road-score'),
     'timeout': 10
 }
 

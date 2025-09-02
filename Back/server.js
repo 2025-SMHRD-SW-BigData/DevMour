@@ -5,23 +5,29 @@ const mysql         = require('mysql2');
 const bodyParser    = require('body-parser')
 const markerRouter = require('./router/marker')
 
+require('dotenv').config();
+
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 const path = require('path');
 
 // MySQL 연결 설정 (conn.connect()를 쿼리마다 호출하는 기존 스타일 유지)
 let conn = mysql.createConnection({
-    host: 'project-db-campus.smhrd.com',
-    port: 3307,
-    user: 'campus_25SW_BD_p3_2',
-    password: 'smhrd2',
-    database: 'campus_25SW_BD_p3_2'
+    host: process.env.DB_HOST || 'project-db-campus.smhrd.com',
+    port: process.env.DB_PORT || 3307,
+    user: process.env.DB_USER || 'campus_25SW_BD_p3_2',
+    password: process.env.DB_PASSWORD || 'smhrd2',
+    database: process.env.DB_NAME || 'campus_25SW_BD_p3_2'
 });
 
 // CORS 설정 - 프론트엔드 개발 서버 허용
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? 
+    process.env.ALLOWED_ORIGINS.split(',') : 
+    ['http://0.0.0.0:5173', 'http://0.0.0.0:3000', 'http://0.0.0.0:3001'];
+
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3001'],
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
@@ -99,7 +105,8 @@ app.get('*', (req, res) => {
 });
 
 // 서버 시작
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+const host = process.env.HOST || '0.0.0.0';
+app.listen(PORT, host, () => {
+  console.log(`Server running at http://${host}:${PORT}`);
 });
 

@@ -4,6 +4,9 @@ import axios from 'axios';
 import SimpleMapSearch from './SimpleMapSearch';
 
 const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initialFilterType = 'all', hideFilterButtons = false, complaintData, showComplaintMarkers = false }) => {
+    // API 기본 URL 설정
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+    
     const mapRef = useRef(null);
     const [isEditing, setIsEditing] = useState(false);
     const isEditingRef = useRef(isEditing);
@@ -738,7 +741,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
             }
 
             // 알림 데이터 가져오기
-            const response = await fetch('http://localhost:3001/api/alert/monthly');
+            const response = await fetch(`${apiBaseUrl}/alert/monthly`);
             if (!response.ok) {
                 console.error('❌ 알림 데이터 조회 실패:', response.status);
                 return;
@@ -756,7 +759,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
             // 각 알림에 대해 위치 정보를 가져와서 마커 생성
             for (const alert of alerts) {
                 try {
-                    const locationResponse = await fetch(`http://localhost:3001/api/alert/location/${alert.alert_idx}`);
+                    const locationResponse = await fetch(`${apiBaseUrl}/alert/location/${alert.alert_idx}`);
                     if (locationResponse.ok) {
                         const locationData = await locationResponse.json();
                         
@@ -1131,7 +1134,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
         if (!mapRef.current) return;
 
         try {
-            const response = await axios.post('http://localhost:3001/api/marker/updatemarker', {
+            const response = await axios.post(`${apiBaseUrl}/marker/updatemarker`, {
                 lat: lat,
                 lon: lng,
                 marker_type: type
@@ -1614,8 +1617,8 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
         try {
             // ✅ t_cctv와 t_road_control 테이블에서 직접 마커 데이터 가져오기
             const [cctvResponse, roadControlResponse] = await Promise.all([
-                axios.get('http://localhost:3001/api/cctv/all'),
-                axios.get('http://localhost:3001/api/road-control/all')
+                        axios.get(`${apiBaseUrl}/cctv/all`),
+        axios.get(`${apiBaseUrl}/road-control/all`)
             ]);
             
             const cctvDataList = cctvResponse.data || [];

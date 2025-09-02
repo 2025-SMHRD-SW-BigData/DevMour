@@ -28,11 +28,11 @@ class FloodDetector:
     """CCTV 침수 감지 및 분석 클래스"""
     
     def __init__(self):
-        self.flood_server_url = "http://localhost:8002"  # 침수 분석 서버
+        self.flood_server_url = os.getenv('FLOOD_SERVER_URL', "http://0.0.0.0:8002")  # 침수 분석 서버
         # CCTV 목록 조회: Back 서버
-        self.cctv_server_url = "http://localhost:3001"
+        self.cctv_server_url = os.getenv('CCTV_SERVER_URL', "http://0.0.0.0:3001")
         # 결과 저장: AiServer 서버
-        self.result_server_url = "http://localhost:3000"
+        self.result_server_url = os.getenv('RESULT_SERVER_URL', "http://0.0.0.0:3000")
         
     async def get_all_cctv_data(self) -> List[Dict]:
         """t_cctv 테이블에서 모든 CCTV 데이터를 가져옵니다."""

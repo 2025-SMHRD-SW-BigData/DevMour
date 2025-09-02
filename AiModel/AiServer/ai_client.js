@@ -3,7 +3,7 @@ require('dotenv').config();
 
 class AIClient {
   constructor() {
-    this.baseURL = process.env.AI_SERVER_URL || 'http://localhost:8000';
+    this.baseURL = process.env.AI_SERVER_URL || 'http://0.0.0.0:8000';
     this.timeout = process.env.AI_SERVER_TIMEOUT || 30000;
     
     // axios 인스턴스 생성

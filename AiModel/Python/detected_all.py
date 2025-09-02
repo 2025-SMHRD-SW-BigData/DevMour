@@ -28,8 +28,8 @@ class CCTVDetector:
     """CCTV 감지 및 분석 클래스"""
     
     def __init__(self):
-        self.ai_server_url = "http://localhost:8000"
-        self.db_server_url = "http://localhost:3000"
+        self.ai_server_url = os.getenv('AI_SERVER_URL', "http://0.0.0.0:8000")
+        self.db_server_url = os.getenv('DB_SERVER_URL', "http://0.0.0.0:3000")
         
     async def get_all_cctv_data(self) -> List[Dict]:
         """t_cctv 테이블에서 모든 CCTV 데이터를 가져옵니다."""

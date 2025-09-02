@@ -26,12 +26,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+import os
+from dotenv import load_dotenv
+
+# 환경변수 로드
+load_dotenv()
+
 # 설정값
-FLOOD_CONFIDENCE_THRESHOLD = 0.7  # 침수 판단 신뢰도 임계값 (70%)
+FLOOD_CONFIDENCE_THRESHOLD = float(os.getenv('FLOOD_CONFIDENCE_THRESHOLD', 0.7))  # 침수 판단 신뢰도 임계값 (70%)
 
 # YOLO 모델 로드
 try:
-    model = YOLO("../floodbest.pt")  # 상위 디렉토리의 floobest.pt 파일 사용
+    model_path = os.getenv('MODEL_PATH', '../floodbest.pt')
+    model = YOLO(model_path)  # 환경변수에서 모델 경로 가져오기
     logger.info("✅ 침수 분석 모델 로드 성공")
     logger.info(f"🔧 설정값: 신뢰도 임계값 = {FLOOD_CONFIDENCE_THRESHOLD}")
     
@@ -214,8 +221,9 @@ async def save_flood_result_to_db(cctv_idx: Optional[int], citizen_report_idx: O
                 "flood_result": flood_result
             }
             
+            backend_url = os.getenv('BACKEND_SERVER_URL', 'http://0.0.0.0:3001')
             async with session.post(
-                "http://localhost:3001/api/floodai/save_result",
+                f"{backend_url}/api/floodai/save_result",
                 json=payload
             ) as response:
                 if response.status == 200:
@@ -269,4 +277,6 @@ def _is_black_image(image_path: str, threshold: float = 0.95) -> bool:
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8002)
+    host = os.getenv('HOST', '0.0.0.0')
+    port = int(os.getenv('PORT', 8002))
+    uvicorn.run(app, host=host, port=port)

@@ -22,13 +22,16 @@ const WeatherDisplay = ({}) => {
     const currentLat = lat || defaultLat;
     const currentLon = lon || defaultLon;
 
+    // API 기본 URL 설정
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+
 
 // DB 저장 함수를 먼저 정의
   const saveWeatherToDatabase = async (lat, lon, weatherData) => {
     try {
         console.log('DB에 날씨 데이터 저장 중...', { lat, lon, weatherData });
             
-        const response = await fetch('http://localhost:3001/api/weather/save_weather', {
+        const response = await fetch(`${apiBaseUrl}/weather/save_weather`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json'
@@ -60,7 +63,7 @@ const fetchAddressData = async (lat, lon) => {
  try {
     console.log(`주소 API 호출 중: 위도=${lat} 경도=${lon}`);
             
-    const response = await fetch(`http://localhost:3001/api/weather/reverse?lat=${lat}&lon=${lon}`);
+            const response = await fetch(`${apiBaseUrl}/weather/reverse?lat=${lat}&lon=${lon}`);
     const result = await response.json();
             
     console.log('🔍 API 전체 응답:', result);
@@ -90,7 +93,7 @@ setLoading(true);
     try {
       console.log(`날씨 API 호출 중 : 위도=${lat} 경도=${lon}`)
 
-      const response = await fetch(`http://localhost:3001/api/weather/weather?lat=${lat}&lon=${lon}`);
+              const response = await fetch(`${apiBaseUrl}/weather/weather?lat=${lat}&lon=${lon}`);
       const result = await response.json();
       
       if (result.success) {

@@ -3,7 +3,7 @@
 import { getToken, isLoggedIn, isValidTokenFormat } from './auth';
 
 // 기본 API 설정
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://0.0.0.0:3001/api';
 
 // JWT 토큰을 포함한 헤더 생성
 const createAuthHeaders = () => {
