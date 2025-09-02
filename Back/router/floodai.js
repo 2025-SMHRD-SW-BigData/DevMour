@@ -18,8 +18,8 @@ const sanitizeParams = (params) => {
 
 // 서버용 라우터 - AI 모델에서 보내는 데이터를 받아서 DB에 저장
 
-// POST /api/analyze-flood 엔드포인트
-router.post('/', async (req, res) => {
+// POST /api/floodai/analyze-flood 엔드포인트
+router.post('/analyze-flood', async (req, res) => {
     try {
         console.log('📥 침수 분석 요청 수신:', req.body);
         
@@ -98,8 +98,8 @@ router.post('/save-risk', async (req, res) => {
     }
 });
 
-// POST /api/flood/save_result 엔드포인트 (침수 탐지 결과 저장)
-router.post('/flood/save_result', async (req, res) => {
+// POST /api/floodai/save_result 엔드포인트 (침수 탐지 결과 저장)
+router.post('/save_result', async (req, res) => {
     try {
         console.log('📥 침수 탐지 결과 저장 요청 수신:', req.body);
         
@@ -204,9 +204,9 @@ router.post('/save-flood-detection', async (req, res) => {
         
         await conn.execute(
             `INSERT INTO t_flood_result 
-             (cctv_idx, citizen_report_idx, image_path, lat, lon, detected_at,flood_result) 
+             (cctv_idx, citizen_report_idx, image_path, lat, lon,flood_result) 
              VALUES (?, ?, ?, ?, ?, ?)`,
-            sanitizeParams([cctv_idx, citizen_report_idx, image_path, lat, lon, NOW(), flood_result])
+            sanitizeParams([cctv_idx, citizen_report_idx, image_path, lat, lon, flood_result])
         );
         
         await conn.end();

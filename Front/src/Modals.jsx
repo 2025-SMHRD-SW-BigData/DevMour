@@ -101,22 +101,17 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
             const currentUser = getUser();
             console.log('🔍 현재 로그인한 사용자:', currentUser);
             
-            // 손상 데이터 가져오기 (t_total 테이블에서)
+            // 손상 데이터 가져오기 (t_total 테이블에서 cctv_idx 기준 최신 데이터)
             let damageData = { breakCnt: 0, aliCrackCnt: 0, weatherScore: 0, roadScore: 0, totalScore: 0 };
             try {
-                console.log('🔍 CCTV 위치 정보:', { lat: markerData?.lat, lng: markerData?.lng });
+                console.log('🔍 CCTV 정보:', { cctv_idx: markerData?.cctv_idx });
                 
-                // CCTV 위치 근처의 손상 데이터 조회
-                const response = await fetch('http://localhost:3001/api/total/nearby', {
-                    method: 'POST',
+                // CCTV idx를 기준으로 가장 최근 데이터 조회
+                const response = await fetch(`http://localhost:3001/api/cctv/risk/${markerData?.cctv_idx}`, {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        lat: markerData?.lat,
-                        lon: markerData?.lng,
-                        radius: 1000 // 1km 반경 내
-                    })
+                    }
                 });
                 
                 console.log('🔍 API 응답 상태:', response.status);

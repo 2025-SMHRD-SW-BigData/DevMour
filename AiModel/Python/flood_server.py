@@ -215,7 +215,7 @@ async def save_flood_result_to_db(cctv_idx: Optional[int], citizen_report_idx: O
             }
             
             async with session.post(
-                "http://localhost:3001/api/flood/save_result",
+                "http://localhost:3001/api/floodai/save_result",
                 json=payload
             ) as response:
                 if response.status == 200:

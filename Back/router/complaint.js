@@ -12,7 +12,7 @@ let conn = mysql.createConnection({
 });
 
 // 시민 제보 상세 데이터 조회
-router.get('/detail', (req, res) => {
+router.get('/list', (req, res) => {
     console.log('🔍 시민 제보 상세 데이터 조회 요청');
     
     const query = `
@@ -123,7 +123,7 @@ router.get('/stats', (req, res) => {
 });
 
 // 특정 시민 제보 상세 정보 조회
-router.get('/:id', (req, res) => {
+router.get('/detail/:id', (req, res) => {
     const reportId = req.params.id;
     console.log('🔍 시민 제보 상세 정보 조회 요청:', reportId);
     
