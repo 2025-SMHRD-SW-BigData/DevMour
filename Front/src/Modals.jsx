@@ -168,7 +168,7 @@ const performComplaintImageAnalysis = async (complaintData) => {
 
 
 const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEditMode = false, onUpdateComplete }) => {
-    const { modalData, setModalData } = useContext(InfoContext);
+    const { citizenReportData } = useContext(InfoContext);
     const [detailData, setDetailData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [videoLoading, setVideoLoading] = useState(false);
@@ -458,41 +458,33 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
         }
     }, [initialEditMode, detailData, markerType]);
 
-    // ✅ modalData가 있을 때 시민 제보 모달 자동 열기
+    // ✅ Context의 citizenReportData가 변경될 때 detailData 설정
     useEffect(() => {
-        if (modalData && modalData.type === 'citizen_report') {
-            console.log('🔔 알림 클릭으로 시민 제보 모달 열기:', modalData);
+        if (citizenReportData) {
+            console.log('🔔 Context에서 시민 제보 데이터 변경됨:', citizenReportData);
             
-            // 시민 제보 데이터 설정
+            const notificationData = citizenReportData.notification;
+            const detailData = citizenReportData.detail;
+            
+            // detailData 설정 (기존 로직과 호환성을 위해)
             setDetailData({
                 marker: {
-                    marker_id: modalData.reportId,
-                    lat: modalData.lat,
-                    lon: modalData.lon,
+                    marker_id: notificationData.reportId,
+                    lat: notificationData.lat,
+                    lon: notificationData.lon,
                     icon: '📝'
                 },
-                detail: {
-                    c_report_idx: modalData.reportId,
-                    addr: modalData.addr,
-                    c_report_detail: modalData.c_report_detail,
-                    lat: modalData.lat,
-                    lon: modalData.lon,
-                    c_reported_at: modalData.timestamp
+                detail: detailData || {
+                    c_report_idx: notificationData.reportId,
+                    addr: notificationData.addr,
+                    c_report_detail: notificationData.c_report_detail,
+                    lat: notificationData.lat,
+                    lon: notificationData.lon,
+                    c_reported_at: notificationData.timestamp
                 }
             });
-            
-            // 모달 열기 (markerType을 'complaint'로 설정)
-            if (onClose) {
-                // 부모 컴포넌트에 모달 열기 요청
-                // 이 부분은 부모 컴포넌트에서 처리해야 함
-                console.log('🔔 시민 제보 모달 열기 요청');
-            }
-            
-            // modalData 초기화
-            setModalData(null);
         }
-    }, [modalData, setModalData]);
-
+    }, [citizenReportData]);
 
     // 시민 제보 모달이 열릴 때 분석 결과 조회
     useEffect(() => {
@@ -768,7 +760,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
         const safeCoordinate = (value, fallback) => {
             if (value === null || value === undefined) return fallback;
             const num = parseFloat(value);
-            return isNaN(num) ? fallback : num;
+            return isNaN(num) ? (fallback ? parseFloat(fallback) : null) : num;
         };
 
         const cctvLat = safeCoordinate(cctvData?.lat, markerData?.lat);
@@ -1037,7 +1029,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                                     {(floodAnalysisResult.confidence * 100).toFixed(1)}%
                                                         </span>
                                                     </div>
-                                            {floodAnalysisResult.image_path && (
+                                            {/*{floodAnalysisResult.image_path && (
                                                 <div className="detection-item">
                                                     <span>분석 이미지</span>
                                                     <span className="marker-type-cctv">
@@ -1046,7 +1038,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                                         </a>
                                                     </span>
                                                 </div>
-                                            )}
+                                            )}*/}
                                         </div>
                                     ) : (
                                         <div className="detections">
@@ -1092,7 +1084,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
         const safeCoordinate = (value, fallback) => {
             if (value === null || value === undefined) return fallback;
             const num = parseFloat(value);
-            return isNaN(num) ? fallback : num;
+            return isNaN(num) ? (fallback ? parseFloat(fallback) : null) : num;
         };
 
         const controlLat = safeCoordinate(controlData?.lat, markerData?.lat);
@@ -1139,7 +1131,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                             </p>
                             <div style={{ marginTop: '20px', textAlign: 'left' }}>
                                 <p><strong>마커 타입:</strong> {markerData?.type || 'construction'}</p>
-                                <p><strong>위치:</strong> {controlLat?.toFixed(6) || 'N/A'}, {controlLon?.toFixed(6) || 'N/A'}</p>
+                                <p><strong>위치:</strong> {typeof controlLat === 'number' ? controlLat.toFixed(6) : 'N/A'}, {typeof controlLon === 'number' ? controlLon.toFixed(6) : 'N/A'}</p>
                                 <p><strong>상태:</strong> 기본 정보만 표시</p>
                             </div>
                         </div>
@@ -1237,7 +1229,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                     {controlData?.control_addr && (
                                         <p><strong>통제 주소</strong><br></br> {controlData.control_addr}</p>
                                     )}
-                                    <p><strong>위치</strong><br></br> {controlLat?.toFixed(6) || 'N/A'}, {controlLon?.toFixed(6) || 'N/A'}</p>
+                                    <p><strong>위치</strong><br></br> {typeof controlLat === 'number' ? controlLat.toFixed(6) : 'N/A'}, {typeof controlLon === 'number' ? controlLon.toFixed(6) : 'N/A'}</p>
                                 </div>
                             )}
 
@@ -1302,7 +1294,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
         const safeCoordinate = (value, fallback) => {
             if (value === null || value === undefined) return fallback;
             const num = parseFloat(value);
-            return isNaN(num) ? fallback : num;
+            return isNaN(num) ? (fallback ? parseFloat(fallback) : null) : num;
         };
 
         const controlLat = safeCoordinate(controlData?.lat, markerData?.lat);
@@ -1349,7 +1341,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                             </p>
                             <div style={{ marginTop: '20px', textAlign: 'left' }}>
                                 <p><strong>마커 타입:</strong> {markerData?.type || 'flood'}</p>
-                                <p><strong>위치:</strong> {controlLat?.toFixed(6) || 'N/A'}, {controlLon?.toFixed(6) || 'N/A'}</p>
+                                <p><strong>위치:</strong> {typeof controlLat === 'number' ? controlLat.toFixed(6) : 'N/A'}, {typeof controlLon === 'number' ? controlLon.toFixed(6) : 'N/A'}</p>
                                 <p><strong>상태:</strong> 기본 정보만 표시</p>
                             </div>
                         </div>
@@ -1447,7 +1439,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                     {controlData?.control_addr && (
                                         <p><strong>침수 주소:</strong> {controlData.control_addr}</p>
                                     )}
-                                    <p><strong>위치:</strong> {controlLat?.toFixed(6) || 'N/A'}, {controlLon?.toFixed(6) || 'N/A'}</p>
+                                    <p><strong>위치:</strong> {typeof controlLat === 'number' ? controlLat.toFixed(6) : 'N/A'}, {typeof controlLon === 'number' ? controlLon.toFixed(6) : 'N/A'}</p>
                                 </div>
                             )}
 
@@ -1512,7 +1504,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
         const safeCoordinate = (value, fallback) => {
             if (value === null || value === undefined) return fallback;
             const num = parseFloat(value);
-            return isNaN(num) ? fallback : num;
+            return isNaN(num) ? (fallback ? parseFloat(fallback) : null) : num;
         };
 
         const complaintLat = safeCoordinate(complaintData?.lat, markerData?.lat);
@@ -1559,7 +1551,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                             </p>
                             <div style={{ marginTop: '20px', textAlign: 'left' }}>
                                 <p><strong>마커 타입:</strong> {markerData?.type || 'complaint'}</p>
-                                <p><strong>위치:</strong> {complaintLat?.toFixed(6) || 'N/A'}, {complaintLon?.toFixed(6) || 'N/A'}</p>
+                                <p><strong>위치:</strong> {typeof complaintLat === 'number' ? complaintLat.toFixed(6) : 'N/A'}, {typeof complaintLon === 'number' ? complaintLon.toFixed(6) : 'N/A'}</p>
                                 <p><strong>상태:</strong> 기본 정보만 표시</p>
                             </div>
                         </div>
@@ -1646,7 +1638,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                     <p><strong>상세 내용:</strong> {complaintData?.c_report_detail || '상세 정보가 없습니다.'}</p>
                                     <p><strong>제보자:</strong> {complaintData?.c_reporter_name}</p>
                                     <p><strong>연락처:</strong> {complaintData?.c_reporter_phone}</p>
-                                    <p><strong>좌표:</strong> {complaintLat?.toFixed(6) || 'N/A'}, {complaintLon?.toFixed(6) || 'N/A'}</p>
+                                    <p><strong>좌표:</strong> {typeof complaintLat === 'number' ? complaintLat.toFixed(6) : 'N/A'}, {typeof complaintLon === 'number' ? complaintLon.toFixed(6) : 'N/A'}</p>
 
                                     {/* 첨부 파일 정보 */}
                                     {(complaintData?.c_report_file1 || complaintData?.c_report_file2 || complaintData?.c_report_file3) && (
@@ -1688,7 +1680,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                         <div className="analysis-card">
                                             <h4>📍 위치 정보</h4>
                                             <p>주소: {complaintData?.addr || '주소 정보 없음'}</p>
-                                            <p>좌표: {complaintLat?.toFixed(6) || 'N/A'}, {complaintLon?.toFixed(6) || 'N/A'}</p>
+                                            <p>좌표: {typeof complaintLat === 'number' ? complaintLat.toFixed(6) : 'N/A'}, {typeof complaintLon === 'number' ? complaintLon.toFixed(6) : 'N/A'}</p>
                                             <p>제보자: {complaintData?.c_reporter_name}</p>
                                             <p>연락처: {complaintData?.c_reporter_phone}</p>
                                         </div>

@@ -6,20 +6,6 @@ const bodyParser    = require('body-parser')
 const markerRouter = require('./router/marker')
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const axios = require('axios');
-// server.js에 추가
-const https = require('https');
-const fs = require('fs');
-
-// SSL 인증서 로드
-const options = {
-    key: fs.readFileSync('/path/to/private-key.pem'),
-    cert: fs.readFileSync('/path/to/certificate.pem')
-};
-
-// HTTPS 서버 시작
-https.createServer(options, app).listen(3443, '0.0.0.0', () => {
-    console.log('HTTPS 서버가 포트 3443에서 실행 중입니다.');
-});
 
 require('dotenv').config();
 
@@ -47,7 +33,7 @@ let lastStTm = "1970-01-01 00:00:00"; // 초기값
 // CORS 설정 - 프론트엔드 개발 서버 허용
 const allowedOrigins = process.env.ALLOWED_ORIGINS ? 
     process.env.ALLOWED_ORIGINS.split(',') : 
-    ['http://0.0.0.0:5173', 'http://0.0.0.0:3000', 'http://0.0.0.0:3001', 'http://dorosee.xyz', 'http://www.dorosee.xyz','http://175.45.194.114:3001','http://dorosee.smhrd.com','https://dorosee.smhrd.com'];
+    ['http://0.0.0.0:5173', 'http://0.0.0.0:3000', 'http://0.0.0.0:3001', 'http://dorosee.xyz', 'http://www.dorosee.xyz','http://175.45.194.114:3001','http://dorosee.smhrd.com','https://dorosee.smhrd.com','http://localhost:3001'];
 
 app.use(cors({
     origin: allowedOrigins,
@@ -121,7 +107,7 @@ app.post('/api/analyze-flood', async (req, res) => {
         console.log('📍 요청 헤더:', req.headers);
         console.log('📍 요청 데이터:', req.body);
         
-        const response = await axios.post('http://218.149.60.128:8001/api/analyze-flood', req.body, {
+        const response = await axios.post('http://218.149.60.128:8002/api/analyze-flood', req.body, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -141,7 +127,7 @@ app.post('/api/analyze-complaint-flood', async (req, res) => {
         console.log('📍 요청 헤더:', req.headers);
         console.log('📍 요청 데이터:', req.body);
         
-        const response = await axios.post('http://218.149.60.128:8001/api/analyze-complaint-flood', req.body, {
+        const response = await axios.post('http://218.149.60.128:8002/api/analyze-complaint-flood', req.body, {
             headers: {
                 'Content-Type': 'application/json'
             }

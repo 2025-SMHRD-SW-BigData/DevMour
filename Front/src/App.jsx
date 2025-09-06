@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext } from "react";
 import { Routes, Route } from "react-router-dom";
 import Index from "./Index";
 import Dashboard from "./Dashboard";
@@ -15,49 +15,47 @@ import CCTVAdd from "./pages/CCTVAdd";
 import Register from "./pages/Register";
 import NotificationSystem from "./components/NotificationSystem";
 import Modals from "./Modals";
+import { getComplaintDetail } from "./utils/api";
+import { isLoggedIn } from "./utils/auth";
+import { useLocation } from "react-router-dom";
 
 function App() {
-    const [lat, setLat] = useState(35.159983);
-    const [lon, setLon] = useState(126.8513092);
-    const [modalData, setModalData] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalType, setModalType] = useState(null);
-
-    // 위치 업데이트 함수
-    const updateLocation = (newLat, newLon) => {
-        setLat(newLat);
-        setLon(newLon);
-    };
+    const { openCitizenReportModal, closeModal, isModalOpen, modalType, citizenReportData } = useContext(InfoContext);
+    const location = useLocation();
 
     // 알림 클릭 핸들러
-    const handleNotificationClick = (notification) => {
+    const handleNotificationClick = async (notification) => {
+        console.log('🔔 알림 클릭 이벤트 발생:', notification);
+        
         if (notification.type === 'citizen_report') {
-            // 시민 제보 모달 데이터 설정
-            setModalData({
-                type: 'citizen_report',
-                reportId: notification.reportId,
-                addr: notification.addr,
-                c_report_detail: notification.c_report_detail,
-                lat: notification.lat,
-                lon: notification.lon,
-                timestamp: notification.timestamp
-            });
-            
-            // 모달 열기
-            setModalType('complaint');
-            setIsModalOpen(true);
+            try {
+                console.log('🔍 시민 제보 상세 정보 조회 시작:', notification.reportId);
+                console.log('📡 API 요청 URL:', `http://175.45.194.114:3001/api/complaint/detail/${notification.reportId}`);
+                
+                // 시민 제보 상세 정보 조회
+                const detailResult = await getComplaintDetail(notification.reportId);
+                
+                console.log('✅ getComplaintDetail 함수 호출 완료:', detailResult);
+                
+                // Context를 통해 시민 제보 모달 열기
+                openCitizenReportModal(notification, detailResult.success ? detailResult.complaint : null);
+                
+            } catch (error) {
+                console.error('❌ 시민 제보 상세 정보 조회 실패:', error);
+                
+                // 오류가 발생해도 기본 정보로 모달 열기
+                openCitizenReportModal(notification, null);
+            }
         }
     };
 
     // 모달 닫기 핸들러
     const handleModalClose = () => {
-        setIsModalOpen(false);
-        setModalType(null);
-        setModalData(null);
+        closeModal();
     };
 
     return(
-        <InfoContext.Provider value = {{lat, setLat, lon, setLon, updateLocation, modalData, setModalData}}>
+        <>
             <Routes>
                 <Route path = '/' element={<Index></Index>}></Route>
                 <Route path = '/register' element={<Register></Register>}></Route>
@@ -74,18 +72,20 @@ function App() {
                 <Route path = '/alerts' element = {<AlertDetail></AlertDetail>}></Route>
                 <Route path = '/cctv-add' element = {<CCTVAdd></CCTVAdd>}></Route>
             </Routes>
-
-            {/* 실시간 알림 시스템 */}
-            <NotificationSystem onNotificationClick={handleNotificationClick} />
+            
+            {/* 실시간 알림 시스템 - 로그인된 상태에서만 표시 */}
+            {isLoggedIn() && location.pathname !== '/' && location.pathname !== '/register' && (
+                <NotificationSystem onNotificationClick={handleNotificationClick} />
+            )}
             
             {/* 알림 클릭 시 열리는 모달 */}
             <Modals 
                 isOpen={isModalOpen}
                 onClose={handleModalClose}
                 markerType={modalType}
-                markerData={modalData}
+                markerData={citizenReportData}
             />
-        </InfoContext.Provider>
+        </>
     )
     
 }

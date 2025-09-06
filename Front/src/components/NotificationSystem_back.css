@@ -1,20 +1,10 @@
 .notification-system {
     position: fixed;
-    top: 6%;
-    left: 180px;
-    transform: translateY(-50%);
+    top: 20px;
+    right: 20px;
     z-index: 9999;
     max-width: 400px;
     font-family: 'Noto Sans KR', sans-serif;
-    transition: all 0.3s ease;
-}
-
-.notification-system.collapsed {
-    max-width: 60px;
-}
-
-.notification-system.expanded {
-    max-width: 400px;
 }
 
 /* 연결 상태 표시 */
@@ -22,17 +12,13 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 12px;
+    padding: 8px 12px;
     margin-bottom: 10px;
-    border-radius: 30px;
+    border-radius: 20px;
     font-size: 12px;
     font-weight: 500;
     backdrop-filter: blur(10px);
     transition: all 0.3s ease;
-    cursor: pointer;
-    position: relative;
-    min-width: 40px;
-    justify-content: center;
 }
 
 .connection-status.connected {
@@ -48,11 +34,10 @@
 }
 
 .status-dot {
-    width: 12px;
-    height: 12px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     animation: pulse 2s infinite;
-    flex-shrink: 0;
 }
 
 .connection-status.connected .status-dot {
@@ -67,41 +52,6 @@
     0% { opacity: 1; }
     50% { opacity: 0.5; }
     100% { opacity: 1; }
-}
-
-/* 알림 배지 */
-.notification-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #ff4444;
-    color: white;
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    font-size: 10px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: bounce 0.5s ease-in-out;
-}
-
-@keyframes bounce {
-    0%, 20%, 50%, 80%, 100% {
-        transform: translateY(0);
-    }
-    40% {
-        transform: translateY(-3px);
-    }
-    60% {
-        transform: translateY(-2px);
-    }
-}
-
-/* 확장/축소 애니메이션 */
-.notifications-container {
-    animation: slideInLeft 0.3s ease-out;
 }
 
 /* 알림 컨테이너 */
@@ -258,29 +208,10 @@
 /* 반응형 디자인 */
 @media (max-width: 768px) {
     .notification-system {
-        top: 20px;
-        left: 10px;
+        top: 10px;
         right: 10px;
-        transform: none;
+        left: 10px;
         max-width: none;
-    }
-    
-    .notification-system.collapsed {
-        max-width: 50px;
-    }
-    
-    .notification-system.expanded {
-        max-width: none;
-    }
-    
-    .connection-status {
-        min-width: 35px;
-        padding: 10px;
-    }
-    
-    .status-dot {
-        width: 10px;
-        height: 10px;
     }
     
     .notification-message {
@@ -294,12 +225,12 @@
 
 /* 애니메이션 */
 .notification-item {
-    animation: slideInLeft 0.3s ease-out;
+    animation: slideInRight 0.3s ease-out;
 }
 
-@keyframes slideInLeft {
+@keyframes slideInRight {
     from {
-        transform: translateX(-100%);
+        transform: translateX(100%);
         opacity: 0;
     }
     to {

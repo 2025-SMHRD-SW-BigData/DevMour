@@ -7,13 +7,36 @@ const axios = require('axios');
 
 const router = express.Router();
 
-// multer 설정 - 메모리 스토리지 사용 (S3 업로드용)
-const storage = multer.memoryStorage();
+// multer 설정 - 이미지 파일 업로드용
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = path.join(__dirname, '../uploads');
+        // uploads 디렉토리가 없으면 생성
+        fs.mkdir(uploadDir, { recursive: true }).then(() => {
+            cb(null, uploadDir);
+        }).catch(err => {
+            cb(err);
+        });
+    },
+    filename: function (req, file, cb) {
+        // 파일명: timestamp_originalname
+        const uniqueSuffix = Date.now() + '_' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
 
 const upload = multer({ 
     storage: storage,
     limits: {
         fileSize: 5 * 1024 * 1024 // 5MB 제한
+    },
+    fileFilter: function (req, file, cb) {
+        // 이미지 파일만 허용
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('이미지 파일만 업로드 가능합니다.'), false);
+        }
     }
 });
 
@@ -63,45 +86,23 @@ router.post('/submit', upload.fields([
             });
         }
         
-        // 클라이언트에서 전송된 이미지 URL 처리
+        // 업로드된 파일 정보 수집
         const files = req.files;
-        const fileUrls = {
+        const filePaths = {
             c_report_file1: null,
             c_report_file2: null,
             c_report_file3: null
         };
         
-        // 클라이언트에서 이미 S3에 업로드된 URL을 받아서 처리
+        // 파일 경로 저장
         if (files.c_report_file1 && files.c_report_file1[0]) {
-            // 클라이언트에서 전송된 데이터가 URL인지 확인
-            const fileData = files.c_report_file1[0];
-            if (fileData.buffer && fileData.buffer.toString().startsWith('http')) {
-                // URL인 경우
-                fileUrls.c_report_file1 = fileData.buffer.toString();
-                console.log('클라이언트에서 전송된 이미지 URL:', fileUrls.c_report_file1);
-            } else {
-                // 파일인 경우 (기존 방식) - 파일명만 저장
-                fileUrls.c_report_file1 = fileData.filename;
-                console.log('로컬 파일명 저장:', fileUrls.c_report_file1);
-            }
+            filePaths.c_report_file1 = files.c_report_file1[0].filename;
         }
-        
         if (files.c_report_file2 && files.c_report_file2[0]) {
-            const fileData = files.c_report_file2[0];
-            if (fileData.buffer && fileData.buffer.toString().startsWith('http')) {
-                fileUrls.c_report_file2 = fileData.buffer.toString();
-            } else {
-                fileUrls.c_report_file2 = fileData.filename;
-            }
+            filePaths.c_report_file2 = files.c_report_file2[0].filename;
         }
-        
         if (files.c_report_file3 && files.c_report_file3[0]) {
-            const fileData = files.c_report_file3[0];
-            if (fileData.buffer && fileData.buffer.toString().startsWith('http')) {
-                fileUrls.c_report_file3 = fileData.buffer.toString();
-            } else {
-                fileUrls.c_report_file3 = fileData.filename;
-            }
+            filePaths.c_report_file3 = files.c_report_file3[0].filename;
         }
         
         // 지오코딩을 통한 주소 변환
@@ -142,23 +143,23 @@ router.post('/submit', upload.fields([
             lat, // lat (위도) - 클라이언트에서 전송된 값
             lon, // lon (경도) - 클라이언트에서 전송된 값
             c_report_detail, // 카테고리 정보 (도로침수/도로파손)
-            fileUrls.c_report_file1, // 첫 번째 사진 S3 URL 또는 파일명
-            fileUrls.c_report_file2, // 두 번째 사진 S3 URL 또는 파일명
-            fileUrls.c_report_file3, // 세 번째 사진 S3 URL 또는 파일명
+            filePaths.c_report_file1, // 첫 번째 사진
+            filePaths.c_report_file2, // 두 번째 사진
+            filePaths.c_report_file3, // 세 번째 사진
             null, // c_reporter_name (제보자 성명) - 아직 연결 안됨
             null, // c_reporter_phone (제보자 연락처) - 아직 연결 안됨
-            'P', // c_report_status (처리 상태)
+            'p', // c_report_status (처리 상태)
             null, // admin_id (관리자 ID) - 아직 연결 안됨
-            geocodedAddr.full // addr (지오코딩된 주소)
+            geocodedAddr // addr (지오코딩된 주소)
         ]);
         
         console.log('민원 제출 성공:', {
             reportId: result.insertId,
-            addr: geocodedAddr.full,
+            addr: geocodedAddr,
             lat,
             lon,
             c_report_detail,
-            files: fileUrls
+            files: filePaths
         });
         
         // SSE를 통한 실시간 알림 발송
@@ -170,7 +171,7 @@ router.post('/submit', upload.fields([
                 type: 'citizen_report',
                 message: notificationMessage,
                 reportId: result.insertId,
-                addr: geocodedAddr.full,
+                addr: geocodedAddr,
                 c_report_detail,
                 lat,
                 lon,
@@ -191,14 +192,25 @@ router.post('/submit', upload.fields([
                 lat,
                 lon,
                 c_report_detail,
-                files: fileUrls
+                files: filePaths
             }
         });
         
     } catch (error) {
         console.error('민원 제출 오류:', error);
         
-        // 메모리 스토리지 사용으로 파일 정리 불필요
+        // 업로드된 파일들 정리 (오류 시)
+        if (req.files) {
+            for (const fieldName in req.files) {
+                for (const file of req.files[fieldName]) {
+                    try {
+                        await fs.unlink(file.path);
+                    } catch (unlinkError) {
+                        console.error('파일 삭제 오류:', unlinkError);
+                    }
+                }
+            }
+        }
         
         res.status(500).json({
             success: false,
@@ -247,6 +259,25 @@ router.get('/list', async (req, res) => {
     }
 });
 
-// 이미지 파일 제공 API는 S3에서 직접 제공하므로 제거됨
+// 이미지 파일 제공 API
+router.get('/image/:filename', async (req, res) => {
+    try {
+        const filename = req.params.filename;
+        const imagePath = path.join(__dirname, '../uploads', filename);
+        
+        // 파일 존재 확인
+        await fs.access(imagePath);
+        
+        // 이미지 파일 전송
+        res.sendFile(imagePath);
+        
+    } catch (error) {
+        console.error('이미지 제공 오류:', error);
+        res.status(404).json({
+            success: false,
+            message: '이미지를 찾을 수 없습니다.'
+        });
+    }
+});
 
 module.exports = router;

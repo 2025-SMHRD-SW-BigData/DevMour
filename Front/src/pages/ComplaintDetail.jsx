@@ -191,26 +191,17 @@ const ComplaintDetail = () => {
         return (
             <div className="detail-container">
                 <div className="detail-header">
-                    <h1>
-                    {/* 🖼️ 로고 이미지 */}
+                                       {/* 🖼️ 로고 이미지 */}
                     <img
-                    src="./도로시마크 (1).png" // public 폴더에 있는 이미지
+                    src="./logo.png" // public 폴더에 있는 이미지
                     alt="로고"
                     style={{
-                    width: '50px',
+                    width: 'auto',
                     height: '50px',
                     borderRadius: '8px'
                     }}
                     />
-                    <img
-                    src="./Doro-see.png" // public 폴더에 있는 이미지
-                    alt="로고"
-                    style={{
-                    width: '80px',
-                    height: '50px',
-                    borderRadius: '8px'
-                    }} />
-                    📋 시민 제보 상세</h1>
+                   <h1> 📋 시민 제보 상세</h1>
                     <button className="back-btn" onClick={() => nav('/dashboard')}>
                          대시보드로 돌아가기
                     </button>
@@ -227,26 +218,17 @@ const ComplaintDetail = () => {
         return (
             <div className="detail-container">
                 <div className="detail-header">
-                    <h1>
-                    {/* 🖼️ 로고 이미지 */}
+                                       {/* 🖼️ 로고 이미지 */}
                     <img
-                    src="./도로시마크 (1).png" // public 폴더에 있는 이미지
+                    src="./logo.png" // public 폴더에 있는 이미지
                     alt="로고"
                     style={{
-                    width: '50px',
+                    width: 'auto',
                     height: '50px',
                     borderRadius: '8px'
                     }}
                     />
-                    <img
-                    src="./Doro-see.png" // public 폴더에 있는 이미지
-                    alt="로고"
-                    style={{
-                    width: '80px',
-                    height: '50px',
-                    borderRadius: '8px'
-                    }} />
-                    📋 시민 제보 상세</h1>
+                   <h1> 📋 시민 제보 상세</h1>
                     <button className="back-btn" onClick={() => nav('/dashboard')}>
                          대시보드로 돌아가기
                     </button>
@@ -264,26 +246,17 @@ const ComplaintDetail = () => {
         <div className="detail-container">
             {/* 헤더 */}
             <div className="detail-header">
-                <h1>
-                    {/* 🖼️ 로고 이미지 */}
+                                   {/* 🖼️ 로고 이미지 */}
                     <img
-                    src="./도로시마크 (1).png" // public 폴더에 있는 이미지
+                    src="./logo.png" // public 폴더에 있는 이미지
                     alt="로고"
                     style={{
-                    width: '50px',
+                    width: 'auto',
                     height: '50px',
                     borderRadius: '8px'
                     }}
                     />
-                    <img
-                    src="./Doro-see.png" // public 폴더에 있는 이미지
-                    alt="로고"
-                    style={{
-                    width: '80px',
-                    height: '50px',
-                    borderRadius: '8px'
-                    }} />
-                📋 시민 제보 상세</h1>
+                   <h1> 📋 시민 제보 상세</h1>
                 <button className="back-btn" onClick={() => nav('/dashboard')}>
                      대시보드로 돌아가기
                 </button>

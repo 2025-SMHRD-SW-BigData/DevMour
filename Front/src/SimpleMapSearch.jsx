@@ -71,7 +71,7 @@ const SimpleMapSearch = ({ mapRef }) => {
                     value={searchAddress}
                     onChange={(e) => setSearchAddress(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
-                    placeholder="주소를 입력하세요 (예: 광주광역시 서구)"
+                    placeholder="주소를 입력하세요(예:치평동)"
                     style={{
                         width: '100%',
                         padding: '10px 15px',

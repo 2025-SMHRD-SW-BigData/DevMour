@@ -163,15 +163,11 @@ if (weatherData) {
                         gap: '10px', 
                         justifyContent: 'space-between',
                         marginTop: '8px' }}>  
-                      
-            <div className="detail-item">
-              <img src="./온도.png" alt="온도계" width="10px" height="10px" />{weatherData.temperature.toFixed(1)}°C</div>
-            <div className="detail-item">
-              <img src="./날씨묘사.png" alt="날씨" width="10px" height="10px" />{weatherData.description}</div>
-            <div className="detail-item">
-             <img src="./강수량.png" alt="비" width="10px" height="10px" /> 강수량: {weatherData?.rain?.['1h'] ? `${weatherData.rain['1h']}mm/h` : '없음'}</div>
-            <div className="detail-item">
-             <img src="./눈송이.png" alt="눈" width="10px" height="10px" /> 강설량: {weatherData?.snow?.['1h'] ? `${weatherData.snow['1h']}mm/h` : '없음'} </div>
+
+            <div className="detail-item">🌡{weatherData.temperature.toFixed(1)}°C</div>
+            <div className="detail-item">🌈{weatherData.description}</div>
+            <div className="detail-item">강수량:💧{weatherData?.rain?.['1h'] ? `${weatherData.rain['1h']}mm/h` : '없음'}</div>
+            <div className="detail-item">강설량:❄{weatherData?.snow?.['1h'] ? `${weatherData.snow['1h']}mm/h` : '없음'} </div>                      
 
             </div>
       

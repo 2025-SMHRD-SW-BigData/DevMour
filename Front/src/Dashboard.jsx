@@ -374,15 +374,15 @@ const [currentUser, setCurrentUser] = useState(null);
 
   {/* 🖼️ 로고 이미지 */}
    <img 
-      src="./도로시마크 (1).png" // public 폴더에 있는 이미지
+      src="./logo.png" // public 폴더에 있는 이미지
       alt="로고" 
       style={{
-        width: '50px',
+        width: 'auto',
         height: '50px',
         borderRadius: '8px'
       }}
     />
-    <img 
+    {/*<img 
       src="./Doro-see.png" // public 폴더에 있는 이미지
       alt="로고" 
       style={{
@@ -390,7 +390,8 @@ const [currentUser, setCurrentUser] = useState(null);
         height: '50px',
         borderRadius: '8px'
       }}
-    /></div>
+    />*/}
+        </div>
 
         <div className="header-title">도로 안전 관리 시스템</div>
         <div style={{ 

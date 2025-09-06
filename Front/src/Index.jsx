@@ -693,7 +693,7 @@ export default function Index() {
               }}
             />
             
-            {/* 아이디 저장 체크박스 */}
+            {/* 아이디 저장 체크박스
             <label style={{
               display: 'flex',
               alignItems: 'center',
@@ -714,7 +714,7 @@ export default function Index() {
                 }}
               />
               아이디 저장
-            </label>
+            </label> */}
           </div>
 
           {/* 비밀번호 입력 필드 */}
@@ -764,7 +764,29 @@ export default function Index() {
             alignItems: 'center',
             marginBottom: '2rem'
           }}>
+                       {/* 아이디 저장 체크박스 */}
             <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              fontSize: '0.75rem',
+              color: '#6b7280',
+              cursor: 'pointer',
+              fontFamily: 'Noto Sans KR, sans-serif',
+              marginTop: '0.5rem'
+            }}>
+              <input
+                type="checkbox"
+                checked={saveUsername}
+                onChange={(e) => setSaveUsername(e.target.checked)}
+                style={{
+                  marginRight: '0.5rem',
+                  accentColor: '#2f354f',
+                  transform: 'scale(0.9)'
+                }}
+              />
+              아이디 저장
+            </label>
+            {/*<label style={{
               display: 'flex',
               alignItems: 'center',
               fontSize: '0.875rem',
@@ -783,7 +805,7 @@ export default function Index() {
               />
               로그인 상태 유지
             </label>
-            {/* <button
+             <button
               type="button"
               style={{
                 background: 'none',
@@ -836,7 +858,7 @@ export default function Index() {
           </button>
 
           {/* 사용자 등록 링크 */}
-          <div style={{
+         {/* <div style={{
             marginTop: '1rem',
             textAlign: 'center'
           }}>
@@ -863,7 +885,7 @@ export default function Index() {
             >
               사용자 등록
             </button>
-          </div>
+          </div> */}
 
           {/* 에러 메시지 */}
           {loginError && (

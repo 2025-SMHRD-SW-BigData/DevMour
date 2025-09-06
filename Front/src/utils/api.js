@@ -6,7 +6,7 @@ import { getToken, isLoggedIn, isValidTokenFormat } from './auth';
 // const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://0.0.0.0:3001/api';
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? '/api'  // 프로덕션에서는 상대 경로 사용
-  : 'http://localhost:3001/api';  // 개발 환경에서는 localhost 사용
+  : 'http://175.45.194.114:3001/api';  // 개발 환경에서는 localhost 사용
 // JWT 토큰을 포함한 헤더 생성
 const createAuthHeaders = () => {
   const token = getToken();
@@ -138,6 +138,42 @@ export const registerApi = async (userData) => {
     throw error;
   }
 };
+
+// 시민 제보 상세 정보 조회 API (토큰 검증 없음)
+export const getComplaintDetail = async (reportId) => {
+  const url = `${API_BASE_URL}/complaint/detail/${reportId}`;
+  console.log('시민 제보 상세 정보 조회 API 요청:', url);
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('시민 제보 상세 정보 조회 API 응답 상태:', response.status);
+
+    if (response.status === 404) {
+      // 상세 정보가 없는 경우
+      console.log('404 응답 - 시민 제보 상세 정보 없음');
+      return { success: false, message: '시민 제보 정보를 찾을 수 없습니다.' };
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('API 오류 응답:', errorData);
+      throw new Error(errorData.message || `시민 제보 상세 정보 조회 실패: ${response.status}`);
+    }
+
+    const responseData = await response.json();
+    console.log('시민 제보 상세 정보 조회 API 응답 데이터:', responseData);
+    return responseData;
+  } catch (error) {
+    console.error('시민 제보 상세 정보 조회 API 오류:', error);
+    throw error;
+  }
+};
+
 
 // 시민 제보 분석 결과 조회 API (토큰 검증 없음)
 export const getComplaintAnalysisResult = async (reportId) => {

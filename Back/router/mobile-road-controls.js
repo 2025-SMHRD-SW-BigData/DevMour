@@ -124,4 +124,59 @@ router.get('/flood', async (req, res) => {
     }
 });
 
+// 최신 도로 통제 데이터 조회 (폴링용)
+router.get('/latest', async (req, res) => {
+    try {
+        // 가장 최근에 생성된 도로 통제 데이터 조회
+        const [rows] = await db.execute(`
+            SELECT 
+                control_idx,
+                pred_idx,
+                control_desc,
+                control_st_tm,
+                control_ed_tm,
+                created_at,
+                road_idx,
+                lat,
+                lon,
+                control_addr,
+                control_type,
+                completed
+            FROM t_road_control
+            ORDER BY created_at DESC
+            LIMIT 1
+        `);
+        
+        if (rows.length === 0) {
+            return res.json({
+                newData: false,
+                data: null
+            });
+        }
+        
+        const latestControl = rows[0];
+        
+        // 응답 데이터 형식에 맞게 변환
+        const controlData = {
+            id: latestControl.control_idx,
+            control_desc: latestControl.control_desc,
+            control_st_tm: latestControl.control_st_tm,
+            control_addr: latestControl.control_addr
+        };
+        
+        res.json({
+            newData: true,
+            data: controlData
+        });
+        
+    } catch (error) {
+        console.error('최신 도로 통제 데이터 조회 오류:', error);
+        res.status(500).json({
+            newData: false,
+            data: null,
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

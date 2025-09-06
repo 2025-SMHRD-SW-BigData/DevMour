@@ -4,7 +4,6 @@ import './NotificationSystem.css';
 const NotificationSystem = ({ onNotificationClick }) => {
     const [notifications, setNotifications] = useState([]);
     const [isConnected, setIsConnected] = useState(false);
-    const [isExpanded, setIsExpanded] = useState(false);
     const eventSourceRef = useRef(null);
     const reconnectTimeoutRef = useRef(null);
 
@@ -24,14 +23,13 @@ const NotificationSystem = ({ onNotificationClick }) => {
             }
 
             console.log('🔔 SSE 연결 시도 중...');
-            
+
             // 환경에 따라 다른 URL 사용
             const sseUrl = process.env.NODE_ENV === 'development' 
                 ? 'http://localhost:3001/api/notifications/stream'
                 : '/api/notifications/stream';
             
             const eventSource = new EventSource(sseUrl);
-            eventSourceRef.current = eventSource;
 
             eventSource.onopen = () => {
                 console.log('✅ SSE 연결 성공');
@@ -116,20 +114,12 @@ const NotificationSystem = ({ onNotificationClick }) => {
 
         setNotifications(prev => [notification, ...prev.slice(0, 9)]); // 최대 10개 알림 유지
         
-        // 알림 수신 시 확장
-        setIsExpanded(true);
-        
         // 5초 후 자동으로 읽음 처리
         setTimeout(() => {
             setNotifications(prev => 
                 prev.map(n => n.id === notification.id ? { ...n, isRead: true } : n)
             );
         }, 5000);
-        
-        // 10초 후 자동으로 축소
-        setTimeout(() => {
-            setIsExpanded(false);
-        }, 10000);
     };
 
     const handleTestNotification = (data) => {
@@ -142,30 +132,17 @@ const NotificationSystem = ({ onNotificationClick }) => {
         };
 
         setNotifications(prev => [notification, ...prev.slice(0, 9)]);
-        
-        // 알림 수신 시 확장
-        setIsExpanded(true);
-        
-        // 10초 후 자동으로 축소
-        setTimeout(() => {
-            setIsExpanded(false);
-        }, 10000);
     };
 
     const handleNotificationClick = (notification) => {
         // 알림을 읽음 처리
-        console.log('🔔 NotificationSystem: 알림 클릭됨', notification);
-
         setNotifications(prev => 
             prev.map(n => n.id === notification.id ? { ...n, isRead: true } : n)
         );
 
         // 부모 컴포넌트에 알림 클릭 이벤트 전달
         if (onNotificationClick) {
-            console.log('📤 부모 컴포넌트에 알림 클릭 이벤트 전달');
             onNotificationClick(notification);
-        } else {
-            console.log('❌ onNotificationClick 함수가 없음');
         }
     };
 
@@ -176,65 +153,55 @@ const NotificationSystem = ({ onNotificationClick }) => {
     const unreadCount = notifications.filter(n => !n.isRead).length;
 
     return (
-        <div className={`notification-system ${isExpanded ? 'expanded' : 'collapsed'}`}>
+        <div className="notification-system">
             {/* 연결 상태 표시 */}
-            <div 
-                className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}
-                onClick={() => setIsExpanded(!isExpanded)}
-            >
+            <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
                 <div className="status-dot"></div>
-                {isExpanded && (
-                    <span>{isConnected ? '실시간 알림 연결됨' : '실시간 알림 연결 끊김'}</span>
-                )}
-                {!isExpanded && notifications.length > 0 && (
-                    <div className="notification-badge">{unreadCount}</div>
-                )}
+                <span>{isConnected ? '실시간 알림 연결됨' : '실시간 알림 연결 끊김'}</span>
             </div>
 
             {/* 알림 목록 */}
-            {isExpanded && (
-                <div className="notifications-container">
-                    {notifications.length > 0 && (
-                        <div className="notifications-header">
-                            <span>알림 ({unreadCount})</span>
-                            <button 
-                                className="clear-all-btn"
-                                onClick={() => setNotifications([])}
+            <div className="notifications-container">
+                {notifications.length > 0 && (
+                    <div className="notifications-header">
+                        <span>알림 ({unreadCount})</span>
+                        <button 
+                            className="clear-all-btn"
+                            onClick={() => setNotifications([])}
+                        >
+                            모두 지우기
+                        </button>
+                    </div>
+                )}
+                
+                <div className="notifications-list">
+                    {notifications.map(notification => (
+                        <div
+                            key={notification.id}
+                            className={`notification-item ${notification.isRead ? 'read' : 'unread'} ${notification.type}`}
+                            onClick={() => handleNotificationClick(notification)}
+                        >
+                            <div className="notification-content">
+                                <div className="notification-message">
+                                    {notification.message}
+                                </div>
+                                <div className="notification-time">
+                                    {new Date(notification.timestamp).toLocaleTimeString()}
+                                </div>
+                            </div>
+                            <button
+                                className="remove-btn"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeNotification(notification.id);
+                                }}
                             >
-                                모두 지우기
+                                ×
                             </button>
                         </div>
-                    )}
-                    
-                    <div className="notifications-list">
-                        {notifications.map(notification => (
-                            <div
-                                key={notification.id}
-                                className={`notification-item ${notification.isRead ? 'read' : 'unread'} ${notification.type}`}
-                                onClick={() => handleNotificationClick(notification)}
-                            >
-                                <div className="notification-content">
-                                    <div className="notification-message">
-                                        {notification.message}
-                                    </div>
-                                    <div className="notification-time">
-                                        {new Date(notification.timestamp).toLocaleTimeString()}
-                                    </div>
-                                </div>
-                                <button
-                                    className="remove-btn"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        removeNotification(notification.id);
-                                    }}
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        ))}
-                    </div>
+                    ))}
                 </div>
-            )}
+            </div>
         </div>
     );
 };
