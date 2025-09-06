@@ -6,6 +6,20 @@ const bodyParser    = require('body-parser')
 const markerRouter = require('./router/marker')
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const axios = require('axios');
+// server.js에 추가
+const https = require('https');
+const fs = require('fs');
+
+// SSL 인증서 로드
+const options = {
+    key: fs.readFileSync('/path/to/private-key.pem'),
+    cert: fs.readFileSync('/path/to/certificate.pem')
+};
+
+// HTTPS 서버 시작
+https.createServer(options, app).listen(3443, '0.0.0.0', () => {
+    console.log('HTTPS 서버가 포트 3443에서 실행 중입니다.');
+});
 
 require('dotenv').config();
 
@@ -225,6 +239,10 @@ app.use('/api/weather', require('./router/weather'));
 app.use('/api/mobile/road-controls', require('./router/mobile-road-controls'));
 app.use('/api/mobile/reports', require('./router/mobile-reports'));
 app.use('/api/mobile/markers', require('./router/mobile-markers'));
+
+// SSE 알림 라우터 추가
+const { router: notificationRouter, broadcastNotification } = require('./router/notifications');
+app.use('/api/notifications', notificationRouter);
 
 // 종합 위험도 관련 라우터
 app.use('/api/total', require('./router/total'));

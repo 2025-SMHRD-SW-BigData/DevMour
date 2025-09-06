@@ -3,6 +3,7 @@ const mysql = require('mysql2/promise');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
+const axios = require('axios');
 
 const router = express.Router();
 
@@ -104,6 +105,22 @@ router.post('/submit', upload.fields([
             filePaths.c_report_file3 = files.c_report_file3[0].filename;
         }
         
+        // 지오코딩을 통한 주소 변환
+        let geocodedAddr = null;
+        try {
+            const geocodingResponse = await axios.get(`http://localhost:3001/api/weather/reverse?lat=${lat}&lon=${lon}`);
+            
+            if (geocodingResponse.data && geocodingResponse.data.success) {
+                geocodedAddr = geocodingResponse.data.data.address || geocodedResponse.data.data.formatted_address;
+                console.log('📍 지오코딩 성공:', geocodedAddr);
+            } else {
+                console.log('⚠️ 지오코딩 실패, 기본값 사용');
+            }
+        } catch (geocodingError) {
+            console.error('❌ 지오코딩 오류:', geocodingError.message);
+            console.log('⚠️ 지오코딩 실패, 기본값 사용');
+        }
+        
         // DB에 민원 데이터 저장
         const insertQuery = `
             INSERT INTO t_citizen_report (
@@ -125,30 +142,55 @@ router.post('/submit', upload.fields([
         const [result] = await db.execute(insertQuery, [
             lat, // lat (위도) - 클라이언트에서 전송된 값
             lon, // lon (경도) - 클라이언트에서 전송된 값
-            c_report_detail, // 카테고리 정보 (도로침수/도로빙결/도로파손)
+            c_report_detail, // 카테고리 정보 (도로침수/도로파손)
             filePaths.c_report_file1, // 첫 번째 사진
             filePaths.c_report_file2, // 두 번째 사진
             filePaths.c_report_file3, // 세 번째 사진
             null, // c_reporter_name (제보자 성명) - 아직 연결 안됨
             null, // c_reporter_phone (제보자 연락처) - 아직 연결 안됨
-            'pending', // c_report_status (처리 상태)
+            'p', // c_report_status (처리 상태)
             null, // admin_id (관리자 ID) - 아직 연결 안됨
-            null // addr (주소) - 아직 연결 안됨
+            geocodedAddr // addr (지오코딩된 주소)
         ]);
         
         console.log('민원 제출 성공:', {
             reportId: result.insertId,
-            addr,
+            addr: geocodedAddr,
+            lat,
+            lon,
             c_report_detail,
             files: filePaths
         });
+        
+        // SSE를 통한 실시간 알림 발송
+        try {
+            const { broadcastNotification } = require('./notifications');
+            const notificationMessage = `${geocodedAddr || '위치 정보 없음'} 지역 ${c_report_detail} 민원 신고 접수!`;
+            
+            broadcastNotification({
+                type: 'citizen_report',
+                message: notificationMessage,
+                reportId: result.insertId,
+                addr: geocodedAddr,
+                c_report_detail,
+                lat,
+                lon,
+                timestamp: new Date().toISOString()
+            });
+            
+            console.log('🔔 SSE 알림 발송 완료:', notificationMessage);
+        } catch (sseError) {
+            console.error('❌ SSE 알림 발송 실패:', sseError.message);
+        }
         
         res.json({
             success: true,
             message: '민원이 성공적으로 제출되었습니다.',
             data: {
                 reportId: result.insertId,
-                addr,
+                addr: geocodedAddr,
+                lat,
+                lon,
                 c_report_detail,
                 files: filePaths
             }

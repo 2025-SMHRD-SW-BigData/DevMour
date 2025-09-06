@@ -39,15 +39,17 @@ const upload = multer({
     }
 });
 
-// DB 연결 설정
-const dbConfig = {
+// MySQL Pool 연결 설정
+const db = mysql.createPool({
     host: 'project-db-campus.smhrd.com',
     port: 3307,
     user: 'campus_25SW_BD_p3_2',
     password: 'smhrd2',
-    database: 'campus_25SW_BD_p3_2', // 사용자명과 동일한 DB명으로 설정
-    charset: 'utf8mb4'
-};
+    database: 'campus_25SW_BD_p3_2',
+    charset: 'utf8mb4',
+    waitForConnections: true,
+    connectionLimit: 10
+});
 
 // 민원 제출 API
 router.post('/submit', upload.fields([
@@ -55,12 +57,7 @@ router.post('/submit', upload.fields([
     { name: 'c_report_file2', maxCount: 1 },
     { name: 'c_report_file3', maxCount: 1 }
 ]), async (req, res) => {
-    let connection;
-    
     try {
-        // DB 연결
-        connection = await mysql.createConnection(dbConfig);
-        
         // 요청 데이터 파싱
         const {
             addr = null, // 주소는 null로 설정
@@ -125,7 +122,7 @@ router.post('/submit', upload.fields([
             ) VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         
-        const [result] = await connection.execute(insertQuery, [
+        const [result] = await db.execute(insertQuery, [
             lat, // lat (위도) - 클라이언트에서 전송된 값
             lon, // lon (경도) - 클라이언트에서 전송된 값
             c_report_detail, // 카테고리 정보 (도로침수/도로빙결/도로파손)
@@ -178,20 +175,12 @@ router.post('/submit', upload.fields([
             message: '민원 제출 중 오류가 발생했습니다.',
             error: error.message
         });
-    } finally {
-        if (connection) {
-            await connection.end();
-        }
     }
 });
 
 // 민원 목록 조회 API
 router.get('/list', async (req, res) => {
-    let connection;
-    
     try {
-        connection = await mysql.createConnection(dbConfig);
-        
         const query = `
             SELECT 
                 c_report_idx,
@@ -211,7 +200,7 @@ router.get('/list', async (req, res) => {
             ORDER BY c_reported_at DESC
         `;
         
-        const [rows] = await connection.execute(query);
+        const [rows] = await db.execute(query);
         
         res.json({
             success: true,
@@ -225,10 +214,6 @@ router.get('/list', async (req, res) => {
             message: '민원 목록 조회 중 오류가 발생했습니다.',
             error: error.message
         });
-    } finally {
-        if (connection) {
-            await connection.end();
-        }
     }
 });
 

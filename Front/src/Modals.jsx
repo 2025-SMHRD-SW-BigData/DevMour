@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import ReportPreview from './components/ReportPreview';
 import './Modal.css';
 import { getUser } from './utils/auth';
 import { getComplaintAnalysisResult, getComplaintFloodResult  } from './utils/api';
+import { InfoContext } from './context/InfoContext';
 
 // CCTV AI 분석 함수
 const performCCTVAnalysis = async (cctvData) => {
@@ -167,6 +168,7 @@ const performComplaintImageAnalysis = async (complaintData) => {
 
 
 const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEditMode = false, onUpdateComplete }) => {
+    const { modalData, setModalData } = useContext(InfoContext);
     const [detailData, setDetailData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [videoLoading, setVideoLoading] = useState(false);
@@ -455,6 +457,42 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
             }
         }
     }, [initialEditMode, detailData, markerType]);
+
+    // ✅ modalData가 있을 때 시민 제보 모달 자동 열기
+    useEffect(() => {
+        if (modalData && modalData.type === 'citizen_report') {
+            console.log('🔔 알림 클릭으로 시민 제보 모달 열기:', modalData);
+            
+            // 시민 제보 데이터 설정
+            setDetailData({
+                marker: {
+                    marker_id: modalData.reportId,
+                    lat: modalData.lat,
+                    lon: modalData.lon,
+                    icon: '📝'
+                },
+                detail: {
+                    c_report_idx: modalData.reportId,
+                    addr: modalData.addr,
+                    c_report_detail: modalData.c_report_detail,
+                    lat: modalData.lat,
+                    lon: modalData.lon,
+                    c_reported_at: modalData.timestamp
+                }
+            });
+            
+            // 모달 열기 (markerType을 'complaint'로 설정)
+            if (onClose) {
+                // 부모 컴포넌트에 모달 열기 요청
+                // 이 부분은 부모 컴포넌트에서 처리해야 함
+                console.log('🔔 시민 제보 모달 열기 요청');
+            }
+            
+            // modalData 초기화
+            setModalData(null);
+        }
+    }, [modalData, setModalData]);
+
 
     // 시민 제보 모달이 열릴 때 분석 결과 조회
     useEffect(() => {

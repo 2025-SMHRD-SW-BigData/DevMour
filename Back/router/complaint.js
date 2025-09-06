@@ -277,7 +277,7 @@ router.get('/flood-result/:reportId', async (req, res) => {
     
     const query = `
         SELECT 
-            citizen_result_idx,
+            cr_idx,
             c_report_idx,
             c_reporter_name,
             c_reporter_phone,
@@ -338,7 +338,7 @@ router.get('/citizen-result/:reportId', async (req, res) => {
     
     const query = `
         SELECT 
-            citizen_result_idx,
+            cr_idx,
             c_report_idx,
             c_reporter_name,
             c_reporter_phone,

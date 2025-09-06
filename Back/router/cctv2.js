@@ -93,10 +93,15 @@ router.get('/check-duplicate/:cctvName', async (req, res) => {
 });
 
 // CCTV 추가
-router.post('/add', async (req, res) => {
+router.post('/add', (req, res) => {
     console.log('✅ CCTV 추가 요청 수신');
 
-    try {
+    conn.connect(err => {
+        if (err) {
+            console.error('❌ 데이터베이스 연결 실패:', err);
+            return res.status(500).json({ error: '데이터베이스 연결 실패' });
+        }
+
         const {
             cctv_name,
             lat,
@@ -145,45 +150,51 @@ router.post('/add', async (req, res) => {
             VALUES (?, ?, ?, ?, ?)
         `;
 
-        const [result] = await db.execute(insertQuery, [
+        conn.query(insertQuery, [
             cctv_name,
             latNum,
             lonNum,
             cctv_status || 'A',
             cctv_url
-        ]);
-
-        console.log('✅ CCTV 추가 성공:', result.insertId);
-        
-        res.status(201).json({
-            success: true,
-            message: 'CCTV가 성공적으로 추가되었습니다.',
-            cctv_idx: result.insertId,
-            data: {
-                cctv_name,
-                lat: latNum,
-                lon: lonNum,
-                cctv_status: cctv_status || 'A',
-                cctv_url
+        ], (err, result) => {
+            if (err) {
+                console.error('❌ CCTV 추가 실패:', err);
+                return res.status(500).json({
+                    success: false,
+                    message: 'CCTV 추가 실패',
+                    error: err.message
+                });
             }
+
+            console.log('✅ CCTV 추가 성공:', result.insertId);
+            
+            res.status(201).json({
+                success: true,
+                message: 'CCTV가 성공적으로 추가되었습니다.',
+                cctv_idx: result.insertId,
+                data: {
+                    cctv_name,
+                    lat: latNum,
+                    lon: lonNum,
+                    cctv_status: cctv_status || 'A',
+                    cctv_url
+                }
+            });
         });
-    } catch (error) {
-        console.error('❌ CCTV 추가 실패:', error);
-        res.status(500).json({
-            success: false,
-            message: 'CCTV 추가 실패',
-            error: error.message
-        });
-    }
+    });
 });
 
 // CCTV 위험도 데이터 조회 (최신 데이터)
-router.get('/risk/:cctvIdx', async (req, res) => {
+router.get('/risk/:cctvIdx', (req, res) => {
     console.log('✅ CCTV 위험도 데이터 조회 요청 수신:', req.params.cctvIdx);
 
     const cctvIdx = req.params.cctvIdx;
 
-    try {
+    conn.connect(err => {
+        if (err) {
+            console.error('❌ 데이터베이스 연결 실패:', err);
+            return res.status(500).json({ error: '데이터베이스 연결 실패' });
+        }
 
         // 특정 cctv_idx를 기준으로 가장 최근(detected_at이 가장 최근인) 레코드만 조회
         const sql = `
@@ -216,29 +227,36 @@ router.get('/risk/:cctvIdx', async (req, res) => {
                 AND T.cctv_idx = ?
         `;
         
-        const [rows] = await db.execute(sql, [cctvIdx]);
+        conn.query(sql, [cctvIdx], (err, rows) => {
+            if (err) {
+                console.error('❌ CCTV 위험도 데이터 조회 실패:', err);
+                return res.status(500).json({ error: 'CCTV 위험도 데이터 조회 실패' });
+            }
 
-        if (rows.length === 0) {
-            console.log('⚠️ 해당 CCTV의 위험도 데이터가 없습니다:', cctvIdx);
-            return res.status(404).json({ 
-                error: '해당 CCTV의 위험도 데이터를 찾을 수 없습니다.',
-                cctv_idx: cctvIdx
-            });
-        }
+            if (rows.length === 0) {
+                console.log('⚠️ 해당 CCTV의 위험도 데이터가 없습니다:', cctvIdx);
+                return res.status(404).json({ 
+                    error: '해당 CCTV의 위험도 데이터를 찾을 수 없습니다.',
+                    cctv_idx: cctvIdx
+                });
+            }
 
-        console.log('✅ CCTV 위험도 데이터 조회 성공:', rows[0]);
-        res.json(rows[0]);
-    } catch (error) {
-        console.error('❌ CCTV 위험도 데이터 조회 실패:', error);
-        res.status(500).json({ error: 'CCTV 위험도 데이터 조회 실패' });
-    }
+            console.log('✅ CCTV 위험도 데이터 조회 성공:', rows[0]);
+            res.json(rows[0]);
+        });
+    });
 });
 
 // CCTV 위험도 데이터 목록 조회 (최신 데이터만)
-router.get('/risk-list', async (req, res) => {
+router.get('/risk-list', (req, res) => {
     console.log('✅ CCTV 위험도 데이터 목록 조회 요청 수신');
 
-    try {
+    conn.connect(err => {
+        if (err) {
+            console.error('❌ 데이터베이스 연결 실패:', err);
+            return res.status(500).json({ error: '데이터베이스 연결 실패' });
+        }
+
         // 각 cctv_idx별로 가장 최근 데이터만 조회
         const sql = `
             SELECT
@@ -271,21 +289,28 @@ router.get('/risk-list', async (req, res) => {
                 T.total_score DESC
         `;
         
-        const [rows] = await db.execute(sql);
+        conn.query(sql, (err, rows) => {
+            if (err) {
+                console.error('❌ CCTV 위험도 데이터 목록 조회 실패:', err);
+                return res.status(500).json({ error: 'CCTV 위험도 데이터 목록 조회 실패' });
+            }
 
-        console.log('✅ CCTV 위험도 데이터 목록 조회 성공:', rows.length, '개');
-        res.json(rows);
-    } catch (error) {
-        console.error('❌ CCTV 위험도 데이터 목록 조회 실패:', error);
-        res.status(500).json({ error: 'CCTV 위험도 데이터 목록 조회 실패' });
-    }
+            console.log('✅ CCTV 위험도 데이터 목록 조회 성공:', rows.length, '개');
+            res.json(rows);
+        });
+    });
 });
 
 // CCTV 위험도 통계 조회
-router.get('/risk-stats', async (req, res) => {
+router.get('/risk-stats', (req, res) => {
     console.log('✅ CCTV 위험도 통계 조회 요청 수신');
 
-    try {
+    conn.connect(err => {
+        if (err) {
+            console.error('❌ 데이터베이스 연결 실패:', err);
+            return res.status(500).json({ error: '데이터베이스 연결 실패' });
+        }
+
         // 각 cctv_idx별로 가장 최근 데이터의 통계 조회
         const sql = `
             SELECT
@@ -310,39 +335,41 @@ router.get('/risk-stats', async (req, res) => {
                 T.rn = 1
         `;
         
-        const [rows] = await db.execute(sql);
-
-        if (rows.length === 0) {
-            return res.status(404).json({ error: '위험도 통계 데이터가 없습니다.' });
-        }
-
-        const stats = rows[0];
-        console.log('✅ CCTV 위험도 통계 조회 성공:', stats);
-        
-        res.json({
-            success: true,
-            data: {
-                total_cctv: stats.total_cctv,
-                average_scores: {
-                    total: parseFloat(stats.avg_total_score || 0).toFixed(2),
-                    road: parseFloat(stats.avg_road_score || 0).toFixed(2),
-                    weather: parseFloat(stats.avg_weather_score || 0).toFixed(2)
-                },
-                total_defects: {
-                    crack: stats.total_crack_cnt || 0,
-                    break: stats.total_break_cnt || 0,
-                    ali_crack: stats.total_ali_crack_cnt || 0
-                },
-                weather_info: {
-                    precipitation: parseFloat(stats.avg_precipitation || 0).toFixed(2),
-                    temperature: parseFloat(stats.avg_temp || 0).toFixed(2)
-                }
+        conn.query(sql, (err, rows) => {
+            if (err) {
+                console.error('❌ CCTV 위험도 통계 조회 실패:', err);
+                return res.status(500).json({ error: 'CCTV 위험도 통계 조회 실패' });
             }
+
+            if (rows.length === 0) {
+                return res.status(404).json({ error: '위험도 통계 데이터가 없습니다.' });
+            }
+
+            const stats = rows[0];
+            console.log('✅ CCTV 위험도 통계 조회 성공:', stats);
+            
+            res.json({
+                success: true,
+                data: {
+                    total_cctv: stats.total_cctv,
+                    average_scores: {
+                        total: parseFloat(stats.avg_total_score || 0).toFixed(2),
+                        road: parseFloat(stats.avg_road_score || 0).toFixed(2),
+                        weather: parseFloat(stats.avg_weather_score || 0).toFixed(2)
+                    },
+                    total_defects: {
+                        crack: stats.total_crack_cnt || 0,
+                        break: stats.total_break_cnt || 0,
+                        ali_crack: stats.total_ali_crack_cnt || 0
+                    },
+                    weather_info: {
+                        precipitation: parseFloat(stats.avg_precipitation || 0).toFixed(2),
+                        temperature: parseFloat(stats.avg_temp || 0).toFixed(2)
+                    }
+                }
+            });
         });
-    } catch (error) {
-        console.error('❌ CCTV 위험도 통계 조회 실패:', error);
-        res.status(500).json({ error: 'CCTV 위험도 통계 조회 실패' });
-    }
+    });
 });
 
 module.exports = router;

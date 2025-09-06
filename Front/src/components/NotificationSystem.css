@@ -1,0 +1,240 @@
+.notification-system {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 400px;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+/* 연결 상태 표시 */
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.connection-status.connected {
+    background: rgba(76, 175, 80, 0.2);
+    color: #2e7d32;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.connection-status.disconnected {
+    background: rgba(244, 67, 54, 0.2);
+    color: #c62828;
+    border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.connection-status.connected .status-dot {
+    background: #4caf50;
+}
+
+.connection-status.disconnected .status-dot {
+    background: #f44336;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* 알림 컨테이너 */
+.notifications-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.notifications-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(33, 150, 243, 0.1);
+    border-bottom: 1px solid rgba(33, 150, 243, 0.2);
+    font-size: 14px;
+    font-weight: 600;
+    color: #1976d2;
+}
+
+.clear-all-btn {
+    background: none;
+    border: none;
+    color: #1976d2;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.clear-all-btn:hover {
+    background: rgba(33, 150, 243, 0.1);
+}
+
+/* 알림 목록 */
+.notifications-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.notification-item:hover {
+    background: rgba(33, 150, 243, 0.05);
+}
+
+.notification-item.unread {
+    background: rgba(33, 150, 243, 0.08);
+    border-left: 4px solid #2196f3;
+}
+
+.notification-item.read {
+    opacity: 0.7;
+}
+
+.notification-item.citizen_report {
+    border-left-color: #ff9800;
+}
+
+.notification-item.citizen_report.unread {
+    background: rgba(255, 152, 0, 0.08);
+}
+
+.notification-item.test {
+    border-left-color: #4caf50;
+}
+
+.notification-item.test.unread {
+    background: rgba(76, 175, 80, 0.08);
+}
+
+/* 알림 내용 */
+.notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-message {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    line-height: 1.4;
+    margin-bottom: 4px;
+    word-wrap: break-word;
+}
+
+.notification-time {
+    font-size: 11px;
+    color: #666;
+    font-weight: 400;
+}
+
+/* 제거 버튼 */
+.remove-btn {
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    margin-left: 8px;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.remove-btn:hover {
+    background: rgba(244, 67, 54, 0.1);
+    color: #f44336;
+}
+
+/* 스크롤바 스타일링 */
+.notifications-container::-webkit-scrollbar,
+.notifications-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.notifications-container::-webkit-scrollbar-track,
+.notifications-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+}
+
+.notifications-container::-webkit-scrollbar-thumb,
+.notifications-list::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+.notifications-container::-webkit-scrollbar-thumb:hover,
+.notifications-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .notification-system {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+    
+    .notification-message {
+        font-size: 13px;
+    }
+    
+    .notification-time {
+        font-size: 10px;
+    }
+}
+
+/* 애니메이션 */
+.notification-item {
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
