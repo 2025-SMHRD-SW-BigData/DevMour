@@ -5,6 +5,48 @@ import { getUser } from './utils/auth';
 import { getComplaintAnalysisResult, getComplaintFloodResult  } from './utils/api';
 import { InfoContext } from './context/InfoContext';
 
+// 날짜 형식 변환 함수 (datetime-local -> date)
+const formatDateForInput = (dateString) => {
+    console.log('📅 날짜 형식 변환 시작:', { 원본값: dateString, 타입: typeof dateString });
+    
+    if (!dateString) {
+        console.log('📅 빈 값 반환');
+        return '';
+    }
+        
+    try {
+        // "2025-09-07T11:22" 형식을 "2025-09-07" 형식으로 변환
+        if (dateString.includes('T')) {
+            const result = dateString.split('T')[0];
+            console.log('📅 T 포함 형식 변환:', { 원본: dateString, 변환결과: result });
+            return result;
+        }
+        
+        // 이미 "2025-09-07" 형식인 경우
+        if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            console.log('📅 이미 올바른 형식:', dateString);
+            return dateString;
+        }
+        
+        // 다른 형식인 경우 Date 객체로 파싱
+        console.log('📅 Date 객체로 파싱 시도:', dateString);
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            console.warn('유효하지 않은 날짜 형식:', dateString);
+            return '';
+        }
+
+        const result = date.toISOString().split('T')[0];
+        console.log('📅 Date 객체 변환 결과:', { 원본: dateString, 변환결과: result });
+        return result;        
+    } catch (error) {
+        console.error('날짜 형식 변환 오류:', error, dateString);
+        return '';
+    }
+};
+
+
+
 // CCTV AI 분석 함수
 const performCCTVAnalysis = async (cctvData) => {
     try {
@@ -625,10 +667,24 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                 });
             } else {
                 // 기존 도로 통제 수정 모드
+                // 기존 도로 통제 수정 모드
+                console.log('📅 도로 통제 수정 모드 - 원본 날짜 데이터:', {
+                    control_st_tm: detailData.detail.control_st_tm,
+                    control_ed_tm: detailData.detail.control_ed_tm
+                });
+                
+                const startDate = detailData.detail.control_st_tm ? formatDateForInput(detailData.detail.control_st_tm) : '';
+                const endDate = detailData.detail.control_ed_tm ? formatDateForInput(detailData.detail.control_ed_tm) : '';
+                
+                console.log('📅 도로 통제 수정 모드 - 변환된 날짜 데이터:', {
+                    control_st_tm: startDate,
+                    control_ed_tm: endDate
+                });
+      
                 setEditFormData({
-                    control_desc: detailData.detail.control_desc || '',
-                    control_st_tm: detailData.detail.control_st_tm ? detailData.detail.control_st_tm.split('T')[0] : '',
-                    control_ed_tm: detailData.detail.control_ed_tm ? detailData.detail.control_ed_tm.split('T')[0] : '',
+                    control_desc: detailData.detail.control_addr + detailData.detail.control_desc || '',
+                    control_st_tm: startDate,
+                    control_ed_tm: endDate,
                     control_addr: detailData.detail.control_addr || '',
                     control_type: detailData.detail.control_type || 'construction'
                 });
@@ -659,10 +715,22 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
 
     // 폼 데이터 변경 핸들러
     const handleFormChange = (field, value) => {
-        setEditFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
+        console.log('📅 폼 데이터 변경:', { 
+            필드: field, 
+            새값: value, 
+            타입: typeof value,
+            이전데이터: editFormData 
+        });
+        
+        setEditFormData(prev => {
+            const newData = {
+                ...prev,
+                [field]: value
+            };
+            console.log('📅 업데이트된 폼 데이터:', newData);
+            return newData;
+        });
+
     };
 
     // 데이터 업데이트
@@ -1029,16 +1097,6 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                                     {(floodAnalysisResult.confidence * 100).toFixed(1)}%
                                                         </span>
                                                     </div>
-                                            {/*{floodAnalysisResult.image_path && (
-                                                <div className="detection-item">
-                                                    <span>분석 이미지</span>
-                                                    <span className="marker-type-cctv">
-                                                        <a href={floodAnalysisResult.image_path} target="_blank" rel="noopener noreferrer">
-                                                            이미지 보기
-                                                        </a>
-                                                    </span>
-                                                </div>
-                                            )}*/}
                                         </div>
                                     ) : (
                                         <div className="detections">
@@ -1154,16 +1212,34 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                                         <input
                                             type="date"
                                             value={editFormData.control_st_tm || ''}
-                                            onChange={(e) => handleFormChange('control_st_tm', e.target.value)}
+                                            onChange={(e) => {
+                                                console.log('📅 시작일 입력 필드 변경:', { 
+                                                    이전값: editFormData.control_st_tm, 
+                                                    새값: e.target.value 
+                                                });
+                                                handleFormChange('control_st_tm', e.target.value);
+                                            }}
                                         />
+                                        <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                                            현재 값: {editFormData.control_st_tm || '(없음)'}
+                                        </div>
                                     </div>
                                     <div className="form-group">
                                         <label>예상 완료일:</label>
                                         <input
                                             type="date"
                                             value={editFormData.control_ed_tm || ''}
-                                            onChange={(e) => handleFormChange('control_ed_tm', e.target.value)}
+                                            onChange={(e) => {
+                                                console.log('📅 완료일 입력 필드 변경:', { 
+                                                    이전값: editFormData.control_ed_tm, 
+                                                    새값: e.target.value 
+                                                });
+                                                handleFormChange('control_ed_tm', e.target.value);
+                                            }}
                                         />
+                                        <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                                            현재 값: {editFormData.control_ed_tm || '(없음)'}
+                                        </div>
                                     </div>
                                     <div className="form-group">
                                         <label>통제 주소:</label>
@@ -1960,8 +2036,7 @@ const Modals = ({ isOpen, onClose, markerType, markerData, isEditMode: initialEd
                     console.error('분석 결과 조회 실패:', error);
                 }
             }
-
-     
+            alert('AI 분석이 완료되었습니다!');     
 
         } catch (error) {
             console.error('시민 제보 이미지 AI 분석 실패:', error);

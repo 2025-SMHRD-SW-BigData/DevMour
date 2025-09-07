@@ -27,7 +27,7 @@ const ReportPreview = ({ isOpen, onClose, reportData }) => {
      phone: '010-1234-5678',
      position: '대리',
      description: '무등로 123번지 좌측 차선에 포트홀이 확인되었습니다. 구멍의 크기는 직경 약 45cm, 깊이 7cm 정도입니다. CCTV로 감지된 포트홀로 인한 교통 정체 우려가 있습니다.',
-     totalScore: 85,
+     totalScore: 2.5, //테스트용 - 안전 범위
      breakCnt: 2,
      aliCrackCnt: 1,
      weatherScore: 75,
@@ -35,7 +35,51 @@ const ReportPreview = ({ isOpen, onClose, reportData }) => {
    };
 
   const data = reportData || defaultData;
+
+  // 위험도 계산 및 업데이트
+  const getRiskLevel = (totalScore) => {
+    if (totalScore < 3) {
+      return '안전';
+    } else if (totalScore < 6) {
+      return '주의';
+    } else if (totalScore < 8) {
+      return '경고';
+    } else {
+      return '위험';
+    }
+  };  
+
+  // 위험도 색상 계산
+  const getRiskColor = (riskLevel) => {
+    console.log('🔍 getRiskColor 호출됨, riskLevel:', riskLevel);
+    switch(riskLevel) {
+      case '안전': 
+        console.log('✅ 안전 케이스 선택됨');
+        return '#16a34a'; // 초록색
+      case '주의': 
+        console.log('✅ 주의 케이스 선택됨');
+        return '#eab308'; // 노란색
+      case '경고': 
+        console.log('✅ 경고 케이스 선택됨');
+        return '#ea580c'; // 주황색
+      case '위험': 
+        console.log('✅ 위험 케이스 선택됨');
+        return '#dc2626'; // 빨간색
+      default: 
+        console.log('❌ 기본 케이스 선택됨, riskLevel:', riskLevel);
+        return '#dc2626';
+    }
+  };
   
+  // data 객체의 riskLevel을 totalScore 기반으로 업데이트
+  data.riskLevel = getRiskLevel(data.totalScore);
+  const riskColor = getRiskColor(data.riskLevel);
+
+  console.log('🔍 최종 결과:');
+  console.log('  - totalScore:', data.totalScore);
+  console.log('  - riskLevel:', data.riskLevel);
+  console.log('  - riskColor:', riskColor);
+   
   // 도로 이름 추출 함수 - 상단 제목에서 CCTV 위치명 추출
   const getRoadName = () => {
     // reportData에서 CCTV 위치명을 가져오거나, 기본값 사용
@@ -50,7 +94,8 @@ const ReportPreview = ({ isOpen, onClose, reportData }) => {
       // location 필드에 CCTV 모니터링 정보가 있다면 사용
       title = data.location;
     } else if (data.cctvName) {
-      // cctvName 필드가 있다면 사용
+     
+ // cctvName 필드가 있다면 사용
       title = `CCTV 모니터링 - ${data.cctvName}`;
     } else if (data.cctv_name) {
       // cctv_name 필드가 있다면 사용 (Modals.jsx와 일치)
@@ -122,7 +167,7 @@ const ReportPreview = ({ isOpen, onClose, reportData }) => {
                 <td style="padding: 10px 14px; border-right: 2px solid #e5e7eb; border-bottom: 1px solid #d1d5db;">
                   <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="font-weight: 600; color: #374151; font-size: 12px;">위험도:</span>
-                    <span style="color: #dc2626; font-size: 14px; font-weight: 600;">${data.riskLevel}</span>
+                    <span style="color: ${riskColor} !important; font-size: 14px; font-weight: 600;">${data.riskLevel}</span>
                   </div>
                 </td>
                 <td style="padding: 10px 14px; border-bottom: 1px solid #d1d5db;">
@@ -239,7 +284,8 @@ const ReportPreview = ({ isOpen, onClose, reportData }) => {
           </div>
       </div>
     `;
-    
+      
+
     // PDF 옵션 설정
     const opt = {
       margin: 10,
@@ -325,7 +371,7 @@ const ReportPreview = ({ isOpen, onClose, reportData }) => {
                         <td style={{ padding: '10px 14px', borderRight: '2px solid #e5e7eb', borderBottom: '1px solid #d1d5db', background: 'white' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontWeight: '600', color: '#374151', fontSize: '12px' }}>위험도:</span>
-                            <span style={{ color: '#dc2626', fontSize: '14px', fontWeight: '600' }}>{data?.riskLevel}</span>
+                            <span style={{ color: riskColor, fontSize: '14px', fontWeight: '600' }}>{data?.riskLevel}</span>
                           </div>
                         </td>
                         <td style={{ padding: '10px 14px', borderBottom: '1px solid #d1d5db', background: 'white' }}>

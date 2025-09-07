@@ -209,7 +209,6 @@
 }
 
 .report-details .risk-danger {
-  color: #ff0000;
   font-weight: 600;
 }
 
@@ -346,7 +345,6 @@
 }
 
 .risk-level {
-  color: #ff0000;
   font-size: 12px;
 }
 

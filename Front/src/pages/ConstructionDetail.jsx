@@ -4,6 +4,7 @@ import '../Dashboard.css';
 import './DetailPages.css';
 import NaverMap from '../NaverMap.jsx';
 import Modals from '../Modals.jsx';
+import ConstructionFloodMap from '../components/ConstructionFloodMap.jsx';
 
 const ConstructionDetail = () => {
     const nav = useNavigate();
@@ -24,6 +25,7 @@ const ConstructionDetail = () => {
     const [selectedMarkerData, setSelectedMarkerData] = useState(null);
     const [isEditMode, setIsEditMode] = useState(false);
     const [isEditLoading, setIsEditLoading] = useState(false);
+    const [mapFilterType, setMapFilterType] = useState('construction'); // 지도 필터 타입
 
     // 통제 데이터 조회
     useEffect(() => {
@@ -431,13 +433,57 @@ const ConstructionDetail = () => {
                             </button>
                         </div>
                         {showMap ? (
-                            <div className="map-container">
-                                <NaverMap 
-                                    filterType="construction"
+                            <div className="map-container" style={{ position: 'relative' }}>
+
+                                {/* 커스텀 필터 버튼 */}
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '10px',
+                                    left: '10px',
+                                    zIndex: 100,
+                                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                    color: 'white',
+                                    padding: '10px',
+                                    borderRadius: '8px',
+                                    display: 'flex',
+                                    gap: '10px',
+                                }}>
+                                    <button
+                                        onClick={() => setMapFilterType('construction')}
+                                        style={{
+                                            backgroundColor: mapFilterType === 'construction' ? '#FF9800' : 'transparent',
+                                            color: 'white',
+                                            border: `1px solid ${mapFilterType === 'construction' ? '#FF9800' : 'white'}`,
+                                            borderRadius: '5px',
+                                            padding: '8px 12px',
+                                            cursor: 'pointer',
+                                            fontWeight: 'bold'
+                                        }}
+                                    >
+                                        🚧 공사중
+                                    </button>
+                                    <button
+                                        onClick={() => setMapFilterType('flood')}
+                                        style={{
+                                            backgroundColor: mapFilterType === 'flood' ? '#2196F3' : 'transparent',
+                                            color: 'white',
+                                            border: `1px solid ${mapFilterType === 'flood' ? '#2196F3' : 'white'}`,
+                                            borderRadius: '5px',
+                                            padding: '8px 12px',
+                                            cursor: 'pointer',
+                                            fontWeight: 'bold'
+                                        }}
+                                    >
+                                        🌊 침수
+                                    </button>
+                                </div>
+                                
+                              <NaverMap 
+                                    filterType={mapFilterType}
                                     hideFilterButtons={true}
-                                    key="construction-map"
+                                    key={`construction-map-${mapFilterType}`}
                                     onMarkerClick={handleMarkerClick}
-                                />
+			      />
                             </div>
                         ) : (
                             <>

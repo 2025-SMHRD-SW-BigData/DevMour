@@ -544,7 +544,7 @@ const [currentUser, setCurrentUser] = useState(null);
         </div>
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1px' }}>
-            <h3>&nbsp;도로 보수공사</h3>
+            <h3>&nbsp;도로 통제구역</h3>
             <button className="detail-btn" onClick={() => nav('/construction')}>
               상세보기
             </button>

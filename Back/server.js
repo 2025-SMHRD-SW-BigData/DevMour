@@ -225,6 +225,7 @@ app.use('/api/weather', require('./router/weather'));
 app.use('/api/mobile/road-controls', require('./router/mobile-road-controls'));
 app.use('/api/mobile/reports', require('./router/mobile-reports'));
 app.use('/api/mobile/markers', require('./router/mobile-markers'));
+app.use('/api/mobile/fcm', require('./router/mobile-fcm'));
 
 // SSE 알림 라우터 추가
 const { router: notificationRouter, broadcastNotification } = require('./router/notifications');

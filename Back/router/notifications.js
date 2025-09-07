@@ -1,5 +1,20 @@
 const express = require('express');
+const mysql = require('mysql2/promise');
+const { sendFCMNotification, sendFCMNotificationToMultiple } = require('../config/firebaseConfig');
+
 const router = express.Router();
+
+// MySQL Pool 연결 설정
+const db = mysql.createPool({
+    host: 'project-db-campus.smhrd.com',
+    port: 3307,
+    user: 'campus_25SW_BD_p3_2',
+    password: 'smhrd2',
+    database: 'campus_25SW_BD_p3_2',
+    charset: 'utf8mb4',
+    waitForConnections: true,
+    connectionLimit: 10
+});
 
 // SSE 연결을 위한 클라이언트 저장소
 const clients = new Set();
@@ -44,13 +59,13 @@ router.get('/stream', (req, res) => {
     }, 30000); // 30초마다 ping
 });
 
-// 모든 클라이언트에게 알림 전송하는 함수
-function broadcastNotification(notificationData) {
+// 모든 클라이언트에게 알림 전송하는 함수 (SSE + FCM)
+async function broadcastNotification(notificationData) {
     const message = `data: ${JSON.stringify(notificationData)}\n\n`;
     
     console.log('🔔 알림 브로드캐스트:', notificationData);
     
-    // 모든 연결된 클라이언트에게 전송
+    // 1. SSE로 웹 클라이언트에게 전송
     clients.forEach(client => {
         try {
             if (!client.res.destroyed) {
@@ -61,6 +76,66 @@ function broadcastNotification(notificationData) {
             clients.delete(client);
         }
     });
+
+    // 2. FCM으로 모바일 앱에게 푸시 알림 전송
+    try {
+        await sendFCMToAllUsers(notificationData);
+    } catch (error) {
+        console.error('❌ FCM 전송 실패:', error);
+    }
+}
+
+// 모든 활성 사용자에게 FCM 알림 전송
+async function sendFCMToAllUsers(notificationData) {
+    try {
+        // 활성화된 모든 FCM 토큰 조회
+        const [tokens] = await db.execute(
+            'SELECT fcm_token, user_id FROM t_fcm_tokens WHERE is_active = 1'
+        );
+
+        if (tokens.length === 0) {
+            console.log('📱 전송할 FCM 토큰이 없습니다.');
+            return;
+        }
+
+        const fcmTokens = tokens.map(token => token.fcm_token);
+        const title = notificationData.title || 'DevMour 알림';
+        const body = notificationData.message || '새로운 알림이 있습니다.';
+
+        // FCM 데이터 준비
+        const fcmData = {
+            type: notificationData.type || 'general',
+            timestamp: notificationData.timestamp || new Date().toISOString(),
+            ...notificationData
+        };
+
+        // 다중 토큰으로 FCM 전송
+        const result = await sendFCMNotificationToMultiple(fcmTokens, title, body, fcmData);
+
+        // 알림 히스토리 저장
+        for (let i = 0; i < tokens.length; i++) {
+            const token = tokens[i];
+            const status = i < result.successCount ? 'sent' : 'failed';
+            
+            await db.execute(
+                'INSERT INTO t_notification_history (user_id, fcm_token, title, body, data, notification_type, status, sent_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
+                [
+                    token.user_id,
+                    token.fcm_token,
+                    title,
+                    body,
+                    JSON.stringify(fcmData),
+                    notificationData.type || 'general',
+                    status
+                ]
+            );
+        }
+
+        console.log(`📱 FCM 전송 완료: 성공 ${result.successCount}개, 실패 ${result.failureCount}개`);
+
+    } catch (error) {
+        console.error('❌ FCM 전체 전송 오류:', error);
+    }
 }
 
 // 연결된 클라이언트 수 조회

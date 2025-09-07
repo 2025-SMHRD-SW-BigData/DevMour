@@ -1861,7 +1861,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                     >
                         모두 보기
                     </button>
-                    {['cctv', 'construction', 'flood'].map((type) => {
+                    {['cctv','construction', 'flood'].map((type) => {
                         const config = getMarkerConfig(type);
                         return (
                             <button
@@ -2030,7 +2030,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                 </div>
             )}
 
-            {/* 편집 모드 상태 표시 - 위험도 마커 모드가 아닐 때만 표시 */}
+            {/* 편집 모드 상태 표시 - 위험도 마커 모드가 아닐 때만 표시 
             {!showRiskMarkers && (
                 <div style={{
                     position: 'absolute',
@@ -2045,7 +2045,7 @@ const NaverMap = ({ onMarkerClick, riskData, showRiskMarkers, filterType: initia
                 }}>
                     편집모드: {isEditing ? 'ON' : 'OFF'} | 마커: {markers.length}개
                 </div>
-            )}
+            )}*/}
 
             {/* 위험도 마커 모드일 때 표시할 정보
             {showRiskMarkers && (
