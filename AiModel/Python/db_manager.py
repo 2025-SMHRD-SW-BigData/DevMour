@@ -22,6 +22,7 @@ async def save_road_score_to_db(
 ) -> bool:
     """도로 점수를 AiServer 데이터베이스에 저장합니다."""
     try:
+        import aiohttp
         from config import DB_CONFIG
         
         logger.info(f"🔍 save_road_score_to_db 함수 시작")
@@ -45,37 +46,30 @@ async def save_road_score_to_db(
             'ali_crack_cnt': ali_crack_cnt
         }
         
-        logger.info(f"💾 도로 점수 저장 시도: CCTV {cctv_idx} ({cctv_name})")
+        logger.info(f"💾 도로 점수 비동기 저장 시도: CCTV {cctv_idx} ({cctv_name})")
         logger.info(f"   📍 위치: ({lat}, {lon})")
         logger.info(f"   🎯 위험도: {risk_score}")
         logger.info(f"   📊 클래스별 개수: 균열 {crack_cnt}, 포트홀 {break_cnt}, 거북등 {ali_crack_cnt}")
         logger.info(f"   🌐 전송 URL: {DB_CONFIG['road_score_url']}")
         logger.info(f"   📦 전송 데이터: {payload}")
         
-        # requests 모듈 확인
-        logger.info(f"🔧 requests 모듈 상태: {requests.__version__ if hasattr(requests, '__version__') else 'loaded'}")
-        
-        response = requests.post(
-            DB_CONFIG['road_score_url'],
-            json=payload,
-            timeout=DB_CONFIG['timeout']
-        )
-        
-        logger.info(f"📡 HTTP 응답: 상태코드 {response.status_code}")
-        logger.info(f"📡 응답 내용: {response.text}")
-        
-        if response.status_code == 200:
-            result = response.json()
-            logger.info(f"✅ 도로 점수 저장 성공: ID {result.get('road_score_idx')}")
-            return True
-        else:
-            logger.error(f"❌ 도로 점수 저장 실패: {response.status_code} - {response.text}")
-            return False
-            
+        # aiohttp를 사용한 비동기 요청
+        timeout = aiohttp.ClientTimeout(total=DB_CONFIG['timeout'])
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.post(DB_CONFIG['road_score_url'], json=payload) as response:
+                if response.status == 200:
+                    result = await response.json()
+                    logger.info(f"✅ 도로 점수 비동기 저장 성공: ID {result.get('road_score_idx')}")
+                    return True
+                else:
+                    logger.error(f"❌ 도로 점수 비동기 저장 실패: {response.status} - {response.text}")
+                    return False
+
+    except ImportError as e:
+        logger.error(f"❌ aiohttp 모듈을 찾을 수 없습니다: {e}")
+        return False
     except Exception as e:
         logger.error(f"❌ 도로 점수 저장 오류: {e}")
-        import traceback
-        logger.error(f"📋 상세 오류: {traceback.format_exc()}")
         return False
 
 async def save_risk_prediction_to_db(risk_analysis: Dict) -> bool:
@@ -333,4 +327,80 @@ async def save_total_score_to_db(
         return False
     except Exception as e:
         logger.error(f"❌ 종합 점수 저장 실패: {e}")
+        return False
+
+async def save_citizen_result_to_db(
+    c_report_idx: int,
+    c_reporter_name: Optional[str],
+    c_reporter_phone: Optional[str],
+    cr_type: str,
+    lat: float,
+    lon: float,
+    road_score: float,
+    weather_score: int,
+    total_score: float,
+    crack_cnt: int,
+    break_cnt: int,
+    ali_crack_cnt: int,
+    precipitation: float,
+    temp: float,
+    wh_type: str,
+    snowfall: float,
+    image_path: str
+) -> bool:
+    """시민 제보 분석 결과를 t_citizen_result 테이블에 저장합니다."""
+    try:
+        from config import DB_CONFIG
+        
+        logger.info(f"🔍 save_citizen_result_to_db 함수 시작")
+        logger.info(f"   📊 입력 데이터: c_report_idx={c_report_idx}, cr_type={cr_type}")
+        logger.info(f"   📍 위치: ({lat}, {lon})")
+        logger.info(f"   🎯 점수: 도로={road_score}, 날씨={weather_score}, 총점={total_score}")
+        
+        # AiServer로 데이터 전송
+        payload = {
+            'c_report_idx': c_report_idx,
+            'c_reporter_name': c_reporter_name,
+            'c_reporter_phone': c_reporter_phone,
+            'cr_type': cr_type,
+            'lat': lat,
+            'lon': lon,
+            'road_score': road_score,
+            'weather_score': weather_score,
+            'total_score': total_score,
+            'crack_cnt': crack_cnt,
+            'break_cnt': break_cnt,
+            'ali_crack_cnt': ali_crack_cnt,
+            'precipitation': precipitation,
+            'temp': temp,
+            'wh_type': wh_type,
+            'snowfall': snowfall,
+            'image_path': image_path
+        }
+        
+        logger.info(f"💾 시민 제보 결과 저장 시도: 제보번호 {c_report_idx}")
+        logger.info(f"   📦 전송 데이터: {payload}")
+        
+        # 시민 제보 분석 결과 저장 엔드포인트로 전송
+        response = requests.post(
+            f"{DB_CONFIG['base_url']}/api/complaint/citizen-result",
+            json=payload,
+            timeout=DB_CONFIG['timeout']
+        )
+        
+        logger.info(f"📡 HTTP 응답: 상태코드 {response.status_code}")
+        logger.info(f"📡 응답 내용: {response.text}")
+        
+        if response.status_code == 200:
+            result = response.json()
+            logger.info(f"✅ 시민 제보 결과 저장 성공: ID {result.get('citizen_result_idx')}")
+            return True
+        else:
+            logger.error(f"❌ 시민 제보 결과 저장 실패: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"❌ 시민 제보 결과 저장 오류: {e}")
+        import traceback
+        logger.error(f"📋 상세 오류: {traceback.format_exc()}")
         return False

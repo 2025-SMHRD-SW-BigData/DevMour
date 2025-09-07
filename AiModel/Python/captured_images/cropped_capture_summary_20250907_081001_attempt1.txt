@@ -1,0 +1,16 @@
+CCTV 페이지 자동 크롭 캡처 요약 (시도 1)
+==================================================
+시도 번호: 1
+고정 크롭 좌표: (473, 57) ~ (793, 272)
+크롭 영역: 640 x 429 픽셀
+Chrome 해상도: 2560x1440 (2K)
+DPI 스케일링: 2배
+고해상도 지원: 활성화
+페이지 로딩 대기 시간: 3초
+캡처 시간: 2025-09-07 08:10:06
+URL: https://www.utic.go.kr/jsp/map/cctvStream.jsp?cctvid=L310008&cctvname=%25EB%25AF%25BC%25EC%25A3%25BC%25EA%25B4%2591%25EC%259E%25A5&kind=v&cctvip=undefined&cctvch=4&id=1113&cctvpasswd=undefined&cctvport=undefined&minX=126.91364511434362&minY=35.14126201164607&maxX=126.9252209637993&maxY=35.15294860496634
+원본 이미지 크기: (2586, 5088, 3)
+최종 이미지 크기: (429, 640, 3)
+저장된 파일들:
+  1. 전체 페이지: 01_full_page_20250907_081001_attempt1.png
+  2. 크롭된 결과: 04_cropped_result_20250907_081001_attempt1.jpg

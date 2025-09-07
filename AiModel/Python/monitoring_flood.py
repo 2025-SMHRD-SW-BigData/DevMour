@@ -36,7 +36,7 @@ class FloodMonitoring:
     
     def __init__(self, test_mode=False):
         # Back 서버 포트(3001)로 변경
-        self.db_server_url = "http://localhost:3001"
+        self.db_server_url = "http://175.45.194.114:3001"
         
         # config.py에서 날씨 API 설정 가져오기
         try:

@@ -29,8 +29,8 @@ class FloodDetector:
     
     def __init__(self):
         self.flood_server_url = "http://localhost:8002"  # 침수 분석 서버
-        # CCTV 목록 조회: Back 서버
-        self.cctv_server_url = "http://localhost:3001"
+        # CCTV 목록 조회: Back 서버 
+        self.cctv_server_url = "http://175.45.194.114:3001"
         # 결과 저장: AiServer 서버
         self.result_server_url = "http://localhost:3000"
         

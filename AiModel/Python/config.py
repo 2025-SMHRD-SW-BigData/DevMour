@@ -64,6 +64,7 @@ CCTV_CONFIG = {
 DB_CONFIG = {
     'url': os.getenv('DB_URL', 'http://localhost:3000/api/save-risk'),
     'road_score_url': os.getenv('ROAD_SCORE_URL', 'http://localhost:3000/api/save-road-score'),
+    'base_url': os.getenv('BASE_URL', 'http://175.45.194.114:3001'),
     'timeout': 10
 }
 

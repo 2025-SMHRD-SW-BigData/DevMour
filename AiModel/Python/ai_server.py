@@ -11,6 +11,8 @@ from PIL import Image
 import io
 import sys
 from pathlib import Path
+import requests
+from urllib.parse import urlparse
 
 # 현재 파일의 디렉토리를 Python 경로에 추가
 current_dir = Path(__file__).parent
@@ -21,7 +23,7 @@ from config import SERVER_CONFIG, DB_CONFIG, MODEL_CONFIG
 from yolo_ensemble import YOLOEnsemble
 from cctv_processor import CCTVProcessor
 from auto_analyzer import start_auto_analysis, stop_auto_analysis, get_analysis_stats, force_analysis
-from db_manager import save_road_score_to_db
+from db_manager import save_road_score_to_db, save_citizen_result_to_db, get_weather_info
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -37,10 +39,10 @@ app = FastAPI(
 # CORS 설정
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # 모든 origin 허용
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # 모든 메서드 허용
+    allow_headers=["*"],  # 모든 헤더 허용
 )
 
 # CCTV 분석 요청 모델
@@ -54,6 +56,18 @@ class CCTVAnalysisRequest(BaseModel):
        analysis_type: Optional[str] = "cctv_realtime"
        zoom_factor: Optional[float] = None
        crop_coords: Optional[Dict] = None
+
+# 시민 제보 이미지 분석 요청 모델
+class ComplaintImageAnalysisRequest(BaseModel):
+    c_report_idx: Optional[int] = None  # 제보 고유번호
+    image_url: str  # 이미지 URL (c_report_file1)
+    lat: Optional[float] = None  # 위도
+    lon: Optional[float] = None  # 경도
+    c_report_detail: Optional[str] = None  # 제보 상세 내용
+    c_reporter_name: Optional[str] = None  # 제보자 이름
+    c_reporter_phone: Optional[str] = None  # 제보자 연락처
+    analysis_type: Optional[str] = "complaint_image"
+
 
 # 전역 변수
 yolo_ensemble: Optional[YOLOEnsemble] = None
@@ -656,10 +670,196 @@ async def force_analysis_endpoint():
         logger.error(f"상세 오류: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"즉시 분석 오류: {str(e)}")
 
+@app.post("/api/analyze-complaint-image")
+async def analyze_complaint_image(request: ComplaintImageAnalysisRequest):
+    """시민 제보 이미지 URL을 분석합니다."""
+    if yolo_ensemble is None:
+        raise HTTPException(status_code=500, detail="AI 모델이 로드되지 않았습니다")
+    
+    try:
+        logger.info(f"📸 시민 제보 이미지 분석 시작: {request.image_url}")
+        logger.info(f"📋 제보 정보: 번호 {request.c_report_idx}, 상세 {request.c_report_detail}")
+        
+        # 이미지 URL에서 이미지 다운로드
+        try:
+            response = requests.get(request.image_url, timeout=30)
+            response.raise_for_status()
+            
+            # 이미지 데이터를 PIL Image로 변환
+            image = Image.open(io.BytesIO(response.content))
+            
+            # PIL 이미지를 numpy 배열로 변환
+            image_array = np.array(image)
+            
+            # RGB로 변환 (RGBA인 경우)
+            if len(image_array.shape) == 3 and image_array.shape[2] == 4:
+                image_array = image_array[:, :, :3]
+            
+            logger.info(f"📊 이미지 정보: 크기 {len(response.content)} bytes, 해상도 {image_array.shape[1]}x{image_array.shape[0]}")
+            
+        except requests.RequestException as e:
+            logger.error(f"❌ 이미지 다운로드 실패: {e}")
+            raise HTTPException(status_code=400, detail=f"이미지 다운로드 실패: {str(e)}")
+        except Exception as e:
+            logger.error(f"❌ 이미지 처리 실패: {e}")
+            raise HTTPException(status_code=400, detail=f"이미지 처리 실패: {str(e)}")
+        
+        # YOLO 앙상블 예측 수행
+        logger.info("🚀 YOLO 앙상블 예측 시작")
+        detections = yolo_ensemble.predict(image_array)
+        
+        # 위험도 점수 계산
+        logger.info("💰 위험도 점수 계산 시작")
+        risk_analysis = yolo_ensemble.calculate_risk_score(detections)
+        
+        # 🎨 탐지 결과 이미지에 바운딩 박스 그리기 및 저장
+        try:
+            logger.info("🎨 탐지 결과 이미지 생성 시작")
+            
+            # 결과 이미지 파일명 생성
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            result_filename = f"complaint_detection_{request.c_report_idx}_{timestamp}.png"
+            result_path = f"result/{result_filename}"
+            
+            # 임시 CCTV 프로세서 생성 (이미지 저장용)
+            temp_cctv_processor = CCTVProcessor()
+            
+            # 바운딩 박스가 그려진 이미지 생성 및 저장
+            annotated_image = temp_cctv_processor.draw_detection_boxes(
+                image_array, detections, save_path=result_path
+            )
+            
+            logger.info(f"✅ 탐지 결과 이미지 생성 완료: {result_path}")
+            
+            # 결과에 이미지 경로 추가
+            result_image_info = {
+                "result_image_path": result_path,
+                "detection_count": len(detections),
+                "annotated": True
+            }
+            
+            # 임시 프로세서 정리
+            temp_cctv_processor.release()
+            
+        except Exception as image_error:
+            logger.error(f"❌ 탐지 결과 이미지 생성 실패: {image_error}")
+            result_image_info = {
+                "result_image_path": None,
+                "detection_count": len(detections),
+                "annotated": False
+            }
+        
+        # 날씨 정보 조회 및 점수 계산
+        weather_score = 0
+        weather_info = None
+        if request.lat and request.lon:
+            try:
+                logger.info("🌤️ 날씨 정보 조회 시작")
+                weather_info = await get_weather_info(request.lat, request.lon)
+                
+                if weather_info:
+                    logger.info(f"🌤️ 날씨 정보 조회 성공: {weather_info}")
+                    
+                    # 날씨 점수 계산
+                    weather_score = cctv_processor.calculate_weather_score(
+                        weather_info['temperature'],
+                        weather_info['rain'],
+                        weather_info['snow']
+                    )
+                    logger.info(f"🌤️ 날씨 점수 계산 완료: {weather_score}점")
+                else:
+                    logger.warning("⚠️ 날씨 정보 조회 실패, 기본값 사용")
+                    
+            except Exception as weather_error:
+                logger.error(f"❌ 날씨 정보 처리 중 오류: {weather_error}")
+                weather_score = 0
+        
+        # 종합 점수 계산 (도로점수 x (1 + 날씨점수/10))
+        total_score = round(risk_analysis['total_risk_score'] * (1 + weather_score / 10), 1)
+        logger.info(f"🎯 종합 점수 계산 완료: 도로점수 {risk_analysis['total_risk_score']} x (1 + {weather_score}/10) = {total_score}")
+        
+        # t_citizen_result 테이블에 저장
+        if request.lat and request.lon:
+            logger.info("💾 시민 제보 분석 결과 저장 시작")
+            
+            # 클래스별 개수 추출
+            crack_cnt = risk_analysis['class_counts'].get('crack', 0)
+            break_cnt = risk_analysis['class_counts'].get('break', 0)
+            ali_crack_cnt = risk_analysis['class_counts'].get('ali_crack', 0)
+            
+            # 날씨 정보 기본값 설정
+            precipitation = weather_info['rain'] if weather_info else 0.0
+            temp = weather_info['temperature'] if weather_info else 0.0
+            wh_type = weather_info['weather_type'] if weather_info else 'Unknown'
+            snowfall = weather_info['snow'] if weather_info else 0.0
+            
+            # 제보 유형 결정
+            cr_type = "도로 파손" if request.c_report_detail and "파손" in request.c_report_detail else "도로 침수"
+            
+            # t_citizen_result 테이블에 저장
+            citizen_saved = await save_citizen_result_to_db(
+                c_report_idx=request.c_report_idx,
+                c_reporter_name=request.c_reporter_name,
+                c_reporter_phone=request.c_reporter_phone,
+                cr_type=cr_type,
+                lat=request.lat,
+                lon=request.lon,
+                road_score=risk_analysis['total_risk_score'],
+                weather_score=weather_score,
+                total_score=total_score,
+                crack_cnt=crack_cnt,
+                break_cnt=break_cnt,
+                ali_crack_cnt=ali_crack_cnt,
+                precipitation=precipitation,
+                temp=temp,
+                wh_type=wh_type,
+                snowfall=snowfall,
+                image_path=request.image_url
+            )
+            
+            if citizen_saved:
+                logger.info("💾 시민 제보 분석 결과 저장 완료")
+            else:
+                logger.error("❌ 시민 제보 분석 결과 저장 실패")
+        
+        # 분석 결과 구성
+        result = {
+            "success": True,
+            "c_report_idx": request.c_report_idx,
+            "image_url": request.image_url,
+            "c_report_detail": request.c_report_detail,
+            "image_info": {
+                'size': len(response.content),
+                'dimensions': f"{image_array.shape[1]}x{image_array.shape[0]}",
+                'source': 'complaint_image_url'
+            },
+            "detections": detections,
+            "risk_analysis": risk_analysis,
+            "weather_info": weather_info,
+            "weather_score": weather_score,
+            "total_score": total_score,
+            "result_image": result_image_info,
+            "analysis_type": request.analysis_type,
+            "timestamp": time.time()
+        }
+        
+        logger.info(f"✅ 시민 제보 이미지 분석 완료: {len(detections)}개 객체 탐지")
+        logger.info(f"📈 최종 결과: 위험도 총점 {risk_analysis['total_risk_score']}, 클래스별 개수 {risk_analysis['class_counts']}")
+        return JSONResponse(content=result)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"시민 제보 이미지 분석 실패: {e}")
+        import traceback
+        logger.error(f"📋 상세 오류: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"시민 제보 이미지 분석 실패: {str(e)}")
+
+
 if __name__ == "__main__":
     uvicorn.run(
         "ai_server:app",
-        host=SERVER_CONFIG['host'],
+        host=SERVER_CONFIG['0.0.0.0'],
         port=SERVER_CONFIG['port'],
         reload=SERVER_CONFIG['debug']
     )

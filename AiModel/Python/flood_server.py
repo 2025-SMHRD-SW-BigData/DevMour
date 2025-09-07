@@ -20,10 +20,10 @@ app = FastAPI(title="Flood Analysis API", version="1.0.0")
 # CORS 설정 추가
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 개발 환경에서는 모든 origin 허용
+    allow_origins=["*"],  # 모든 origin 허용
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # 모든 메서드 허용
+    allow_headers=["*"],  # 모든 헤더 허용
 )
 
 # 설정값
@@ -51,6 +51,15 @@ class FloodAnalysisRequest(BaseModel):
     citizen_report_idx: Optional[int] = None
     lat: Optional[float] = None
     lon: Optional[float] = None
+
+class ComplaintFloodAnalysisRequest(BaseModel):
+    c_report_idx: int
+    image_url: str
+    lat: float
+    lon: float
+    c_report_detail: Optional[str] = None
+    c_reporter_name: Optional[str] = None
+    c_reporter_phone: Optional[str] = None
 
 class FloodAnalysisResponse(BaseModel):
     success: bool
@@ -215,7 +224,7 @@ async def save_flood_result_to_db(cctv_idx: Optional[int], citizen_report_idx: O
             }
             
             async with session.post(
-                "http://localhost:3001/api/floodai/save_result",
+                "http://175.45.194.114:3001/api/floodai/save_result",
                 json=payload
             ) as response:
                 if response.status == 200:
@@ -266,6 +275,163 @@ def _is_black_image(image_path: str, threshold: float = 0.95) -> bool:
     except Exception as e:
         logger.error(f"❌ 이미지 밝기 분석 실패: {e}")
         return False  # 분석 실패 시 검정 화면이 아닌 것으로 간주
+
+@app.post("/api/analyze-complaint-flood", response_model=FloodAnalysisResponse)
+async def analyze_complaint_flood(request: ComplaintFloodAnalysisRequest):
+    """
+    시민 제보 이미지 침수 분석 엔드포인트
+    """
+    logger.info(f"🌊 시민 제보 침수 분석 시작: 제보번호 {request.c_report_idx}")
+    
+    if model is None:
+        logger.error("❌ 침수 분석 모델이 로드되지 않음")
+        raise HTTPException(status_code=500, detail="침수 분석 모델이 로드되지 않았습니다.")
+    
+    try:
+        # 이미지 다운로드 및 분석
+        async with aiohttp.ClientSession() as session:
+            async with session.get(request.image_url) as response:
+                if response.status != 200:
+                    logger.error(f"❌ 이미지 다운로드 실패: {response.status}")
+                    raise HTTPException(status_code=400, detail="이미지를 다운로드할 수 없습니다.")
+                
+                image_data = await response.read()
+                
+                # 임시 파일로 저장
+                temp_image_path = f"temp_complaint_flood_{request.c_report_idx}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+                
+                with open(temp_image_path, 'wb') as f:
+                    f.write(image_data)
+                
+                logger.info(f"📸 이미지 저장 완료: {temp_image_path}")
+                
+                # 결과 이미지 저장 경로 설정
+                result_folder = "flood_result"
+                os.makedirs(result_folder, exist_ok=True)
+                result_image_path = os.path.join(result_folder, f"complaint_flood_{request.c_report_idx}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg")
+                
+                # 검정 화면 확인
+                if _is_black_image(temp_image_path):
+                    logger.warning("⚠️ 검정 화면 감지 - 침수 없음으로 판단")
+                    flood_result = 'N'
+                    confidence = 0.0
+                    message = "검정 화면으로 인해 침수 분석을 수행할 수 없습니다."
+                    
+                    # 검정 화면인 경우에도 원본 이미지를 결과 폴더에 복사
+                    import shutil
+                    shutil.copy2(temp_image_path, result_image_path)
+                    logger.info(f"📸 검정 화면 이미지 복사 완료: {result_image_path}")
+                else:
+                    # YOLO 모델로 침수 분석
+                    results = model(temp_image_path, conf=FLOOD_CONFIDENCE_THRESHOLD)
+                    
+                    # 결과 분석
+                    flood_detected = False
+                    max_confidence = 0.0
+                    
+                    for result in results:
+                        if result.boxes is not None and len(result.boxes) > 0:
+                            for box in result.boxes:
+                                confidence = float(box.conf[0])
+                                if confidence > max_confidence:
+                                    max_confidence = confidence
+                                flood_detected = True
+                                logger.info(f"🌊 침수 감지: 신뢰도 {confidence:.3f}")
+                    
+                    if flood_detected:
+                        flood_result = 'Y'
+                        confidence = max_confidence
+                        message = f"침수가 감지되었습니다. (신뢰도: {confidence:.3f})"
+                    else:
+                        flood_result = 'N'
+                        confidence = 0.0
+                        message = "침수가 감지되지 않았습니다."
+                    
+                    # 분석 결과 이미지 저장 (바운딩 박스가 그려진 이미지)
+                    if results and len(results) > 0:
+                        # 결과 이미지 저장
+                        results[0].save(result_image_path)
+                        logger.info(f"📸 침수 분석 결과 이미지 저장 완료: {result_image_path}")
+                    else:
+                        # 결과가 없는 경우 원본 이미지 복사
+                        import shutil
+                        shutil.copy2(temp_image_path, result_image_path)
+                        logger.info(f"📸 원본 이미지 복사 완료: {result_image_path}")
+                
+                # 결과 저장
+                await save_complaint_flood_result(
+                    request.c_report_idx,
+                    request.c_reporter_name,
+                    request.c_reporter_phone,
+                    request.lat,
+                    request.lon,
+                    flood_result,
+                    result_image_path  # 로컬 결과 이미지 경로 사용
+                )
+                
+                # 임시 파일 삭제
+                try:
+                    os.remove(temp_image_path)
+                    logger.info(f"🗑️ 임시 파일 삭제 완료: {temp_image_path}")
+                except Exception as e:
+                    logger.warning(f"⚠️ 임시 파일 삭제 실패: {e}")
+                
+                logger.info(f"✅ 시민 제보 침수 분석 완료: {flood_result} (신뢰도: {confidence:.3f})")
+                
+                return FloodAnalysisResponse(
+                    success=True,
+                    flood_result=flood_result,
+                    confidence=confidence,
+                    image_path=request.image_url,
+                    message=message
+                )
+                
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ 시민 제보 침수 분석 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"침수 분석 중 오류가 발생했습니다: {str(e)}")
+
+async def save_complaint_flood_result(
+    c_report_idx: int,
+    c_reporter_name: Optional[str],
+    c_reporter_phone: Optional[str],
+    lat: float,
+    lon: float,
+    flood_result: str,
+    image_path: str
+):
+    """
+    시민 제보 침수 분석 결과를 데이터베이스에 저장합니다.
+    """
+    try:
+        payload = {
+            'c_report_idx': c_report_idx,
+            'c_reporter_name': c_reporter_name,
+            'c_reporter_phone': c_reporter_phone,
+            'cr_type': '도로 침수',
+            'lat': lat,
+            'lon': lon,
+            'flood_result': flood_result,
+            'image_path': image_path
+        }
+        
+        logger.info(f"💾 시민 제보 침수 분석 결과 저장 시도: 제보번호 {c_report_idx}")
+        logger.info(f"   📦 전송 데이터: {payload}")
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                "http://175.45.194.114:3001/api/complaint/flood-result",
+                json=payload
+            ) as response:
+                if response.status == 200:
+                    result = await response.json()
+                    logger.info(f"✅ 시민 제보 침수 분석 결과 저장 성공: {result}")
+                else:
+                    logger.error(f"❌ 시민 제보 침수 분석 결과 저장 실패: {response.status}")
+                    
+    except Exception as e:
+        logger.error(f"❌ 시민 제보 침수 분석 결과 저장 중 오류: {e}")
 
 if __name__ == "__main__":
     import uvicorn
