@@ -6,15 +6,15 @@ CCTV 영상과 AI를 활용하여 도로 파손을 실시간으로 감지하고,
 # 개발 기간
 2025.07.29~25.09.10
 # 개발자 소개(역할분담 상세)
-
+![팀원소개](https://github.com/2025-SMHRD-SW-BigData/DevMour/blob/master/%ED%8C%80%EC%9B%90%EC%86%8C%EA%B0%9C.jpg?raw=true)
 # 개발환경
-
+VisualStudio Code, Colab, Android Studio, Ubuntu
 # 기술스택
-
-
+![기술스택](https://github.com/2025-SMHRD-SW-BigData/DevMour/blob/master/%EA%B8%B0%EC%88%A0%20%EC%8A%A4%ED%83%9D.jpg?raw=true)
 # 주요기능
 
 # 프로젝트 아키텍쳐
+![프로젝트 아키텍처](https://github.com/2025-SMHRD-SW-BigData/DevMour/blob/master/devmour%20%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98.jpg?raw=true)
 
 # 시연영상
 https://www.youtube.com/watch?si=M73OB3VOOP5eas6v&v=o9kYfwejQRQ&feature=youtu.be
