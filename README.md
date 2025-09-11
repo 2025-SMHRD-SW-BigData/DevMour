@@ -6,6 +6,12 @@ CCTV 영상과 AI를 활용하여 도로 파손을 실시간으로 감지하고,
 # 개발 기간
 2025.07.29~25.09.10
 # 개발자 소개(역할분담 상세)
+팀장 : 김상중 - 프로젝트 총괄 PM, AI 모델링, AI 모델링 서버 연결, AI 모델 라벨링
+팀원 : 전혜미 - 프로젝트 기획, 산출문서 작성, UI 설계, AI 모델 라벨링
+팀원 : 박주진 - 서버 배포 총괄, AI 서버 컴퓨팅, DB 설계구현, API 통합 관리
+팀원 : 박보라 - 날씨 API 연동, 지오코딩 API 활용, 앱 지도 API 활용, 웹 UI/UX
+팀원 : 최정운 - 반응형 로그인 페이지, 앱 민원 페이지, 자동 PDF 보고서, 웹 UI/UX
+팀원 : 송달상 - 앱 PUSH 알림 기능, 앱 소셜 로그인 기능, 앱 알림 내역 구현, CCTV API 연동
 ![팀원소개](https://github.com/2025-SMHRD-SW-BigData/DevMour/blob/master/%ED%8C%80%EC%9B%90%EC%86%8C%EA%B0%9C.jpg?raw=true)
 # 개발환경
 VisualStudio Code, Colab, Android Studio, Ubuntu
