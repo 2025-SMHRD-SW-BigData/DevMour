@@ -33,7 +33,7 @@ VisualStudio Code, Colab, Android Studio, Ubuntu
   + 앱을 통한 민원신고을 확인하여 AI 도로분석을 통해 상태 확인 후 관리자의 판단하에 통제 구역 추가 및 추가시 앱 알림
 
 # 프로젝트 아키텍쳐
-![프로젝트 아키텍처]([https://github.com/2025-SMHRD-SW-BigData/DevMour/blob/master/devmour%20%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98.jpg?raw=true](https://github.com/2025-SMHRD-SW-BigData/DevMour/blob/master/devmour%20%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98.jpg?raw=true))
+![프로젝트 아키텍처](https://raw.githubusercontent.com/2025-SMHRD-SW-BigData/DevMour/refs/heads/master/devmour%20%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98.jpg?token=GHSAT0AAAAAADKKYC3ODCGSVT3HQOHDWCTW2GCIJUQ)
 
 # 시연영상
 https://www.youtube.com/watch?si=M73OB3VOOP5eas6v&v=o9kYfwejQRQ&feature=youtu.be
