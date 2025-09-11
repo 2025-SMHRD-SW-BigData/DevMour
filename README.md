@@ -23,6 +23,14 @@ VisualStudio Code, Colab, Android Studio, Ubuntu
 # 기술스택
 ![기술스택](https://github.com/2025-SMHRD-SW-BigData/DevMour/blob/master/%EA%B8%B0%EC%88%A0%20%EC%8A%A4%ED%83%9D.jpg?raw=true)
 # 주요기능
++ 웹 대시보드 구현
+  + 맵에 CCTV, 공사중, 침수, 위험지역 마커 표시
+  + CCTV 마커 클릭시 실시간 영상 확인, AI 모델을 통한 도로파손, 침수 탐지, 자동 보고서 생성
+  + 매일 정해진 시간에 자동으로 모든 CCTV 구역 자동 검사후 도로 점수 갱신
+  + 일정 주기마다 날씨 확인후 강수량 20mm 이상시 자동 침수 탐지 모델 작동
+  + 각종 통계와 현황 분석을 위한 기능별 상세 페이지
+  + 앱을 통한 민원신고 접수시 실시간 알림 표시 기능
+  + 앱을 통한 민원신고을 확인하여 AI 도로분석을 통해 상태 확인 후 관리자의 판단하에 통제 구역 추가 및 추가시 앱 알림
 
 # 프로젝트 아키텍쳐
 ![프로젝트 아키텍처](https://github.com/2025-SMHRD-SW-BigData/DevMour/blob/master/devmour%20%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98.jpg?raw=true)
